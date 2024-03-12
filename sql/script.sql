@@ -13,7 +13,7 @@ CREATE TABLE user
     email         VARCHAR(255) NOT NULL UNIQUE,
     password      VARCHAR(64)  NOT NULL,
     photo_url     TEXT,
-    channel_name  VARCHAR(64)  NOT NULL UNIQUE,
+    channel_name  VARCHAR(64) UNIQUE,
     created_by    VARCHAR(64),
     created_date  TIMESTAMP,
     modified_by   VARCHAR(64),

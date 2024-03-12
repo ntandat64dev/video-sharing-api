@@ -1,4 +1,4 @@
-package com.example.videosharingapi.entity;
+package com.example.videosharingapi.model.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,37 +6,41 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "video")
-public class Video extends AuditableEntity {
+@Table(name = "user")
+public class User extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "title")
-    private String title;
+    @Column(name = "email")
+    private String email;
 
-    @Column(name = "description")
-    private String description;
+    @Column(name = "password")
+    private String password;
 
-    @Column(name = "url")
-    private String url;
+    @Column(name = "photo_url")
+    private String photoUrl;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;
+    @Column(name = "channel_name")
+    private String channelName;
+
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<Video> videos;
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        return id != null && id.equals(((Video) o).getId());
+        return id != null && id.equals(((User) o).getId());
     }
 
     @Override

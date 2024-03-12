@@ -1,6 +1,6 @@
 package com.example.videosharingapi.repository;
 
-import com.example.videosharingapi.entity.Video;
+import com.example.videosharingapi.model.entity.Video;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
