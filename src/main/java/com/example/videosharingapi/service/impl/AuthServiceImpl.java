@@ -1,6 +1,6 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.exeption.ApplicationException;
+import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.payload.dto.AuthDTO;
 import com.example.videosharingapi.repository.UserRepository;

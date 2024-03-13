@@ -1,4 +1,4 @@
-package com.example.videosharingapi.exeption;
+package com.example.videosharingapi.exception;
 
 import lombok.Getter;
 import org.springframework.http.HttpStatus;
