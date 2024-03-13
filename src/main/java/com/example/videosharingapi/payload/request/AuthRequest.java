@@ -1,13 +1,13 @@
-package com.example.videosharingapi.payload.dto;
+package com.example.videosharingapi.payload.request;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class AuthDTO {
+@NoArgsConstructor
+public class AuthRequest {
     private String email;
     private String password;
 }

@@ -1,6 +1,7 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.payload.dto.AuthDTO;
+import com.example.videosharingapi.payload.request.AuthRequest;
+import com.example.videosharingapi.payload.response.AuthResponse;
 import com.example.videosharingapi.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,14 +20,14 @@ public class AuthController {
     }
 
     @PostMapping(value = { "/signin", "/login" })
-    public ResponseEntity<String> signIn(@RequestBody AuthDTO authDTO) {
-        String response = authService.signIn(authDTO);
+    public ResponseEntity<AuthResponse> signIn(@RequestBody AuthRequest request) {
+        var response = authService.signIn(request);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping(value = { "/signup", "/register" })
-    public ResponseEntity<String> signUp(@RequestBody AuthDTO authDTO) {
-        String response = authService.signUp(authDTO);
+    public ResponseEntity<AuthResponse> signUp(@RequestBody AuthRequest request) {
+        var response = authService.signUp(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

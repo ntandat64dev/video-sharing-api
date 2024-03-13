@@ -2,7 +2,7 @@ package com.example.videosharingapi.exception.handler;
 
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.exception.ResourceNotFoundException;
-import com.example.videosharingapi.payload.ErrorResponse;
+import com.example.videosharingapi.payload.response.ErrorResponse;
 import io.micrometer.common.lang.NonNullApi;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;

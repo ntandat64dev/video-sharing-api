@@ -1,4 +1,4 @@
-package com.example.videosharingapi.payload;
+package com.example.videosharingapi.payload.response;
 
 import java.sql.Timestamp;
 

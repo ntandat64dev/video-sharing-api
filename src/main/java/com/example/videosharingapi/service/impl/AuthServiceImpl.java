@@ -2,7 +2,9 @@ package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.payload.dto.AuthDTO;
+import com.example.videosharingapi.payload.UserDto;
+import com.example.videosharingapi.payload.request.AuthRequest;
+import com.example.videosharingapi.payload.response.AuthResponse;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
 import org.springframework.http.HttpStatus;
@@ -17,24 +19,29 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public String signIn(AuthDTO authDTO) {
-        if (userRepository.findByEmailAndPassword(authDTO.getEmail(), authDTO.getPassword()) == null) {
+    public AuthResponse signIn(AuthRequest request) {
+        var user = userRepository.findByEmailAndPassword(request.getEmail(), request.getPassword());
+        if (user == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email or password is incorrect!");
         }
-        return "Sign in successfully!";
+        return new AuthResponse(
+                "Sign in successfully.",
+                new UserDto(user.getId(), user.getEmail(), user.getPhotoUrl(), user.getChannelName()));
     }
 
     @Override
-    public String signUp(AuthDTO authDTO) {
-        if (userRepository.existsByEmail(authDTO.getEmail())) {
+    public AuthResponse signUp(AuthRequest request) {
+        if (userRepository.existsByEmail(request.getEmail())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email is already exists!");
         }
         var user = User.builder()
-                .email(authDTO.getEmail())
-                .password(authDTO.getPassword())
-                .channelName(authDTO.getEmail())
+                .email(request.getEmail())
+                .password(request.getPassword())
+                .channelName(request.getEmail())
                 .build();
-        userRepository.save(user);
-        return "Sign up successfully!";
+        var newUser = userRepository.save(user);
+        return new AuthResponse(
+                "Sign up successfully.",
+                new UserDto(newUser.getId(), newUser.getEmail(), newUser.getPhotoUrl(), newUser.getChannelName()));
     }
 }
