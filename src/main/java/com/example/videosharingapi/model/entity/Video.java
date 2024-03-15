@@ -1,12 +1,10 @@
 package com.example.videosharingapi.model.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
@@ -25,22 +23,13 @@ public class Video extends AuditableEntity {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "url")
-    private String url;
+    @Column(name = "thumbnail_url")
+    private String thumbnailUrl;
+
+    @Column(name = "video_url")
+    private String videoUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        return id != null && id.equals(((Video) o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }

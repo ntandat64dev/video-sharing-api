@@ -20,7 +20,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse signIn(AuthRequest request) {
-        var user = userRepository.findByEmailAndPassword(request.getEmail(), request.getPassword());
+        var user = userRepository.findByEmailAndPassword(request.email(), request.password());
         if (user == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email or password is incorrect!");
         }
@@ -31,13 +31,13 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthResponse signUp(AuthRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
+        if (userRepository.existsByEmail(request.email())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email is already exists!");
         }
         var user = User.builder()
-                .email(request.getEmail())
-                .password(request.getPassword())
-                .channelName(request.getEmail())
+                .email(request.email())
+                .password(request.password())
+                .channelName(request.email())
                 .build();
         var newUser = userRepository.save(user);
         return new AuthResponse(
