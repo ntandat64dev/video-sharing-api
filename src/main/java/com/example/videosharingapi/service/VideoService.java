@@ -6,4 +6,6 @@ import java.util.List;
 
 public interface VideoService {
     List<VideoDto> getAllVideos();
+
+    VideoDto save(VideoDto videoDto);
 }
