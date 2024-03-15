@@ -9,6 +9,7 @@ import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -19,6 +20,7 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional(readOnly = true)
     public AuthResponse signIn(AuthRequest request) {
         var user = userRepository.findByEmailAndPassword(request.email(), request.password());
         if (user == null) {
