@@ -22,7 +22,7 @@ public class StorageServiceImpl implements StorageService {
         try {
             var videoFile = new File("/home/dell/IdeaProjects/video-sharing-api/new_video.mp4");
             file.transferTo(videoFile);
-            var video = client.videos().create(new VideoCreationPayload());
+            var video = client.videos().create(new VideoCreationPayload().title(videoFile.getName()));
             video = client.videos().upload(video.getVideoId(), videoFile);
             Files.delete(videoFile.toPath());
             return VideoDto.builder()
