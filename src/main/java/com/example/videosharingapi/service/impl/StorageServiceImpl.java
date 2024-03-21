@@ -1,7 +1,9 @@
 package com.example.videosharingapi.service.impl;
 
+import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.service.StorageService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import video.api.client.ApiVideoClient;
@@ -30,6 +32,8 @@ public class StorageServiceImpl implements StorageService {
                     .videoUrl(Objects.requireNonNull(video.getAssets().getMp4()).toString())
                     .build();
         } catch (ApiException | IOException e) {
+            if (e instanceof ApiException ex)
+                throw new ApplicationException(HttpStatus.valueOf(ex.getCode()), ex.getMessage());
             throw new RuntimeException(e);
         }
     }

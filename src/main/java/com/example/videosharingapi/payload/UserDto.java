@@ -1,4 +1,6 @@
 package com.example.videosharingapi.payload;
 
-public record UserDto(Long id, String email, String photoUrl, String channelName) {
+import java.util.UUID;
+
+public record UserDto(UUID id, String email, String photoUrl, String channelName) {
 }
