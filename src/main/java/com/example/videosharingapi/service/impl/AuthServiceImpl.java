@@ -26,9 +26,7 @@ public class AuthServiceImpl implements AuthService {
         if (user == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email or password is incorrect!");
         }
-        return new AuthResponse(
-                "Sign in successfully.",
-                new UserDto(user.getId(), user.getEmail(), user.getPhotoUrl(), user.getChannelName()));
+        return new AuthResponse("Sign in successfully.", new UserDto(user.getId(), user.getEmail()));
     }
 
     @Override
@@ -39,11 +37,8 @@ public class AuthServiceImpl implements AuthService {
         var user = User.builder()
                 .email(request.email())
                 .password(request.password())
-                .channelName(request.email())
                 .build();
         var newUser = userRepository.save(user);
-        return new AuthResponse(
-                "Sign up successfully.",
-                new UserDto(newUser.getId(), newUser.getEmail(), newUser.getPhotoUrl(), newUser.getChannelName()));
+        return new AuthResponse("Sign up successfully.", new UserDto(newUser.getId(), newUser.getEmail()));
     }
 }

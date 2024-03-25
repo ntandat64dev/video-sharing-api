@@ -1,37 +1,40 @@
 package com.example.videosharingapi.model.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.Id;
 import lombok.*;
 
-import java.util.List;
+import java.time.LocalDate;
 import java.util.UUID;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 @Entity
-@Table(name = "user")
 public class User extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @GeneratedValue
     private UUID id;
 
-    @Column(name = "email")
+    @Column(nullable = false, unique = true)
     private String email;
 
-    @Column(name = "password")
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "photo_url")
-    private String photoUrl;
+    private LocalDate dateOfBirth;
 
-    @Column(name = "channel_name")
-    private String channelName;
+    @Column(name = "phone", length = 32, unique = true)
+    private String phoneNumber;
 
-    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Video> videos;
+    @Column(columnDefinition = "TINYINT(1)")
+    private Integer gender;
+
+    @Column(length = 64)
+    private String country;
 }

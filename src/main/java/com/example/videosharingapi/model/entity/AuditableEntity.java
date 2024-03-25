@@ -4,7 +4,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;
 import jakarta.persistence.MappedSuperclass;
 import lombok.Getter;
-import lombok.Setter;
 import org.springframework.data.annotation.CreatedBy;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedBy;
@@ -15,24 +14,23 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Getter
-@Setter
 @MappedSuperclass
 @EntityListeners(AuditingEntityListener.class)
 public abstract class AuditableEntity implements Serializable {
 
     @CreatedBy
-    @Column(name = "created_by")
+    @Column(length = 64, nullable = false)
     protected String createdBy;
 
     @CreatedDate
-    @Column(name = "created_date")
+    @Column(nullable = false)
     protected LocalDateTime createdDate;
 
     @LastModifiedBy
-    @Column(name = "modified_by")
+    @Column(length = 64, nullable = false)
     protected String modifiedBy;
 
     @LastModifiedDate
-    @Column(name = "modified_date")
+    @Column(nullable = false)
     protected LocalDateTime modifiedDate;
 }

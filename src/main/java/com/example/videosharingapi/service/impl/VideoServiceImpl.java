@@ -28,8 +28,7 @@ public class VideoServiceImpl implements VideoService {
     public List<VideoDto> getAllVideos() {
         return videoRepository.findAll()
                 .stream().map(video -> new VideoDto(video.getId(), video.getTitle(), video.getDescription(), video.getThumbnailUrl(),
-                        video.getVideoUrl(), new UserDto(video.getUser().getId(), video.getUser().getEmail(),
-                        video.getUser().getPhotoUrl(), video.getUser().getChannelName())))
+                        video.getVideoUrl(), new UserDto(video.getUser().getId(), video.getUser().getEmail())))
                 .collect(Collectors.toList());
     }
 
@@ -45,7 +44,7 @@ public class VideoServiceImpl implements VideoService {
         var savedVideo = videoRepository.save(video);
         var userPref = userRepository.getReferenceById(savedVideo.getUser().getId());
         videoDto.setId(savedVideo.getId());
-        videoDto.setUser(new UserDto(userPref.getId(), userPref.getEmail(), userPref.getPhotoUrl(), userPref.getChannelName()));
+        videoDto.setUser(new UserDto(userPref.getId(), userPref.getEmail()));
         return videoDto;
     }
 }

@@ -3,35 +3,51 @@ package com.example.videosharingapi.model.entity;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.time.LocalDateTime;
+import java.util.Set;
 import java.util.UUID;
 
-@Data
-@EqualsAndHashCode(callSuper = true)
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
+@Getter
+@Setter
 @Entity
-@Table(name = "video")
 public class Video extends AuditableEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(name = "id")
+    @GeneratedValue
     private UUID id;
 
-    @Column(name = "title")
+    @Column(nullable = false)
     private String title;
 
-    @Column(name = "description")
+    @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(name = "thumbnail_url")
+    @Column(nullable = false, unique = true)
     private String thumbnailUrl;
 
-    @Column(name = "video_url")
+    @Column(nullable = false, unique = true)
     private String videoUrl;
 
+    @Column(nullable = false)
+    private Integer durationSec;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime uploadDate;
+
+    @OneToMany(mappedBy = "video")
+    private Set<VideoTag> videoTags;
+
+    @OneToOne(mappedBy = "video", fetch = FetchType.LAZY)
+    private VideoSpec videoSpec;
+
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Visibility visibility;
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(nullable = false)
     private User user;
 }
