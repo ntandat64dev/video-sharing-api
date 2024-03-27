@@ -36,6 +36,9 @@ dependencies {
     // MySQL driver
     runtimeOnly 'com.mysql:mysql-connector-j'
 
+    // H2 Database
+    runtimeOnly 'com.h2database:h2'
+
     // Lombok
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'

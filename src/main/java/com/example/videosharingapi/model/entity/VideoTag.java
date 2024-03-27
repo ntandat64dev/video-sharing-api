@@ -16,13 +16,13 @@ public class VideoTag extends AuditableEntity {
 
     @Getter
     @Embeddable
-    public static class VideoTagKey implements Serializable {
+    public static class VideoTagId implements Serializable {
         private UUID videoId;
         private UUID tagId;
     }
 
     @EmbeddedId
-    private VideoTagKey id = new VideoTagKey();
+    private VideoTagId id = new VideoTagId();
 
     @ManyToOne
     @MapsId("videoId")

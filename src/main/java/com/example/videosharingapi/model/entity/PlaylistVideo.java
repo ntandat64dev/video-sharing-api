@@ -17,13 +17,13 @@ public class PlaylistVideo extends AuditableEntity {
 
     @Getter
     @Embeddable
-    public static class PlaylistVideoKey implements Serializable {
+    public static class PlaylistVideoId implements Serializable {
         private UUID playlistId;
         private UUID videoId;
     }
 
     @EmbeddedId
-    private PlaylistVideoKey id = new PlaylistVideoKey();
+    private PlaylistVideoId id = new PlaylistVideoId();
 
     @Column(columnDefinition = "SMALLINT", nullable = false)
     private Integer priority;

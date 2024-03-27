@@ -17,13 +17,13 @@ public class VideoLike extends AuditableEntity {
 
     @Getter
     @Embeddable
-    public static class VideoLikeKey implements Serializable {
+    public static class VideoLikeId implements Serializable {
         private UUID id;
         private UUID userId;
     }
 
     @EmbeddedId
-    private VideoLikeKey id = new VideoLikeKey();
+    private VideoLikeId id = new VideoLikeId();
 
     @Column(columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
     private Integer isLike;

@@ -15,13 +15,13 @@ public class CommentLike extends AuditableEntity {
 
     @Getter
     @Embeddable
-    public static class CommentLikeKey implements Serializable {
+    public static class CommentLikeId implements Serializable {
         private UUID id;
         private UUID userId;
     }
 
     @EmbeddedId
-    private CommentLikeKey commentLikeKey = new CommentLikeKey();
+    private CommentLikeId commentLikeId = new CommentLikeId();
 
     @Column(columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
     private Integer isLike;
