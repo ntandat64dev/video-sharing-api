@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ChannelRepository extends JpaRepository<Channel, UUID> {
+    Channel findByUserId(UUID userId);
 }

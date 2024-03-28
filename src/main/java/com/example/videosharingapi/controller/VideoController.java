@@ -3,6 +3,7 @@ package com.example.videosharingapi.controller;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,11 @@ public class VideoController {
 
     @PostMapping(value = "/videos")
     public ResponseEntity<VideoDto> uploadVideo(@RequestParam MultipartFile videoFile,
-                                                @RequestPart VideoDto metadata) {
+                                                @RequestPart @Valid VideoDto metadata) {
         var storedVideo = storageService.store(videoFile);
         metadata.setThumbnailUrl(storedVideo.getThumbnailUrl());
         metadata.setVideoUrl(storedVideo.getVideoUrl());
+        metadata.setDurationSec(storedVideo.getDurationSec());
         var videoDto = videoService.save(metadata);
         return new ResponseEntity<>(videoDto, HttpStatus.CREATED);
     }

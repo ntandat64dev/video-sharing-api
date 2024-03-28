@@ -25,10 +25,10 @@ public class Video extends AuditableEntity {
     @Column(columnDefinition = "TEXT")
     private String description;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String thumbnailUrl;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false)
     private String videoUrl;
 
     @Column(nullable = false)

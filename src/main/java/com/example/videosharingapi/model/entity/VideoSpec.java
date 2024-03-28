@@ -1,9 +1,6 @@
 package com.example.videosharingapi.model.entity;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.MapsId;
-import jakarta.persistence.OneToOne;
+import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -19,15 +16,20 @@ public class VideoSpec extends AuditableEntity {
     @Id
     private UUID id;
 
-    private Long viewCount;
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long viewCount = 0L;
 
-    private Long likeCount;
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long likeCount = 0L;
 
-    private Long dislikeCount;
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long dislikeCount = 0L;
 
-    private Long commentCount;
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long commentCount = 0L;
 
-    private Long downloadCount;
+    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    private Long downloadCount = 0L;
 
     @OneToOne
     @MapsId

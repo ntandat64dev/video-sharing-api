@@ -3,8 +3,10 @@ package com.example.videosharingapi.service.impl;
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.service.StorageService;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import video.api.client.ApiVideoClient;
 import video.api.client.api.ApiException;
@@ -16,6 +18,8 @@ import java.nio.file.Files;
 import java.util.Objects;
 
 @Service
+@Transactional
+@Profile("prod")
 public class StorageServiceImpl implements StorageService {
 
     @Override

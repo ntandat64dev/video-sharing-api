@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface VisibilityRepository extends JpaRepository<Visibility, UUID> {
+    Visibility findByLevel(Visibility.VisibilityLevel level);
 }
