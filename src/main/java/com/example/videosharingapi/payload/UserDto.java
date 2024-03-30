@@ -7,15 +7,15 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 public record UserDto(
-        @NotBlank(message = "User ID is required")
+        @NotBlank(message = "{validation.user.id.required}")
         UUID id,
-        @NotBlank(message = "User email is required")
+        @NotBlank(message = "{validation.user.email.required}")
         String email,
         LocalDate dateOfBirth,
         String phoneNumber,
         Integer gender,
         String country,
-        @NotNull(message = "User's channel is required")
+        @NotNull(message = "{validation.user.channel.required}")
         ChannelDto channel
 ) {
 }

@@ -40,7 +40,7 @@ public class AuthControllerTest {
                         .content("{\"email\": \"user@gmail.com\", \"password\": \"11111111\"}")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("Email or password is incorrect!")));
+                .andExpect(content().string(containsString("Email or password is incorrect.")));
 
         // Given invalid email format.
         mockMvc.perform(post("/api/auth/login")
@@ -73,7 +73,7 @@ public class AuthControllerTest {
                         .content("{\"email\": \"user@gmail.com\", \"password\": \"00000000\"}")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("Email is already exists!")));
+                .andExpect(content().string(containsString("Email is already exists.")));
 
         // Given invalid email format.
         mockMvc.perform(post("/api/auth/signup")

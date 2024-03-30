@@ -5,6 +5,8 @@ import com.example.videosharingapi.model.entity.*;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.repository.*;
 import com.example.videosharingapi.service.VideoService;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,14 +27,18 @@ public class VideoServiceImpl implements VideoService {
     private final VideoTagRepository videoTagRepository;
     private final VisibilityRepository visibilityRepository;
 
+    private final MessageSource messageSource;
+
     public VideoServiceImpl(VideoRepository videoRepository, VideoSpecRepository videoSpecRepository, UserRepository userRepository,
-                            TagRepository tagRepository, VideoTagRepository videoTagRepository, VisibilityRepository visibilityRepository) {
+                            TagRepository tagRepository, VideoTagRepository videoTagRepository, VisibilityRepository visibilityRepository,
+                            MessageSource messageSource) {
         this.videoRepository = videoRepository;
         this.videoSpecRepository = videoSpecRepository;
         this.userRepository = userRepository;
         this.tagRepository = tagRepository;
         this.videoTagRepository = videoTagRepository;
         this.visibilityRepository = visibilityRepository;
+        this.messageSource = messageSource;
     }
 
     @Override
@@ -49,7 +55,9 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public VideoDto save(VideoDto videoDto) {
         if (!userRepository.existsById(videoDto.getUserId()))
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "User ID %s is not exist.".formatted(videoDto.getUserId()));
+            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                    messageSource.getMessage("exception.user.id.not-exist",
+                            new Object[] { videoDto.getUserId() }, LocaleContextHolder.getLocale()));
 
         var visibilityLevel = Visibility.VisibilityLevel.valueOf(videoDto.getVisibility().toUpperCase());
         var visibility = visibilityRepository.findByLevel(visibilityLevel);
