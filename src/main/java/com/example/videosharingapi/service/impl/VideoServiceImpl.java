@@ -1,9 +1,11 @@
 package com.example.videosharingapi.service.impl;
 
+import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.*;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.repository.*;
 import com.example.videosharingapi.service.VideoService;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,6 +48,9 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public VideoDto save(VideoDto videoDto) {
+        if (!userRepository.existsById(videoDto.getUserId()))
+            throw new ApplicationException(HttpStatus.BAD_REQUEST, "User ID %s is not exist.".formatted(videoDto.getUserId()));
+
         var visibilityLevel = Visibility.VisibilityLevel.valueOf(videoDto.getVisibility().toUpperCase());
         var visibility = visibilityRepository.findByLevel(visibilityLevel);
         var video = Video.builder()
@@ -58,28 +63,27 @@ public class VideoServiceImpl implements VideoService {
                 .visibility(visibility)
                 .user(User.builder().id(videoDto.getUserId()).build())
                 .build();
-        var user = userRepository.getReferenceById(video.getUser().getId());
-        video.setUser(user);
         var savedVideo = videoRepository.save(video);
 
         var videoSpec = new VideoSpec();
         videoSpec.setVideo(video);
         videoSpecRepository.save(videoSpec);
 
-        var videoTags = new ArrayList<VideoTag>();
-        videoDto.getTags().forEach(tagString -> {
-            var tag = new Tag();
-            tag.setTag(tagString);
-            var savedTag = tagRepository.saveIfNotExist(tag);
-            var videoTag = new VideoTag();
-            videoTag.setTag(savedTag);
-            videoTag.setVideo(video);
-            videoTags.add(videoTag);
-        });
-        videoTagRepository.saveAll(videoTags);
+        if (videoDto.getTags() != null) {
+            var videoTags = new ArrayList<VideoTag>();
+            videoDto.getTags().forEach(tagString -> {
+                var tag = new Tag();
+                tag.setTag(tagString);
+                var savedTag = tagRepository.saveIfNotExist(tag);
+                var videoTag = new VideoTag();
+                videoTag.setTag(savedTag);
+                videoTag.setVideo(video);
+                videoTags.add(videoTag);
+            });
+            videoTagRepository.saveAll(videoTags);
+        }
 
         videoDto.setId(savedVideo.getId());
-        videoDto.setUserId(user.getId());
         videoDto.setUploadDate(savedVideo.getUploadDate());
         return videoDto;
     }

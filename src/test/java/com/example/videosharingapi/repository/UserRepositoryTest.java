@@ -15,8 +15,8 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-@ActiveProfiles("test")
 @DataJpaTest
+@ActiveProfiles("test")
 @Import(AuditingConfig.class)
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UserRepositoryTest {
@@ -116,7 +116,7 @@ public class UserRepositoryTest {
     }
 
     @Test
-    public void givenUserObject_wenUpdateAndFindById_thenReturnUpdatedUser() {
+    public void givenUserObject_whenUpdateAndFindById_thenReturnUpdatedUser() {
         var user = User.builder()
                 .email("user@gmail.com")
                 .password("00000000")

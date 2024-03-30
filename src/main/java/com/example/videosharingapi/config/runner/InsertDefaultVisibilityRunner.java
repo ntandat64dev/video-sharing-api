@@ -28,12 +28,3 @@ public class InsertDefaultVisibilityRunner implements ApplicationRunner {
         }
     }
 }
-
-/*
- git commit -m "Add more information to DTO objects and update services" -m "- Update UserDto, VideoDto and create ChannelDto
-> - Create FakeStorageService for testing and replace StorageServiceImpl as 'dev' profile
-> - Make StorageServiceImpl as 'prod' profile
-> - Add config.runner.InsertDefaultVisibilityRunner runner to create default visibility levels (PRIVATE and PUBLIC) on initializing database
-> - Create resources/static folder for serving default resources
-
- */

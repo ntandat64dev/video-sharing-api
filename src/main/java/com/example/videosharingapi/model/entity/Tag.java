@@ -9,6 +9,7 @@ import lombok.*;
 import java.util.UUID;
 
 @NoArgsConstructor
+@RequiredArgsConstructor
 @Getter
 @Setter
 @Entity
@@ -19,5 +20,6 @@ public class Tag extends AuditableEntity {
     private UUID id;
 
     @Column(length = 64, nullable = false, unique = true)
+    @NonNull
     private String tag;
 }

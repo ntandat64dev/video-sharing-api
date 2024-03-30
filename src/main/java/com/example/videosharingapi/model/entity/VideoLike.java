@@ -1,6 +1,7 @@
 package com.example.videosharingapi.model.entity;
 
 import jakarta.persistence.*;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -16,6 +17,7 @@ import java.util.UUID;
 public class VideoLike extends AuditableEntity {
 
     @Getter
+    @EqualsAndHashCode
     @Embeddable
     public static class VideoLikeId implements Serializable {
         private UUID id;

@@ -40,7 +40,7 @@ public class Video extends AuditableEntity {
     @OneToMany(mappedBy = "video")
     private Set<VideoTag> videoTags;
 
-    @OneToOne(mappedBy = "video", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "video", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private VideoSpec videoSpec;
 
     @ManyToOne

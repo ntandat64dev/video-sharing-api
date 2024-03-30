@@ -14,6 +14,7 @@ import java.util.UUID;
 public class CommentLike extends AuditableEntity {
 
     @Getter
+    @EqualsAndHashCode
     @Embeddable
     public static class CommentLikeId implements Serializable {
         private UUID id;

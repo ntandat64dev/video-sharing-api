@@ -2,6 +2,7 @@ package com.example.videosharingapi.payload;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -26,6 +27,7 @@ public final class VideoDto {
     private LocalDateTime uploadDate;
     private Set<String> tags;
     @NotBlank(message = "Visibility is required")
+    @Pattern(regexp = "(?i)(private|public)", message = "Visibility must either 'private' or 'public'.")
     private String visibility;
     @NotNull(message = "User ID is required")
     private UUID userId;
