@@ -17,8 +17,8 @@ public class InsertDataExtension implements BeforeAllCallback, AfterAllCallback 
 
         var userRepository = SpringExtension.getApplicationContext(context).getBean(UserRepository.class);
         var videoRepository = SpringExtension.getApplicationContext(context).getBean(VideoRepository.class);
-        var videoTagRepository = SpringExtension.getApplicationContext(context).getBean(VideoTagRepository.class);
-        var tagRepository = SpringExtension.getApplicationContext(context).getBean(TagRepository.class);
+        var videoHashtagRepository = SpringExtension.getApplicationContext(context).getBean(VideoHashtagRepository.class);
+        var hashtagRepository = SpringExtension.getApplicationContext(context).getBean(HashtagRepository.class);
         var channelRepository = SpringExtension.getApplicationContext(context).getBean(ChannelRepository.class);
         var visibilityRepository = SpringExtension.getApplicationContext(context).getBean(VisibilityRepository.class);
 
@@ -48,10 +48,15 @@ public class InsertDataExtension implements BeforeAllCallback, AfterAllCallback 
                 .thumbnailUrl("Video 1 thumbnail URL")
                 .videoUrl("Video 1 video URL")
                 .durationSec(1000)
-                .uploadDate(LocalDateTime.now())
+                .uploadDate(LocalDateTime.parse("2024-04-01T09:00:00"))
                 .visibility(visibilityPrivate)
+                .isCommentAllowed(true)
+                .isMadeForKids(false)
+                .isAgeRestricted(false)
+                .location("United State")
                 .user(user)
                 .build();
+        video1.setVideoSpec(new VideoSpec());
         videoRepository.save(video1);
         var video2 = Video.builder()
                 .title("Video 2")
@@ -59,17 +64,22 @@ public class InsertDataExtension implements BeforeAllCallback, AfterAllCallback 
                 .thumbnailUrl("Video 2 thumbnail URL")
                 .videoUrl("Video 2 video URL")
                 .durationSec(2000)
-                .uploadDate(LocalDateTime.now())
+                .uploadDate(LocalDateTime.parse("2024-04-05T09:00:00"))
                 .visibility(visibilityPublic)
+                .isCommentAllowed(true)
+                .isMadeForKids(false)
+                .isAgeRestricted(false)
+                .location("Vietnam")
                 .user(user)
                 .build();
+        video2.setVideoSpec(new VideoSpec());
         videoRepository.save(video2);
-        var tag = new Tag("music");
-        tagRepository.save(tag);
-        var videoTag = new VideoTag();
-        videoTag.setVideo(video2);
-        videoTag.setTag(tag);
-        videoTagRepository.save(videoTag);
+        var hashtag = new Hashtag("music");
+        hashtagRepository.save(hashtag);
+        var videoHashtag = new VideoHashtag();
+        videoHashtag.setVideo(video2);
+        videoHashtag.setHashtag(hashtag);
+        videoHashtagRepository.save(videoHashtag);
     }
 
     @Override
@@ -80,15 +90,15 @@ public class InsertDataExtension implements BeforeAllCallback, AfterAllCallback 
     protected void cleanUpDatabase(ExtensionContext context) {
         var userRepository = SpringExtension.getApplicationContext(context).getBean(UserRepository.class);
         var videoRepository = SpringExtension.getApplicationContext(context).getBean(VideoRepository.class);
-        var tagRepository = SpringExtension.getApplicationContext(context).getBean(TagRepository.class);
-        var videoTagRepository = SpringExtension.getApplicationContext(context).getBean(VideoTagRepository.class);
+        var hashtagRepository = SpringExtension.getApplicationContext(context).getBean(HashtagRepository.class);
+        var videoHashtagRepository = SpringExtension.getApplicationContext(context).getBean(VideoHashtagRepository.class);
         var channelRepository = SpringExtension.getApplicationContext(context).getBean(ChannelRepository.class);
         var visibilityRepository = SpringExtension.getApplicationContext(context).getBean(VisibilityRepository.class);
         var videoSpecRepository = SpringExtension.getApplicationContext(context).getBean(VideoSpecRepository.class);
 
         videoSpecRepository.deleteAll();
-        videoTagRepository.deleteAll();
-        tagRepository.deleteAll();
+        videoHashtagRepository.deleteAll();
+        hashtagRepository.deleteAll();
         videoRepository.deleteAll();
         visibilityRepository.deleteAll();
         channelRepository.deleteAll();

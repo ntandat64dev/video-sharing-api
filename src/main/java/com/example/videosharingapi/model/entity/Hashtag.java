@@ -13,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-public class Tag extends AuditableEntity {
+public class Hashtag extends AuditableEntity {
 
     @Id
     @GeneratedValue

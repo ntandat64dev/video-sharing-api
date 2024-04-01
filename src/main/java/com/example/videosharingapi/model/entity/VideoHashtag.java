@@ -13,14 +13,14 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-public class VideoTag extends AuditableEntity {
+public class VideoHashtag extends AuditableEntity {
 
     @Getter
     @EqualsAndHashCode
     @Embeddable
     public static class VideoTagId implements Serializable {
         private UUID videoId;
-        private UUID tagId;
+        private UUID hashtagId;
     }
 
     @EmbeddedId
@@ -31,6 +31,6 @@ public class VideoTag extends AuditableEntity {
     private Video video;
 
     @ManyToOne
-    @MapsId("tagId")
-    private Tag tag;
+    @MapsId("hashtagId")
+    private Hashtag hashtag;
 }

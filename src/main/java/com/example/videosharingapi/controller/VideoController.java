@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
@@ -20,6 +21,12 @@ public class VideoController {
     public VideoController(VideoService videoService, StorageService storageService) {
         this.videoService = videoService;
         this.storageService = storageService;
+    }
+
+    @GetMapping("/videos/{userId}")
+    public ResponseEntity<List<VideoDto>> getRecommendVideos(@PathVariable UUID userId) {
+        var response = videoService.getRecommendVideos(userId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/videos")

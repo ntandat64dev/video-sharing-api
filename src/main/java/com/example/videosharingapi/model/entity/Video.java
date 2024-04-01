@@ -2,6 +2,7 @@ package com.example.videosharingapi.model.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.Check;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -13,6 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
+@Check(constraints = "(for_kids = 1 AND age_restricted = 0) OR for_kids = 0")
 public class Video extends AuditableEntity {
 
     @Id
@@ -37,10 +39,21 @@ public class Video extends AuditableEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime uploadDate;
 
-    @OneToMany(mappedBy = "video")
-    private Set<VideoTag> videoTags;
+    @Column(name = "for_kids", nullable = false)
+    private Boolean isMadeForKids;
 
-    @OneToOne(mappedBy = "video", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @Column(name = "age_restricted", nullable = false)
+    private Boolean isAgeRestricted;
+
+    @Column(name = "comment_allowed", nullable = false)
+    private Boolean isCommentAllowed;
+
+    private String location;
+
+    @OneToMany(mappedBy = "video")
+    private Set<VideoHashtag> videoHashtags;
+
+    @OneToOne(mappedBy = "video", cascade = CascadeType.ALL)
     private VideoSpec videoSpec;
 
     @ManyToOne
@@ -50,4 +63,9 @@ public class Video extends AuditableEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private User user;
+
+    public void setVideoSpec(VideoSpec videoSpec) {
+        videoSpec.setVideo(this);
+        this.videoSpec = videoSpec;
+    }
 }

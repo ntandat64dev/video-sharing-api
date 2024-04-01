@@ -1,9 +1,15 @@
 package com.example.videosharingapi.service.impl;
 
+import com.example.videosharingapi.config.mapper.VideoVideoDtoMapper;
 import com.example.videosharingapi.exception.ApplicationException;
-import com.example.videosharingapi.model.entity.*;
+import com.example.videosharingapi.model.entity.Hashtag;
+import com.example.videosharingapi.model.entity.Video;
+import com.example.videosharingapi.model.entity.VideoHashtag;
 import com.example.videosharingapi.payload.VideoDto;
-import com.example.videosharingapi.repository.*;
+import com.example.videosharingapi.repository.HashtagRepository;
+import com.example.videosharingapi.repository.UserRepository;
+import com.example.videosharingapi.repository.VideoHashtagRepository;
+import com.example.videosharingapi.repository.VideoRepository;
 import com.example.videosharingapi.service.VideoService;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
@@ -11,44 +17,47 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
+import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
 public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
-    private final VideoSpecRepository videoSpecRepository;
     private final UserRepository userRepository;
-    private final TagRepository tagRepository;
-    private final VideoTagRepository videoTagRepository;
-    private final VisibilityRepository visibilityRepository;
+    private final HashtagRepository hashtagRepository;
+    private final VideoHashtagRepository videoHashtagRepository;
 
     private final MessageSource messageSource;
+    private final VideoVideoDtoMapper videoVideoDtoMapper;
 
-    public VideoServiceImpl(VideoRepository videoRepository, VideoSpecRepository videoSpecRepository, UserRepository userRepository,
-                            TagRepository tagRepository, VideoTagRepository videoTagRepository, VisibilityRepository visibilityRepository,
-                            MessageSource messageSource) {
+    public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository,
+                            HashtagRepository hashtagRepository, VideoHashtagRepository videoHashtagRepository,
+                            MessageSource messageSource, VideoVideoDtoMapper videoVideoDtoMapper) {
         this.videoRepository = videoRepository;
-        this.videoSpecRepository = videoSpecRepository;
         this.userRepository = userRepository;
-        this.tagRepository = tagRepository;
-        this.videoTagRepository = videoTagRepository;
-        this.visibilityRepository = visibilityRepository;
+        this.hashtagRepository = hashtagRepository;
+        this.videoHashtagRepository = videoHashtagRepository;
         this.messageSource = messageSource;
+        this.videoVideoDtoMapper = videoVideoDtoMapper;
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<VideoDto> getAllVideos() {
-        return videoRepository.findAll()
-                .stream().map(video -> new VideoDto(video.getId(), video.getTitle(), video.getDescription(), video.getThumbnailUrl(),
-                        video.getVideoUrl(), video.getDurationSec(), video.getUploadDate(), video.getVideoTags().stream().map(videoTag ->
-                        videoTag.getTag().getTag()).collect(Collectors.toSet()),
-                        video.getVisibility().getLevel().toString().toLowerCase(Locale.US), video.getUser().getId()))
+        return videoRepository.findAll().stream()
+                .map(videoVideoDtoMapper::videoToVideoDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VideoDto> getRecommendVideos(UUID userId) {
+        // TODO: Get actual recommend videos
+        return videoRepository.findAllByUserId(userId).stream()
+                .map(videoVideoDtoMapper::videoToVideoDto)
                 .collect(Collectors.toList());
     }
 
@@ -59,40 +68,26 @@ public class VideoServiceImpl implements VideoService {
                     messageSource.getMessage("exception.user.id.not-exist",
                             new Object[] { videoDto.getUserId() }, LocaleContextHolder.getLocale()));
 
-        var visibilityLevel = Visibility.VisibilityLevel.valueOf(videoDto.getVisibility().toUpperCase());
-        var visibility = visibilityRepository.findByLevel(visibilityLevel);
-        var video = Video.builder()
-                .title(videoDto.getTitle())
-                .description(videoDto.getDescription())
-                .thumbnailUrl(videoDto.getThumbnailUrl())
-                .videoUrl(videoDto.getVideoUrl())
-                .durationSec(videoDto.getDurationSec())
-                .uploadDate(LocalDateTime.now())
-                .visibility(visibility)
-                .user(User.builder().id(videoDto.getUserId()).build())
-                .build();
-        var savedVideo = videoRepository.save(video);
-
-        var videoSpec = new VideoSpec();
-        videoSpec.setVideo(video);
-        videoSpecRepository.save(videoSpec);
-
-        if (videoDto.getTags() != null) {
-            var videoTags = new ArrayList<VideoTag>();
-            videoDto.getTags().forEach(tagString -> {
-                var tag = new Tag();
-                tag.setTag(tagString);
-                var savedTag = tagRepository.saveIfNotExist(tag);
-                var videoTag = new VideoTag();
-                videoTag.setTag(savedTag);
-                videoTag.setVideo(video);
-                videoTags.add(videoTag);
-            });
-            videoTagRepository.saveAll(videoTags);
-        }
-
-        videoDto.setId(savedVideo.getId());
-        videoDto.setUploadDate(savedVideo.getUploadDate());
+        var video = videoRepository.save(videoVideoDtoMapper.videoDtoToVideo(videoDto));
+        saveHashtag(videoDto.getHashtags(), video);
+        videoDto.setId(video.getId());
+        videoDto.setUploadDate(video.getUploadDate());
         return videoDto;
+    }
+
+    private void saveHashtag(Set<String> hashtags, Video video) {
+        if (hashtags != null) {
+            var videoTags = new ArrayList<VideoHashtag>();
+            hashtags.forEach(tagString -> {
+                var hashtag = new Hashtag();
+                hashtag.setTag(tagString);
+                var savedHashtag = hashtagRepository.saveIfNotExist(hashtag);
+                var videoHashtag = new VideoHashtag();
+                videoHashtag.setHashtag(savedHashtag);
+                videoHashtag.setVideo(video);
+                videoTags.add(videoHashtag);
+            });
+            videoHashtagRepository.saveAll(videoTags);
+        }
     }
 }

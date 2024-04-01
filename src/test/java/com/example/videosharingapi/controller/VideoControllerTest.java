@@ -48,6 +48,9 @@ public class VideoControllerTest {
                     "title": "Video 3",
                     "description": "Video 3 description",
                     "visibility": "private",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false,
                     "userId": "%s"
                 }""".formatted(user.getId()).getBytes());
         mockMvc.perform(multipart("/api/videos")
@@ -66,6 +69,9 @@ public class VideoControllerTest {
                     "title": "Video 3",
                     "description": "Video 3 description",
                     "visibility": "private",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false,
                     "userId": "%s"
                 }""".formatted(randomUserId).getBytes());
         mockMvc.perform(multipart("/api/videos")
@@ -85,6 +91,9 @@ public class VideoControllerTest {
                     "title": "Video 3",
                     "description": "Video 3 description",
                     "visibility": "private",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false,
                     "userId": "%s"
                 }""";
         var metadata = new MockMultipartFile("metadata", null, "application/json",
@@ -99,6 +108,9 @@ public class VideoControllerTest {
                 {
                     "description": "Video 3 description",
                     "visibility": "private",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false,
                     "userId": "%s"
                 }""";
         metadata = new MockMultipartFile("metadata", null, "application/json",
@@ -115,6 +127,9 @@ public class VideoControllerTest {
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false,
                     "userId": "%s"
                 }""";
         metadata = new MockMultipartFile("metadata", null, "application/json",
@@ -130,7 +145,10 @@ public class VideoControllerTest {
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
-                    "visibility": "private"
+                    "visibility": "private",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false
                 }""";
         metadata = new MockMultipartFile("metadata", null, "application/json", json.getBytes());
         mockMvc.perform(multipart("/api/videos")
@@ -149,6 +167,9 @@ public class VideoControllerTest {
                     "title": "Video 3",
                     "description": "Video 3 description",
                     "visibility": "privates",
+                    "isCommentAllowed": true,
+                    "isMadeForKids": false,
+                    "isAgeRestricted": false,
                     "userId": "%s"
                 }""".formatted(user.getId()).getBytes());
         mockMvc.perform(multipart("/api/videos")
