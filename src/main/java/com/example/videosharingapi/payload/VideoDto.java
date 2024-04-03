@@ -39,4 +39,5 @@ public final class VideoDto {
     @NotNull(message = "{validation.video.user-id.required}")
     private UUID userId;
     private VideoSpecDto spec;
+    private ChannelDto channel;
 }

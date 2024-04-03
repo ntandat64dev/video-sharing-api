@@ -8,4 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface ViewHistoryRepository extends JpaRepository<ViewHistory, UUID> {
+    long countByVideoId(UUID videoId);
 }

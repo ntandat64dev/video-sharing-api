@@ -17,6 +17,11 @@ import java.util.UUID;
 @Entity
 public class User extends AuditableEntity {
 
+    public User(String email, String password) {
+        this.email = email;
+        this.password = password;
+    }
+
     @Id
     @GeneratedValue
     private UUID id;

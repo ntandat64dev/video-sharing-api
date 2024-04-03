@@ -17,6 +17,7 @@ public class CommentLike extends AuditableEntity {
     @EqualsAndHashCode
     @Embeddable
     public static class CommentLikeId implements Serializable {
+        @GeneratedValue
         private UUID id;
         private UUID userId;
     }
@@ -24,8 +25,8 @@ public class CommentLike extends AuditableEntity {
     @EmbeddedId
     private CommentLikeId commentLikeId = new CommentLikeId();
 
-    @Column(columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
-    private Integer isLike;
+    @Column(nullable = false)
+    private Boolean isLike;
 
     @Column(nullable = false)
     private LocalDateTime likedAt;

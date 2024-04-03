@@ -20,6 +20,7 @@ public class VideoLike extends AuditableEntity {
     @EqualsAndHashCode
     @Embeddable
     public static class VideoLikeId implements Serializable {
+        @GeneratedValue
         private UUID id;
         private UUID userId;
     }
@@ -27,8 +28,8 @@ public class VideoLike extends AuditableEntity {
     @EmbeddedId
     private VideoLikeId id = new VideoLikeId();
 
-    @Column(columnDefinition = "TINYINT(1) DEFAULT 0", nullable = false)
-    private Integer isLike;
+    @Column(nullable = false)
+    private Boolean isLike;
 
     @Column(nullable = false)
     private LocalDateTime likedAt;

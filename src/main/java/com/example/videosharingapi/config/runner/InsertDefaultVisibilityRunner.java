@@ -17,14 +17,10 @@ public class InsertDefaultVisibilityRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         if (visibilityRepository.findByLevel(Visibility.VisibilityLevel.PUBLIC) == null) {
-            var visibilityPublic = new Visibility();
-            visibilityPublic.setLevel(Visibility.VisibilityLevel.PUBLIC);
-            visibilityRepository.save(visibilityPublic);
+            visibilityRepository.save(new Visibility(Visibility.VisibilityLevel.PUBLIC));
         }
         if (visibilityRepository.findByLevel(Visibility.VisibilityLevel.PRIVATE) == null) {
-            var visibilityPrivate = new Visibility();
-            visibilityPrivate.setLevel(Visibility.VisibilityLevel.PRIVATE);
-            visibilityRepository.save(visibilityPrivate);
+            visibilityRepository.save(new Visibility(Visibility.VisibilityLevel.PRIVATE));
         }
     }
 }

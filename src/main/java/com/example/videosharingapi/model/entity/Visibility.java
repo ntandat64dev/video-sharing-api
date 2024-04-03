@@ -17,6 +17,10 @@ public class Visibility extends AuditableEntity {
         PUBLIC, PRIVATE
     }
 
+    public Visibility(VisibilityLevel visibilityLevel) {
+        this.level = visibilityLevel;
+    }
+
     @Id
     @GeneratedValue
     private UUID id;
