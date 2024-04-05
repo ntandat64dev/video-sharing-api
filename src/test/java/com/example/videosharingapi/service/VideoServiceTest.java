@@ -1,72 +1,90 @@
 package com.example.videosharingapi.service;
 
+import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.payload.VideoDto;
-import com.example.videosharingapi.repository.UserRepository;
-import com.example.videosharingapi.repository.VideoRepository;
-import com.example.videosharingapi.repository.VideoSpecRepository;
-import com.example.videosharingapi.testutil.InsertDataExtension;
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
+import com.example.videosharingapi.repository.*;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
-@ActiveProfiles({ "dev", "test" })
-@ExtendWith(InsertDataExtension.class)
+@ActiveProfiles("test")
+@Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/clean-up.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@TestMethodOrder(MethodOrderer.OrderAnnotation.class)
 public class VideoServiceTest {
 
-    @Autowired
-    private UserRepository userRepository;
+    private @Autowired UserRepository userRepository;
+    private @Autowired VideoSpecRepository videoSpecRepository;
+    private @Autowired VideoRepository videoRepository;
+    private @Autowired CommentRepository commentRepository;
+    private @Autowired CommentLikeRepository commentLikeRepository;
+    private @Autowired VideoService videoService;
 
-    @Autowired
-    private VideoSpecRepository videoSpecRepository;
+    private User user;
 
-    @Autowired
-    private VideoRepository videoRepository;
+    @BeforeEach
+    public void setupUser() {
+        user = userRepository.findByEmail("user@gmail.com");
+    }
 
-    @Autowired
-    private VideoService videoService;
-
-    @Test
-    public void whenGetAllVideos_thenReturnAllVideos() {
-        var videos = videoService.getAllVideos();
-        assertThat(videos).hasSize(2);
+    private VideoDto.VideoDtoBuilder createVideoDtoBuilder() {
+        return VideoDto.builder()
+                .title("Video title")
+                .description("Video description")
+                .durationSec(1000)
+                .uploadDate(LocalDateTime.now())
+                .thumbnailUrl("Video thumbnail URL")
+                .videoUrl("Video thumbnail URL")
+                .hashtags(Set.of("music", "pop"))
+                .userId(user.getId())
+                .visibility("private")
+                .isCommentAllowed(true)
+                .isMadeForKids(false)
+                .isAgeRestricted(false);
     }
 
     @Test
+    @Order(1)
+    public void givenVideoService_whenGetAllVideos_thenReturnAllVideos() {
+        var videos = videoService.getAllVideos();
+        assertThat(videos).hasSize(3);
+    }
+
+    @Test
+    @Order(2)
     public void givenUserId_whenGetVideosByUserId_thenReturnFoundVideos() {
-        var userId = userRepository.findByEmail("user@gmail.com").getId();
-        var foundVideos = videoService.getRecommendVideos(userId);
+        var foundVideos = videoService.getRecommendVideos(user.getId());
         assertThat(foundVideos).hasSize(2);
     }
 
     @Test
-    public void whenGetAVideo_thenCheckInfo() {
-        var userId = userRepository.findByEmail("user@gmail.com").getId();
+    public void givenVideoService_whenGetVideo_thenReturnExpectedVideo() {
         Optional<VideoDto> video = videoService.getAllVideos().stream().filter(videoDto -> videoDto.getTitle().equals("Video 2")).findFirst();
         assertThat(video).isPresent();
-
         assertThat(video.get().getTitle()).isEqualTo("Video 2");
         assertThat(video.get().getDescription()).isEqualTo("Video 2 description");
         assertThat(video.get().getThumbnailUrl()).isEqualTo("Video 2 thumbnail URL");
         assertThat(video.get().getVideoUrl()).isEqualTo("Video 2 video URL");
         assertThat(video.get().getDurationSec()).isEqualTo(2000);
-        assertThat(video.get().getUploadDate()).isEqualTo(LocalDateTime.parse("2024-04-05T09:00:00"));
+        assertThat(video.get().getUploadDate()).isEqualTo(LocalDateTime.parse("2024-04-02T09:00:00"));
         assertThat(video.get().getVisibility()).isEqualTo("public");
-        assertThat(video.get().getHashtags()).hasSize(1);
-        assertThat(video.get().getHashtags().stream().toList().get(0)).isEqualTo("music");
+        assertThat(video.get().getHashtags()).hasSize(0);
         assertThat(video.get().getIsAgeRestricted()).isFalse();
         assertThat(video.get().getIsMadeForKids()).isFalse();
         assertThat(video.get().getIsCommentAllowed()).isTrue();
-        assertThat(video.get().getLocation()).isEqualTo("Vietnam");
-        assertThat(video.get().getUserId()).isEqualTo(userId);
+        assertThat(video.get().getLocation()).isEqualTo("Ha Noi, Vietnam");
+        assertThat(video.get().getUserId()).isEqualTo(user.getId());
         assertThat(video.get().getSpec().commentCount()).isEqualTo(0);
         assertThat(video.get().getSpec().viewCount()).isEqualTo(0);
         assertThat(video.get().getSpec().likeCount()).isEqualTo(0);
@@ -75,31 +93,98 @@ public class VideoServiceTest {
     }
 
     @Test
+    @Order(3)
     public void givenVideoDtoObject_whenSave_thenReturnSavedVideoAndVideoSpecIsCreated() {
-        var user = userRepository.findByEmail("user@gmail.com");
-        var hashtags = new HashSet<String>();
-        hashtags.add("sport");
-        var videoDto = VideoDto.builder()
-                .title("Video title")
-                .description("Video description")
-                .durationSec(1000)
-                .uploadDate(LocalDateTime.now())
-                .thumbnailUrl("Video thumbnail URL")
-                .videoUrl("Video thumbnail URL")
-                .hashtags(hashtags)
-                .userId(user.getId())
-                .visibility("private")
-                .isCommentAllowed(true)
-                .isMadeForKids(false)
-                .isAgeRestricted(false)
-                .build();
+        var videoDto = createVideoDtoBuilder().build();
         videoService.save(videoDto);
         var videos = videoRepository.findAllByUserId(user.getId());
         assertThat(videos).hasSize(3);
         var savedVideo = videos.stream().filter(video -> video.getTitle().equals("Video title")).findFirst();
         assertThat(savedVideo).isPresent();
+    }
 
-        var videoSpec = videoSpecRepository.findById(savedVideo.get().getId());
+    @Test
+    @Order(4)
+    public void givenVideoDtoObject_whenSave_thenVideoSpecIsAlsoSaved() {
+        var videoDto = createVideoDtoBuilder().build();
+        var savedVideo = videoService.save(videoDto);
+        var videoSpec = videoSpecRepository.findById(savedVideo.getId());
         assertThat(videoSpec).isPresent();
+    }
+
+    @Test
+    public void givenVideoDtoObjectWithNullTitle_whenSave_thenReturnError() {
+        var videoDto = createVideoDtoBuilder()
+                .title(null)
+                .build();
+        assertThrows(Exception.class, () -> videoService.save(videoDto));
+    }
+
+    @Test
+    @Order(1)
+    public void givenVideo_whenView_thenVideoSpecUpdatedAsExpected() {
+        var video = videoRepository.findByTitle("Video 1").get(0);
+        videoService.viewVideo(video.getId(), user.getId());
+        var videoSpec = videoSpecRepository.findById(video.getId());
+        assertThat(videoSpec).isPresent();
+        assertThat(videoSpec.get().getViewCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getLikeCount()).isEqualTo(0);
+        assertThat(videoSpec.get().getDislikeCount()).isEqualTo(0);
+        assertThat(videoSpec.get().getCommentCount()).isEqualTo(0);
+        assertThat(videoSpec.get().getDownloadCount()).isEqualTo(0);
+    }
+
+    @Test
+    @Order(2)
+    public void givenVideo_whenLike_thenVideoSpecUpdatedAsExpected() {
+        var video = videoRepository.findByTitle("Video 1").get(0);
+        videoService.likeVideo(video.getId(), user.getId(), true);
+        var videoSpec = videoSpecRepository.findById(video.getId());
+        assertThat(videoSpec).isPresent();
+        assertThat(videoSpec.get().getViewCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getLikeCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getDislikeCount()).isEqualTo(0);
+        assertThat(videoSpec.get().getCommentCount()).isEqualTo(0);
+        assertThat(videoSpec.get().getDownloadCount()).isEqualTo(0);
+    }
+
+    @Test
+    @Order(3)
+    public void givenVideo_whenDislike_thenVideoSpecUpdatedAsExpected() {
+        var video = videoRepository.findByTitle("Video 1").get(0);
+        videoService.likeVideo(video.getId(), user.getId(), false);
+        var videoSpec = videoSpecRepository.findById(video.getId());
+        assertThat(videoSpec).isPresent();
+        assertThat(videoSpec.get().getViewCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getLikeCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getDislikeCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getCommentCount()).isEqualTo(0);
+        assertThat(videoSpec.get().getDownloadCount()).isEqualTo(0);
+    }
+
+    @Test
+    @Order(4)
+    public void givenVideo_whenComment_thenVideoSpecUpdatedAsExpected() {
+        var video = videoRepository.findByTitle("Video 1").get(0);
+        videoService.comment(video.getId(), user.getId(), "Good video");
+        var videoSpec = videoSpecRepository.findById(video.getId());
+        assertThat(videoSpec).isPresent();
+        assertThat(videoSpec.get().getViewCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getLikeCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getDislikeCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getCommentCount()).isEqualTo(1);
+        assertThat(videoSpec.get().getDownloadCount()).isEqualTo(0);
+    }
+
+    @Test
+    @Order(5)
+    public void giveCommentLikeObject_whenLikeComment_thenReturnExpectedCommentLikedObject() {
+        var video = videoRepository.findByTitle("Video 1").get(0);
+        var comment = commentRepository.findByVideoId(video.getId()).get(0);
+        videoService.likeComment(comment.getId(), user.getId(), true);
+        var commentLike = commentLikeRepository.findAll().get(0);
+        assertThat(commentLike.getComment().getId()).isEqualTo(comment.getId());
+        assertThat(commentLike.getUser().getId()).isEqualTo(user.getId());
+        assertThat(commentLike.getIsLike()).isTrue();
     }
 }

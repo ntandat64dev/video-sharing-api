@@ -11,7 +11,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 @Transactional
-@Profile("dev")
+@Profile({ "dev", "test" })
 public class FakeStorageService implements StorageService {
 
     @Override

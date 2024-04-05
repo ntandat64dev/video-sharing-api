@@ -4,32 +4,28 @@ import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.payload.request.AuthRequest;
 import com.example.videosharingapi.repository.ChannelRepository;
 import com.example.videosharingapi.repository.UserRepository;
-import com.example.videosharingapi.testutil.InsertDataExtension;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
-@ActiveProfiles({ "dev", "test" })
-@ExtendWith(InsertDataExtension.class)
+@ActiveProfiles("test")
+@Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/clean-up.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
 public class AuthServiceTest {
 
-    @Autowired
-    private AuthService authService;
-
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private ChannelRepository channelRepository;
+    private @Autowired AuthService authService;
+    private @Autowired UserRepository userRepository;
+    private @Autowired ChannelRepository channelRepository;
 
     @AfterEach
     public void deleteSignedUpUserAndItsChannel(TestInfo testInfo) {

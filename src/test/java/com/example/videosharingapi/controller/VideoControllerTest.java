@@ -1,14 +1,14 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.repository.UserRepository;
-import com.example.videosharingapi.testutil.InsertDataExtension;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.UUID;
@@ -20,16 +20,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
-@ActiveProfiles({ "dev", "test" })
+@ActiveProfiles("test")
 @AutoConfigureMockMvc
-@ExtendWith(InsertDataExtension.class)
+@Sql(scripts = "/sql/test-data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/clean-up.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
 public class VideoControllerTest {
 
-    @Autowired
-    private MockMvc mockMvc;
-
-    @Autowired
-    private UserRepository userRepository;
+    private @Autowired MockMvc mockMvc;
+    private @Autowired UserRepository userRepository;
 
     @Test
     public void givenGetAllVideoUri_whenGet_thenReturnSuccessfulResponse() throws Exception {

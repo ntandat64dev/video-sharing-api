@@ -1,10 +1,10 @@
 package com.example.videosharingapi.config.runner;
 
+import com.example.videosharingapi.VideoSharingApiApplication;
 import com.example.videosharingapi.model.entity.*;
 import com.example.videosharingapi.repository.*;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +12,11 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.Random;
 
+/**
+ * An {@link ApplicationRunner} used to initialize database for testing purpose. Normally used in {@link VideoSharingApiApplication}
+ * with {@code @Bean} configuration.
+ */
 @Component
-@Profile("dev")
-@Transactional
 public class InsertTestDataRunner implements ApplicationRunner {
 
     private final ChannelRepository channelRepository;
@@ -28,7 +30,6 @@ public class InsertTestDataRunner implements ApplicationRunner {
     private final VideoHashtagRepository videoHashtagRepository;
     private final VideoLikeRepository videoLikeRepository;
     private final VideoRepository videoRepository;
-    private final VideoSpecRepository videoSpecRepository;
     private final ViewHistoryRepository viewHistoryRepository;
     private final VisibilityRepository visibilityRepository;
 
@@ -36,7 +37,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
                                 CommentRepository commentRepository, HashtagRepository hashtagRepository, PlaylistRepository playlistRepository,
                                 PlaylistVideoRepository playlistVideoRepository, SubscriptionRepository subscriptionRepository,
                                 UserRepository userRepository, VideoHashtagRepository videoHashtagRepository,
-                                VideoLikeRepository videoLikeRepository, VideoRepository videoRepository, VideoSpecRepository videoSpecRepository,
+                                VideoLikeRepository videoLikeRepository, VideoRepository videoRepository,
                                 ViewHistoryRepository viewHistoryRepository, VisibilityRepository visibilityRepository) {
         this.channelRepository = channelRepository;
         this.commentLikeRepository = commentLikeRepository;
@@ -49,19 +50,15 @@ public class InsertTestDataRunner implements ApplicationRunner {
         this.videoHashtagRepository = videoHashtagRepository;
         this.videoLikeRepository = videoLikeRepository;
         this.videoRepository = videoRepository;
-        this.videoSpecRepository = videoSpecRepository;
         this.viewHistoryRepository = viewHistoryRepository;
         this.visibilityRepository = visibilityRepository;
     }
 
     @Override
+    @Transactional
     public void run(ApplicationArguments args) {
-        if (visibilityRepository.findByLevel(Visibility.VisibilityLevel.PUBLIC) == null) {
-            visibilityRepository.saveAndFlush(new Visibility(Visibility.VisibilityLevel.PUBLIC));
-        }
-        if (visibilityRepository.findByLevel(Visibility.VisibilityLevel.PRIVATE) == null) {
-            visibilityRepository.saveAndFlush(new Visibility(Visibility.VisibilityLevel.PRIVATE));
-        }
+        visibilityRepository.saveAndFlush(new Visibility(Visibility.VisibilityLevel.PUBLIC));
+        visibilityRepository.saveAndFlush(new Visibility(Visibility.VisibilityLevel.PRIVATE));
 
         for (var hashtag : new String[] { "Music", "Sport", "Gaming", "Style", "Programming Language", "Youtuber", "Viral", "Memes", "Rap", "Art",
                 "Trending", "Food", "Design", "Happy", "Love", "Fashion", "Travel", "Podcasts", "Beauty", "Vacation", "Cooking", "Life",
@@ -178,12 +175,6 @@ public class InsertTestDataRunner implements ApplicationRunner {
                     viewHistory.setViewedAt(LocalDateTime.now());
                     viewHistory.setViewedDuration(new Random().nextInt(540, video.getDurationSec() + 1));
                     viewHistoryRepository.saveAndFlush(viewHistory);
-
-                    var videoSpec = videoSpecRepository.findById(video.getId());
-                    videoSpec.ifPresent(spec -> {
-                        spec.setViewCount(spec.getViewCount() + 1);
-                        videoSpecRepository.saveAndFlush(spec);
-                    });
                 }
             }
 
@@ -195,15 +186,6 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 videoLike.setLikedAt(LocalDateTime.now());
                 videoLike.setIsLike(new Random().nextInt(10) > 2);
                 videoLikeRepository.saveAndFlush(videoLike);
-
-                var videoSpec = videoSpecRepository.findById(video.getId());
-                videoSpec.ifPresent(spec -> {
-                    if (videoLike.getIsLike())
-                        spec.setLikeCount(spec.getLikeCount() + 1);
-                    else
-                        spec.setDislikeCount(spec.getDislikeCount() + 1);
-                    videoSpecRepository.saveAndFlush(spec);
-                });
             }
 
             for (int i = 0; i < new Random().nextInt(0, 30); i++) {
@@ -216,12 +198,6 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 comment.setIsReply(false);
                 commentRepository.saveAndFlush(comment);
 
-                var videoSpec = videoSpecRepository.findById(video.getId());
-                videoSpec.ifPresent(spec -> {
-                    spec.setCommentCount(spec.getCommentCount() + 1);
-                    videoSpecRepository.saveAndFlush(spec);
-                });
-
                 if (new Random().nextInt(50) == 0) {
                     for (int j = 0; j < new Random().nextInt(10); j++) {
                         var replyUser = users.get(new Random().nextInt(users.size()));
@@ -233,11 +209,6 @@ public class InsertTestDataRunner implements ApplicationRunner {
                         replyComment.setParent(comment);
                         replyComment.setIsReply(true);
                         commentRepository.saveAndFlush(replyComment);
-
-                        videoSpec.ifPresent(spec -> {
-                            spec.setCommentCount(spec.getCommentCount() + 1);
-                            videoSpecRepository.saveAndFlush(spec);
-                        });
 
                         if (new Random().nextInt(80) == 0) {
                             for (int k = 0; k < new Random().nextInt(10); k++) {

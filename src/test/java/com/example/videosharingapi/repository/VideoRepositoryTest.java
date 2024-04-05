@@ -21,14 +21,9 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class VideoRepositoryTest {
 
-    @Autowired
-    private UserRepository userRepository;
-
-    @Autowired
-    private VideoRepository videoRepository;
-
-    @Autowired
-    private VisibilityRepository visibilityRepository;
+    private @Autowired UserRepository userRepository;
+    private @Autowired VideoRepository videoRepository;
+    private @Autowired VisibilityRepository visibilityRepository;
 
     @Test
     public void givenVideoObject_whenSave_thenReturnSavedVideo() {

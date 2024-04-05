@@ -21,8 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
 public class UserRepositoryTest {
 
-    @Autowired
-    private UserRepository userRepository;
+    private @Autowired UserRepository userRepository;
 
     @Value("${spring.jpa.auditor}")
     private String auditor;

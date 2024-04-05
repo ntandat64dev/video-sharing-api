@@ -4,9 +4,18 @@ import com.example.videosharingapi.model.entity.Visibility;
 import com.example.videosharingapi.repository.VisibilityRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+/**
+ * An {@link ApplicationRunner} used to initialize {@link Visibility} level in database. Used in {@code prod} profile.
+ *
+ * <p> In {@code dev}, database can be initialized by {@link InsertTestDataRunner}.
+ *
+ * @see Visibility
+ */
 @Component
+@Profile("prod")
 public class InsertDefaultVisibilityRunner implements ApplicationRunner {
     private final VisibilityRepository visibilityRepository;
 
