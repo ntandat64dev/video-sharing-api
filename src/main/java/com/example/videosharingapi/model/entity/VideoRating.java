@@ -3,43 +3,45 @@ package com.example.videosharingapi.model.entity;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@NoArgsConstructor
 @Getter
 @Setter
 @Entity
-public class VideoLike extends AuditableEntity {
+public class VideoRating extends AuditableEntity {
+
+    public enum Rating {
+        LIKE, DISLIKE
+    }
 
     @Getter
     @EqualsAndHashCode
     @Embeddable
-    public static class VideoLikeId implements Serializable {
+    public static class VideoRatingId implements Serializable {
         @GeneratedValue
         private UUID id;
-        private UUID userId;
+        private UUID videoId;
     }
 
     @EmbeddedId
-    private VideoLikeId id = new VideoLikeId();
+    private VideoRatingId id = new VideoRatingId();
 
     @Column(nullable = false)
-    private Boolean isLike;
+    @Enumerated(EnumType.STRING)
+    private Rating rating;
 
     @Column(nullable = false)
-    private LocalDateTime likedAt;
+    private LocalDateTime ratedAt;
 
-    @ManyToOne
-    @JoinColumn(nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("videoId")
     private Video video;
 
-    @ManyToOne
-    @MapsId("userId")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
     private User user;
 }
-

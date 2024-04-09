@@ -1,6 +1,9 @@
 package com.example.videosharingapi.service;
 
 import com.example.videosharingapi.payload.VideoDto;
+import com.example.videosharingapi.payload.request.RatingRequest;
+import com.example.videosharingapi.payload.request.ViewRequest;
+import com.example.videosharingapi.payload.response.ViewResponse;
 
 import java.util.List;
 import java.util.UUID;
@@ -10,15 +13,15 @@ public interface VideoService {
 
     List<VideoDto> getRecommendVideos(UUID userId);
 
-    VideoDto save(VideoDto videoDto);
+    VideoDto saveVideo(VideoDto videoDto);
 
-    void viewVideo(UUID videoId, UUID userId);
+    ViewResponse viewVideo(ViewRequest viewRequest);
 
-    void likeVideo(UUID videoId, UUID userId, boolean isLike);
+    void rateVideo(RatingRequest ratingRequest);
 
     void comment(UUID videoId, UUID userId, String content);
 
     void reply(UUID videoId, UUID commentId, UUID userId, String content);
 
-    void likeComment(UUID commentId, UUID userId, boolean isLike);
+    void rateComment(UUID commentId, UUID userId, boolean isLike);
 }

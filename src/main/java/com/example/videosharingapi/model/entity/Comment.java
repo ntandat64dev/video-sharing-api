@@ -1,13 +1,13 @@
 package com.example.videosharingapi.model.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Getter;
+import lombok.Setter;
 import org.hibernate.annotations.Check;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
 
-@NoArgsConstructor
 @Getter
 @Setter
 @Entity

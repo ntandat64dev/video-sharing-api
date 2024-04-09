@@ -1,11 +1,9 @@
 package com.example.videosharingapi.config.runner;
 
-import com.example.videosharingapi.VideoSharingApiApplication;
 import com.example.videosharingapi.model.entity.*;
 import com.example.videosharingapi.repository.*;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
-import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -13,14 +11,13 @@ import java.util.Collections;
 import java.util.Random;
 
 /**
- * An {@link ApplicationRunner} used to initialize database for testing purpose. Normally used in {@link VideoSharingApiApplication}
- * with {@code @Bean} configuration.
+ * An {@link ApplicationRunner} used to initialize database for testing purpose.
  */
-@Component
+//@org.springframework.stereotype.Component
 public class InsertTestDataRunner implements ApplicationRunner {
 
     private final ChannelRepository channelRepository;
-    private final CommentLikeRepository commentLikeRepository;
+    private final CommentRatingRepository commentRatingRepository;
     private final CommentRepository commentRepository;
     private final HashtagRepository hashtagRepository;
     private final PlaylistRepository playlistRepository;
@@ -28,19 +25,19 @@ public class InsertTestDataRunner implements ApplicationRunner {
     private final SubscriptionRepository subscriptionRepository;
     private final UserRepository userRepository;
     private final VideoHashtagRepository videoHashtagRepository;
-    private final VideoLikeRepository videoLikeRepository;
+    private final VideoRatingRepository videoRatingRepository;
     private final VideoRepository videoRepository;
     private final ViewHistoryRepository viewHistoryRepository;
     private final VisibilityRepository visibilityRepository;
 
-    public InsertTestDataRunner(ChannelRepository channelRepository, CommentLikeRepository commentLikeRepository,
+    public InsertTestDataRunner(ChannelRepository channelRepository, CommentRatingRepository commentRatingRepository,
                                 CommentRepository commentRepository, HashtagRepository hashtagRepository, PlaylistRepository playlistRepository,
                                 PlaylistVideoRepository playlistVideoRepository, SubscriptionRepository subscriptionRepository,
                                 UserRepository userRepository, VideoHashtagRepository videoHashtagRepository,
-                                VideoLikeRepository videoLikeRepository, VideoRepository videoRepository,
+                                VideoRatingRepository videoRatingRepository, VideoRepository videoRepository,
                                 ViewHistoryRepository viewHistoryRepository, VisibilityRepository visibilityRepository) {
         this.channelRepository = channelRepository;
-        this.commentLikeRepository = commentLikeRepository;
+        this.commentRatingRepository = commentRatingRepository;
         this.commentRepository = commentRepository;
         this.hashtagRepository = hashtagRepository;
         this.playlistRepository = playlistRepository;
@@ -48,7 +45,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
         this.subscriptionRepository = subscriptionRepository;
         this.userRepository = userRepository;
         this.videoHashtagRepository = videoHashtagRepository;
-        this.videoLikeRepository = videoLikeRepository;
+        this.videoRatingRepository = videoRatingRepository;
         this.videoRepository = videoRepository;
         this.viewHistoryRepository = viewHistoryRepository;
         this.visibilityRepository = visibilityRepository;
@@ -180,12 +177,12 @@ public class InsertTestDataRunner implements ApplicationRunner {
 
             for (int i = 0; i < new Random().nextInt(0, 20); i++) {
                 var user = users.get(new Random().nextInt(users.size()));
-                var videoLike = new VideoLike();
-                videoLike.setUser(user);
-                videoLike.setVideo(video);
-                videoLike.setLikedAt(LocalDateTime.now());
-                videoLike.setIsLike(new Random().nextInt(10) > 2);
-                videoLikeRepository.saveAndFlush(videoLike);
+                var videoRating = new VideoRating();
+                videoRating.setUser(user);
+                videoRating.setVideo(video);
+                videoRating.setRatedAt(LocalDateTime.now());
+                videoRating.setRating(new Random().nextInt(10) > 2 ? VideoRating.Rating.LIKE : VideoRating.Rating.DISLIKE);
+                videoRatingRepository.saveAndFlush(videoRating);
             }
 
             for (int i = 0; i < new Random().nextInt(0, 30); i++) {
@@ -213,12 +210,12 @@ public class InsertTestDataRunner implements ApplicationRunner {
                         if (new Random().nextInt(80) == 0) {
                             for (int k = 0; k < new Random().nextInt(10); k++) {
                                 var commentUser = users.get(new Random().nextInt(users.size()));
-                                var commentLike = new CommentLike();
-                                commentLike.setComment(replyComment);
-                                commentLike.setUser(commentUser);
-                                commentLike.setIsLike(new Random().nextBoolean());
-                                commentLike.setLikedAt(LocalDateTime.now());
-                                commentLikeRepository.saveAndFlush(commentLike);
+                                var replyCommentRating = new CommentRating();
+                                replyCommentRating.setComment(replyComment);
+                                replyCommentRating.setUser(commentUser);
+                                replyCommentRating.setRating(new Random().nextBoolean() ? CommentRating.Rating.LIKE : CommentRating.Rating.DISLIKE);
+                                replyCommentRating.setRatedAt(LocalDateTime.now());
+                                commentRatingRepository.saveAndFlush(replyCommentRating);
                             }
                         }
                     }
@@ -227,12 +224,12 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 if (new Random().nextInt(40) == 0) {
                     for (int j = 0; j < new Random().nextInt(30); j++) {
                         var commentUser = users.get(new Random().nextInt(users.size()));
-                        var commentLike = new CommentLike();
-                        commentLike.setComment(comment);
-                        commentLike.setUser(commentUser);
-                        commentLike.setIsLike(new Random().nextBoolean());
-                        commentLike.setLikedAt(LocalDateTime.now());
-                        commentLikeRepository.saveAndFlush(commentLike);
+                        var commentRating = new CommentRating();
+                        commentRating.setComment(comment);
+                        commentRating.setUser(commentUser);
+                        commentRating.setRating(new Random().nextBoolean() ? CommentRating.Rating.LIKE : CommentRating.Rating.DISLIKE);
+                        commentRating.setRatedAt(LocalDateTime.now());
+                        commentRatingRepository.saveAndFlush(commentRating);
                     }
                 }
             }

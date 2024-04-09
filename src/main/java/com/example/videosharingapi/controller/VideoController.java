@@ -2,6 +2,9 @@ package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.config.validation.ValidFile;
 import com.example.videosharingapi.payload.VideoDto;
+import com.example.videosharingapi.payload.request.RatingRequest;
+import com.example.videosharingapi.payload.request.ViewRequest;
+import com.example.videosharingapi.payload.response.ViewResponse;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
 import jakarta.validation.Valid;
@@ -45,49 +48,43 @@ public class VideoController {
         metadata.setThumbnailUrl(storedVideo.getThumbnailUrl());
         metadata.setVideoUrl(storedVideo.getVideoUrl());
         metadata.setDurationSec(storedVideo.getDurationSec());
-        var videoDto = videoService.save(metadata);
+        var videoDto = videoService.saveVideo(metadata);
         return new ResponseEntity<>(videoDto, HttpStatus.CREATED);
     }
 
     @PostMapping("/view")
-    public ResponseEntity<String> postView(UUID videoId, UUID userId) {
-        videoService.viewVideo(videoId, userId);
-        return new ResponseEntity<>("Video viewed.", HttpStatus.CREATED);
+    public ResponseEntity<ViewResponse> postView(@RequestBody @Valid ViewRequest viewRequest) {
+        var viewResponse = videoService.viewVideo(viewRequest);
+        return new ResponseEntity<>(viewResponse, HttpStatus.OK);
     }
 
-    @PostMapping("/like")
-    public ResponseEntity<String> likeVideo(UUID videoId, UUID userId) {
-        videoService.likeVideo(videoId, userId, true);
-        return new ResponseEntity<>("Video liked.", HttpStatus.CREATED);
-    }
-
-    @PostMapping("/dislike")
-    public ResponseEntity<String> dislikeVideo(UUID videoId, UUID userId) {
-        videoService.likeVideo(videoId, userId, false);
-        return new ResponseEntity<>("Video disliked.", HttpStatus.CREATED);
+    @PostMapping("/rate")
+    public ResponseEntity<Void> rate(@RequestBody @Valid RatingRequest ratingRequest) {
+        videoService.rateVideo(ratingRequest);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @PostMapping("/comment")
     public ResponseEntity<String> commentVideo(UUID videoId, UUID userId, String content) {
         videoService.comment(videoId, userId, content);
-        return new ResponseEntity<>("Video commented.", HttpStatus.CREATED);
+        return new ResponseEntity<>("Video commented.", HttpStatus.OK);
     }
 
     @PostMapping("/comment/reply")
     public ResponseEntity<String> replyCommentVideo(UUID videoId, UUID userId, UUID commentId, String content) {
         videoService.reply(videoId, userId, commentId, content);
-        return new ResponseEntity<>("Comment replied.", HttpStatus.CREATED);
+        return new ResponseEntity<>("Comment replied.", HttpStatus.OK);
     }
 
     @PostMapping("/comment/like")
-    public ResponseEntity<String> likeComment(UUID commentId, UUID userId) {
-        videoService.likeComment(commentId, userId, true);
-        return new ResponseEntity<>("Comment liked..", HttpStatus.CREATED);
+    public ResponseEntity<String> rateComment(UUID commentId, UUID userId) {
+        videoService.rateComment(commentId, userId, true);
+        return new ResponseEntity<>("Comment liked..", HttpStatus.OK);
     }
 
     @PostMapping("/comment/dislike")
     public ResponseEntity<String> dislikeComment(UUID commentId, UUID userId) {
-        videoService.likeComment(commentId, userId, true);
-        return new ResponseEntity<>("Comment liked..", HttpStatus.CREATED);
+        videoService.rateComment(commentId, userId, true);
+        return new ResponseEntity<>("Comment liked..", HttpStatus.OK);
     }
 }

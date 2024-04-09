@@ -3,13 +3,11 @@ package com.example.videosharingapi.model.entity;
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.io.Serializable;
 import java.util.UUID;
 
-@NoArgsConstructor
 @Getter
 @Setter
 @Entity

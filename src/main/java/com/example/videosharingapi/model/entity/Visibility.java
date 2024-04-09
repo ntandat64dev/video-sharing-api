@@ -25,7 +25,7 @@ public class Visibility extends AuditableEntity {
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "visibility_level", length = 64, nullable = false, unique = true)
+    @Column(name = "visibility_level", nullable = false, unique = true)
     @Enumerated(EnumType.STRING)
     private VisibilityLevel level;
 }

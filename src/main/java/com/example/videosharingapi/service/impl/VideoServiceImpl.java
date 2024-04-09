@@ -4,6 +4,9 @@ import com.example.videosharingapi.config.mapper.VideoVideoDtoMapper;
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.*;
 import com.example.videosharingapi.payload.VideoDto;
+import com.example.videosharingapi.payload.request.RatingRequest;
+import com.example.videosharingapi.payload.request.ViewRequest;
+import com.example.videosharingapi.payload.response.ViewResponse;
 import com.example.videosharingapi.repository.*;
 import com.example.videosharingapi.service.VideoService;
 import org.springframework.context.MessageSource;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -27,28 +31,30 @@ public class VideoServiceImpl implements VideoService {
     private final HashtagRepository hashtagRepository;
     private final VideoHashtagRepository videoHashtagRepository;
     private final ViewHistoryRepository viewHistoryRepository;
-    private final VideoLikeRepository videoLikeRepository;
+    private final VideoRatingRepository videoRatingRepository;
     private final CommentRepository commentRepository;
-    private final CommentLikeRepository commentLikeRepository;
+    private final CommentRatingRepository commentRatingRepository;
 
     private final MessageSource messageSource;
     private final VideoVideoDtoMapper videoVideoDtoMapper;
+    private final VideoSpecRepository videoSpecRepository;
 
     public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository, HashtagRepository hashtagRepository,
                             VideoHashtagRepository videoHashtagRepository, ViewHistoryRepository viewHistoryRepository,
-                            VideoLikeRepository videoLikeRepository, CommentRepository commentRepository,
-                            CommentLikeRepository commentLikeRepository, MessageSource messageSource,
-                            VideoVideoDtoMapper videoVideoDtoMapper) {
+                            VideoRatingRepository videoRatingRepository, CommentRepository commentRepository,
+                            CommentRatingRepository commentRatingRepository, MessageSource messageSource,
+                            VideoVideoDtoMapper videoVideoDtoMapper, VideoSpecRepository videoSpecRepository) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.hashtagRepository = hashtagRepository;
         this.videoHashtagRepository = videoHashtagRepository;
         this.viewHistoryRepository = viewHistoryRepository;
-        this.videoLikeRepository = videoLikeRepository;
+        this.videoRatingRepository = videoRatingRepository;
         this.commentRepository = commentRepository;
-        this.commentLikeRepository = commentLikeRepository;
+        this.commentRatingRepository = commentRatingRepository;
         this.messageSource = messageSource;
         this.videoVideoDtoMapper = videoVideoDtoMapper;
+        this.videoSpecRepository = videoSpecRepository;
     }
 
     @Override
@@ -69,7 +75,7 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public VideoDto save(VideoDto videoDto) {
+    public VideoDto saveVideo(VideoDto videoDto) {
         if (!userRepository.existsById(videoDto.getUserId()))
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.user.id.not-exist",
@@ -99,27 +105,75 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public void viewVideo(UUID videoId, UUID userId) {
-        var video = videoRepository.getReferenceById(videoId);
-        var user = userRepository.getReferenceById(userId);
-        var viewHistory = new ViewHistory();
-        viewHistory.setVideo(video);
-        viewHistory.setUser(user);
-        viewHistory.setViewedAt(LocalDateTime.now());
-        viewHistory.setViewedDuration(30);
-        viewHistoryRepository.save(viewHistory);
+    public ViewResponse viewVideo(ViewRequest viewRequest) {
+        checkUserIdAndVideoIdExistent(viewRequest.getUserId(), viewRequest.getVideoId());
+
+        var video = videoRepository.getReferenceById(viewRequest.getVideoId());
+        var user = userRepository.getReferenceById(viewRequest.getUserId());
+
+        var lastViewHistory = viewHistoryRepository.findLatest(viewRequest.getVideoId(), viewRequest.getUserId());
+        if (lastViewHistory != null) {
+            if (ChronoUnit.SECONDS.between(lastViewHistory.getViewedAt(), viewRequest.getViewedAt()) > video.getDurationSec() &&
+                    viewRequest.getDuration() >= 30) {
+                // If this view's duration greater than the last by video duration and video duration >= 30.
+                var viewHistory = new ViewHistory();
+                viewHistory.setVideo(video);
+                viewHistory.setUser(user);
+                viewHistory.setViewedAt(viewRequest.getViewedAt());
+                viewHistory.setViewedDuration(viewRequest.getDuration());
+                viewHistoryRepository.save(viewHistory);
+            }
+        } else {
+            var viewHistory = new ViewHistory();
+            viewHistory.setVideo(video);
+            viewHistory.setUser(user);
+            viewHistory.setViewedAt(viewRequest.getViewedAt());
+            viewHistory.setViewedDuration(viewRequest.getDuration());
+            viewHistoryRepository.save(viewHistory);
+        }
+
+        var viewCount = viewHistoryRepository.countByVideoId(viewRequest.getVideoId());
+
+        return ViewResponse.builder()
+                .videoId(viewRequest.getVideoId())
+                .userId(viewRequest.getUserId())
+                .haveViewedBefore(viewCount > 1)
+                .viewCount(viewCount)
+                .build();
     }
 
     @Override
-    public void likeVideo(UUID videoId, UUID userId, boolean isLike) {
-        var video = videoRepository.getReferenceById(videoId);
-        var user = userRepository.getReferenceById(userId);
-        var videoLike = new VideoLike();
-        videoLike.setVideo(video);
-        videoLike.setUser(user);
-        videoLike.setLikedAt(LocalDateTime.now());
-        videoLike.setIsLike(isLike);
-        videoLikeRepository.save(videoLike);
+    public void rateVideo(RatingRequest ratingRequest) {
+        checkUserIdAndVideoIdExistent(ratingRequest.getUserId(), ratingRequest.getVideoId());
+
+        var video = videoRepository.getReferenceById(ratingRequest.getVideoId());
+        var user = userRepository.getReferenceById(ratingRequest.getUserId());
+
+        var videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), video.getId());
+        if (videoRating == null && ratingRequest.getRating() == RatingRequest.RatingType.NONE) return;
+        if (videoRating != null && videoRating.getRating().name().equals(ratingRequest.getRating().name())) return;
+
+        var videoSpec = videoSpecRepository.findById(video.getId());
+        if (videoSpec.isEmpty())
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR,
+                    messageSource.getMessage("message.some-thing-went-wrong", null, LocaleContextHolder.getLocale()));
+
+        if (videoRating != null) {
+            if (ratingRequest.getRating() == RatingRequest.RatingType.NONE) {
+                videoRatingRepository.delete(videoRating);
+            } else {
+                videoRating.setRating(VideoRating.Rating.valueOf(ratingRequest.getRating().name()));
+                videoRating.setRatedAt(ratingRequest.getRatedAt());
+                videoRatingRepository.save(videoRating);
+            }
+        } else {
+            videoRating = new VideoRating();
+            videoRating.setVideo(video);
+            videoRating.setUser(user);
+            videoRating.setRating(VideoRating.Rating.valueOf(ratingRequest.getRating().name()));
+            videoRating.setRatedAt(ratingRequest.getRatedAt());
+            videoRatingRepository.save(videoRating);
+        }
     }
 
     @Override
@@ -149,14 +203,23 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public void likeComment(UUID commentId, UUID userId, boolean isLike) {
+    public void rateComment(UUID commentId, UUID userId, boolean isLike) {
         var user = userRepository.getReferenceById(userId);
         var comment = commentRepository.getReferenceById(commentId);
-        var commentLike = new CommentLike();
+        var commentLike = new CommentRating();
         commentLike.setComment(comment);
         commentLike.setUser(user);
-        commentLike.setLikedAt(LocalDateTime.now());
-        commentLike.setIsLike(isLike);
-        commentLikeRepository.save(commentLike);
+        commentLike.setRatedAt(LocalDateTime.now());
+        commentLike.setRating(isLike ? CommentRating.Rating.LIKE : CommentRating.Rating.DISLIKE);
+        commentRatingRepository.save(commentLike);
+    }
+
+    private void checkUserIdAndVideoIdExistent(UUID userId, UUID videoId) throws ApplicationException {
+        if (!userRepository.existsById(userId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                messageSource.getMessage("exception.user.id.not-exist",
+                        new Object[] { userId }, LocaleContextHolder.getLocale()));
+        if (!videoRepository.existsById(videoId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                messageSource.getMessage("exception.video.id.not-exist",
+                        new Object[] { videoId }, LocaleContextHolder.getLocale()));
     }
 }
