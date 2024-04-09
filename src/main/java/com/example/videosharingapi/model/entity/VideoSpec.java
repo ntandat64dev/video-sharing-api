@@ -14,19 +14,19 @@ public class VideoSpec extends AuditableEntity {
     @Id
     private UUID id;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(nullable = false)
     private Long viewCount = 0L;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(nullable = false)
     private Long likeCount = 0L;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(nullable = false)
     private Long dislikeCount = 0L;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(nullable = false)
     private Long commentCount = 0L;
 
-    @Column(nullable = false, columnDefinition = "BIGINT DEFAULT 0")
+    @Column(nullable = false)
     private Long downloadCount = 0L;
 
     @OneToOne

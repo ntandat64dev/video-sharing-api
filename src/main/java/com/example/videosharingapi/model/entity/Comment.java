@@ -18,7 +18,8 @@ public class Comment extends AuditableEntity {
     @GeneratedValue
     private UUID id;
 
-    @Column(nullable = false)
+    @Lob
+    @Column(length = 10000, nullable = false)
     private String content;
 
     @Column(nullable = false)

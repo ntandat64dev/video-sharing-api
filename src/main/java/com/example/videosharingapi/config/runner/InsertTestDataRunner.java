@@ -251,7 +251,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
 
                 Collections.shuffle(videos);
                 var randomVideos = videos.subList(0, new Random().nextInt(5));
-                int index = 0;
+                byte index = 0;
                 for (var video : randomVideos) {
                     var playlistVideo = new PlaylistVideo();
                     playlistVideo.setPlaylist(playlist);

@@ -37,8 +37,7 @@ public class User extends AuditableEntity {
     @Column(name = "phone", length = 32, unique = true)
     private String phoneNumber;
 
-    @Column(columnDefinition = "TINYINT(1)")
-    private Integer gender;
+    private Byte gender;
 
     @Column(length = 64)
     private String country;

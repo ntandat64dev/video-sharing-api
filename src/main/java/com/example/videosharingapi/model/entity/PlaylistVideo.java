@@ -25,8 +25,8 @@ public class PlaylistVideo extends AuditableEntity {
     @EmbeddedId
     private PlaylistVideoId id = new PlaylistVideoId();
 
-    @Column(columnDefinition = "SMALLINT", nullable = false)
-    private Integer priority;
+    @Column(nullable = false)
+    private Byte priority;
 
     @ManyToOne
     @MapsId("playlistId")

@@ -19,7 +19,7 @@ public class Channel extends AuditableEntity {
     @Column(length = 64, nullable = false)
     private String name;
 
-    @Column(columnDefinition = "TEXT")
+    @Column(length = 1000)
     private String description;
 
     @Column(nullable = false)

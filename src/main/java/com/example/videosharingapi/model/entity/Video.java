@@ -24,7 +24,8 @@ public class Video extends AuditableEntity {
     @Column(nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(length = 1000000)
     private String description;
 
     @Column(nullable = false)

@@ -20,7 +20,8 @@ public class Playlist extends AuditableEntity {
     @Column(length = 64, nullable = false)
     private String title;
 
-    @Column(columnDefinition = "TEXT")
+    @Lob
+    @Column(length = 10000)
     private String description;
 
     private Boolean isUserCreate;
