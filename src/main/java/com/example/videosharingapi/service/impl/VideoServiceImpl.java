@@ -6,6 +6,7 @@ import com.example.videosharingapi.model.entity.*;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.payload.request.RatingRequest;
 import com.example.videosharingapi.payload.request.ViewRequest;
+import com.example.videosharingapi.payload.response.RatingResponse;
 import com.example.videosharingapi.payload.response.ViewResponse;
 import com.example.videosharingapi.repository.*;
 import com.example.videosharingapi.service.VideoService;
@@ -15,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,8 +32,6 @@ public class VideoServiceImpl implements VideoService {
     private final VideoHashtagRepository videoHashtagRepository;
     private final ViewHistoryRepository viewHistoryRepository;
     private final VideoRatingRepository videoRatingRepository;
-    private final CommentRepository commentRepository;
-    private final CommentRatingRepository commentRatingRepository;
 
     private final MessageSource messageSource;
     private final VideoVideoDtoMapper videoVideoDtoMapper;
@@ -41,17 +39,14 @@ public class VideoServiceImpl implements VideoService {
 
     public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository, HashtagRepository hashtagRepository,
                             VideoHashtagRepository videoHashtagRepository, ViewHistoryRepository viewHistoryRepository,
-                            VideoRatingRepository videoRatingRepository, CommentRepository commentRepository,
-                            CommentRatingRepository commentRatingRepository, MessageSource messageSource,
-                            VideoVideoDtoMapper videoVideoDtoMapper, VideoSpecRepository videoSpecRepository) {
+                            VideoRatingRepository videoRatingRepository,
+                            MessageSource messageSource, VideoVideoDtoMapper videoVideoDtoMapper, VideoSpecRepository videoSpecRepository) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.hashtagRepository = hashtagRepository;
         this.videoHashtagRepository = videoHashtagRepository;
         this.viewHistoryRepository = viewHistoryRepository;
         this.videoRatingRepository = videoRatingRepository;
-        this.commentRepository = commentRepository;
-        this.commentRatingRepository = commentRatingRepository;
         this.messageSource = messageSource;
         this.videoVideoDtoMapper = videoVideoDtoMapper;
         this.videoSpecRepository = videoSpecRepository;
@@ -59,16 +54,26 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<VideoDto> getAllVideos() {
-        return videoRepository.findAll().stream()
+    public VideoDto getVideoById(UUID videoId) {
+        return videoRepository.findById(videoId)
                 .map(videoVideoDtoMapper::videoToVideoDto)
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, messageSource.getMessage("exception.video.id.not-exist",
+                        new Object[] { videoId }, LocaleContextHolder.getLocale())));
     }
 
     @Override
     @Transactional(readOnly = true)
     public List<VideoDto> getRecommendVideos(UUID userId) {
         // TODO: Get actual recommend videos
+        return videoRepository.findAllByUserId(userId).stream()
+                .map(videoVideoDtoMapper::videoToVideoDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public List<VideoDto> getRelatedVideos(UUID videoId, UUID userId) {
+        // TODO: Get actual related videos
         return videoRepository.findAllByUserId(userId).stream()
                 .map(videoVideoDtoMapper::videoToVideoDto)
                 .collect(Collectors.toList());
@@ -106,6 +111,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public ViewResponse viewVideo(ViewRequest viewRequest) {
+        // TODO: Test this function
         checkUserIdAndVideoIdExistent(viewRequest.getUserId(), viewRequest.getVideoId());
 
         var video = videoRepository.getReferenceById(viewRequest.getVideoId());
@@ -177,41 +183,17 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public void comment(UUID videoId, UUID userId, String content) {
-        commentVideo(videoId, userId, null, false, content);
-    }
-
-    @Override
-    public void reply(UUID videoId, UUID commentId, UUID userId, String content) {
-        commentVideo(videoId, userId, commentId, true, content);
-    }
-
-    private void commentVideo(UUID videoId, UUID userId, UUID commentId, boolean isReply, String content) {
-        var video = videoRepository.getReferenceById(videoId);
-        var user = userRepository.getReferenceById(userId);
-        var comment = new Comment();
-        comment.setVideo(video);
-        comment.setUser(user);
-        comment.setCommentedAt(LocalDateTime.now());
-        comment.setContent(content);
-        comment.setIsReply(isReply);
-        if (isReply && commentId != null) {
-            var parentComment = commentRepository.getReferenceById(commentId);
-            comment.setParent(parentComment);
-        }
-        commentRepository.save(comment);
-    }
-
-    @Override
-    public void rateComment(UUID commentId, UUID userId, boolean isLike) {
-        var user = userRepository.getReferenceById(userId);
-        var comment = commentRepository.getReferenceById(commentId);
-        var commentLike = new CommentRating();
-        commentLike.setComment(comment);
-        commentLike.setUser(user);
-        commentLike.setRatedAt(LocalDateTime.now());
-        commentLike.setRating(isLike ? CommentRating.Rating.LIKE : CommentRating.Rating.DISLIKE);
-        commentRatingRepository.save(commentLike);
+    @Transactional(readOnly = true)
+    public RatingResponse getRating(UUID videoId, UUID userId) {
+        var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
+        var ratingResponse = new RatingResponse();
+        ratingResponse.setVideoId(videoId);
+        ratingResponse.setRating(videoRating == null
+                ? RatingResponse.RatingType.NONE
+                : RatingResponse.RatingType.valueOf(videoRating.getRating().name()));
+        ratingResponse.setRatedBy(userId);
+        ratingResponse.setRatedAt(videoRating != null ? videoRating.getRatedAt() : null);
+        return ratingResponse;
     }
 
     private void checkUserIdAndVideoIdExistent(UUID userId, UUID videoId) throws ApplicationException {

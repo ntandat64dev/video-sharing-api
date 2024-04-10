@@ -4,6 +4,7 @@ import com.example.videosharingapi.config.validation.ValidFile;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.payload.request.RatingRequest;
 import com.example.videosharingapi.payload.request.ViewRequest;
+import com.example.videosharingapi.payload.response.RatingResponse;
 import com.example.videosharingapi.payload.response.ViewResponse;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
@@ -29,15 +30,21 @@ public class VideoController {
         this.storageService = storageService;
     }
 
-    @GetMapping("/{userId}")
-    public ResponseEntity<List<VideoDto>> getRecommendVideos(@PathVariable UUID userId) {
+    @GetMapping("/{videoId}")
+    public ResponseEntity<VideoDto> getVideoById(@PathVariable UUID videoId) {
+        var response = videoService.getVideoById(videoId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @GetMapping("/recommend")
+    public ResponseEntity<List<VideoDto>> getRecommendVideos(UUID userId) {
         var response = videoService.getRecommendVideos(userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @GetMapping
-    public ResponseEntity<List<VideoDto>> getVideos() {
-        var response = videoService.getAllVideos();
+    @GetMapping("/related")
+    public ResponseEntity<List<VideoDto>> getRelatedVideos(UUID videoId, UUID userId) {
+        var response = videoService.getRelatedVideos(videoId, userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -64,27 +71,8 @@ public class VideoController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/comment")
-    public ResponseEntity<String> commentVideo(UUID videoId, UUID userId, String content) {
-        videoService.comment(videoId, userId, content);
-        return new ResponseEntity<>("Video commented.", HttpStatus.OK);
-    }
-
-    @PostMapping("/comment/reply")
-    public ResponseEntity<String> replyCommentVideo(UUID videoId, UUID userId, UUID commentId, String content) {
-        videoService.reply(videoId, userId, commentId, content);
-        return new ResponseEntity<>("Comment replied.", HttpStatus.OK);
-    }
-
-    @PostMapping("/comment/like")
-    public ResponseEntity<String> rateComment(UUID commentId, UUID userId) {
-        videoService.rateComment(commentId, userId, true);
-        return new ResponseEntity<>("Comment liked..", HttpStatus.OK);
-    }
-
-    @PostMapping("/comment/dislike")
-    public ResponseEntity<String> dislikeComment(UUID commentId, UUID userId) {
-        videoService.rateComment(commentId, userId, true);
-        return new ResponseEntity<>("Comment liked..", HttpStatus.OK);
+    @GetMapping("/rate")
+    public ResponseEntity<RatingResponse> getRating(UUID videoId, UUID userId) {
+        return new ResponseEntity<>(videoService.getRating(videoId, userId), HttpStatus.OK);
     }
 }

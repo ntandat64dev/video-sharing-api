@@ -30,8 +30,9 @@ public class VideoControllerTest {
     private @Autowired UserRepository userRepository;
 
     @Test
-    public void givenGetAllVideoUri_whenGet_thenReturnSuccessfulResponse() throws Exception {
-        mockMvc.perform(get("/api/videos"))
+    public void givenGetRecommendVideosUri_whenGet_thenReturnSuccessfulResponse() throws Exception {
+        mockMvc.perform(get("/api/videos/recommend")
+                        .param("userId", "3f06af63-a93c-11e4-9797-00505690773f"))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Video 1")))
                 .andExpect(content().string(containsString("Video 2")));

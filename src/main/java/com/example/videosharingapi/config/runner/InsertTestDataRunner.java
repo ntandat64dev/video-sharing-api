@@ -77,7 +77,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
             var channel = new Channel();
             channel.setName(user.getEmail());
             channel.setJoinDate(LocalDateTime.now());
-            channel.setPictureUrl("/default_avatar.png");
+            channel.setPictureUrl("https://via.placeholder.com/300.png/d13328/fff?text=Avatar");
             channel.setUser(user);
             channelRepository.saveAndFlush(channel);
         }
@@ -105,8 +105,8 @@ public class InsertTestDataRunner implements ApplicationRunner {
             var video = Video.builder()
                     .title("Video %s".formatted(i))
                     .description("Video %s description".formatted(i))
-                    .thumbnailUrl("/sample_video_thumbnail.jpg")
-                    .videoUrl("/SampleVideo_1280x720_10mb.mp4")
+                    .thumbnailUrl("https://via.placeholder.com/600x500.png/248cd6/fff?text=thumbnail")
+                    .videoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4")
                     .durationSec(new Random().nextInt(540, 3600))
                     .uploadDate(LocalDateTime.of(2024, new Random().nextInt(1, 5), i % 30 != 0 ? i % 30 : 1,
                             i % 24, 0, 0))
