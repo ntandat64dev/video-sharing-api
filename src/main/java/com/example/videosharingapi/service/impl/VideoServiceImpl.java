@@ -2,7 +2,8 @@ package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.config.mapper.VideoVideoDtoMapper;
 import com.example.videosharingapi.exception.ApplicationException;
-import com.example.videosharingapi.model.entity.*;
+import com.example.videosharingapi.model.entity.VideoRating;
+import com.example.videosharingapi.model.entity.ViewHistory;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.payload.request.RatingRequest;
 import com.example.videosharingapi.payload.request.ViewRequest;
@@ -17,9 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -28,8 +27,6 @@ import java.util.stream.Collectors;
 public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
-    private final HashtagRepository hashtagRepository;
-    private final VideoHashtagRepository videoHashtagRepository;
     private final ViewHistoryRepository viewHistoryRepository;
     private final VideoRatingRepository videoRatingRepository;
 
@@ -37,14 +34,11 @@ public class VideoServiceImpl implements VideoService {
     private final VideoVideoDtoMapper videoVideoDtoMapper;
     private final VideoSpecRepository videoSpecRepository;
 
-    public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository, HashtagRepository hashtagRepository,
-                            VideoHashtagRepository videoHashtagRepository, ViewHistoryRepository viewHistoryRepository,
-                            VideoRatingRepository videoRatingRepository,
+    public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository,
+                            ViewHistoryRepository viewHistoryRepository, VideoRatingRepository videoRatingRepository,
                             MessageSource messageSource, VideoVideoDtoMapper videoVideoDtoMapper, VideoSpecRepository videoSpecRepository) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
-        this.hashtagRepository = hashtagRepository;
-        this.videoHashtagRepository = videoHashtagRepository;
         this.viewHistoryRepository = viewHistoryRepository;
         this.videoRatingRepository = videoRatingRepository;
         this.messageSource = messageSource;
@@ -87,26 +81,9 @@ public class VideoServiceImpl implements VideoService {
                             new Object[] { videoDto.getUserId() }, LocaleContextHolder.getLocale()));
 
         var video = videoRepository.save(videoVideoDtoMapper.videoDtoToVideo(videoDto));
-        saveHashtag(videoDto.getHashtags(), video);
         videoDto.setId(video.getId());
         videoDto.setUploadDate(video.getUploadDate());
         return videoDto;
-    }
-
-    private void saveHashtag(Set<String> hashtags, Video video) {
-        if (hashtags != null) {
-            var videoTags = new ArrayList<VideoHashtag>();
-            hashtags.forEach(tagString -> {
-                var hashtag = new Hashtag();
-                hashtag.setTag(tagString);
-                var savedHashtag = hashtagRepository.saveIfNotExist(hashtag);
-                var videoHashtag = new VideoHashtag();
-                videoHashtag.setHashtag(savedHashtag);
-                videoHashtag.setVideo(video);
-                videoTags.add(videoHashtag);
-            });
-            videoHashtagRepository.saveAll(videoTags);
-        }
     }
 
     @Override

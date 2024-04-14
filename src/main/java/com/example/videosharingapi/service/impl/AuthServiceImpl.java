@@ -3,6 +3,7 @@ package com.example.videosharingapi.service.impl;
 import com.example.videosharingapi.config.mapper.UserUserDtoMapper;
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.Channel;
+import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.payload.request.AuthRequest;
 import com.example.videosharingapi.payload.response.AuthResponse;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Service
 @Transactional
@@ -61,9 +63,23 @@ public class AuthServiceImpl implements AuthService {
 
     private void createChannel(User user) {
         var channel = new Channel();
-        channel.setName(user.getEmail());
-        channel.setJoinDate(LocalDateTime.now());
-        channel.setPictureUrl("/default_avatar.png");
+        channel.setTitle(user.getEmail().substring(0, user.getEmail().indexOf('@')));
+        channel.setPublishedAt(LocalDateTime.now());
+
+        var url = "https://ui-avatars.com/api/?name=%s&size=%s&background=0D8ABC&color=fff&rouded=true&bold=true";
+        var defaultThumbnail = new Thumbnail();
+        defaultThumbnail.setType(Thumbnail.Type.DEFAULT);
+        defaultThumbnail.setUrl(url.formatted(channel.getTitle(), 100));
+        defaultThumbnail.setWidth(100);
+        defaultThumbnail.setHeight(100);
+
+        var mediumThumbnail = new Thumbnail();
+        mediumThumbnail.setType(Thumbnail.Type.MEDIUM);
+        mediumThumbnail.setUrl(url.formatted(channel.getTitle(), 200));
+        mediumThumbnail.setWidth(200);
+        mediumThumbnail.setHeight(200);
+
+        channel.setThumbnails(List.of(defaultThumbnail, mediumThumbnail));
         channel.setUser(user);
         channelRepository.save(channel);
     }

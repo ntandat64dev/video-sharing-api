@@ -13,6 +13,9 @@ TRUNCATE TABLE `video_hashtag`;
 TRUNCATE TABLE `video_rating`;
 TRUNCATE TABLE `video_spec`;
 TRUNCATE TABLE `view_history`;
+TRUNCATE TABLE `channel_thumbnail`;
+TRUNCATE TABLE `video_thumbnail`;
+TRUNCATE TABLE `thumbnail`;
 TRUNCATE TABLE `visibility`;
 
 SET FOREIGN_KEY_CHECKS = 1;

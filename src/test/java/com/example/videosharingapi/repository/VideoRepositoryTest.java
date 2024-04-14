@@ -1,6 +1,7 @@
 package com.example.videosharingapi.repository;
 
 import com.example.videosharingapi.config.AuditingConfig;
+import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.Video;
 import com.example.videosharingapi.model.entity.Visibility;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
@@ -27,9 +29,16 @@ public class VideoRepositoryTest {
 
     @Test
     public void givenVideoObject_whenSave_thenReturnSavedVideo() {
+
+        var thumbnail = new Thumbnail();
+        thumbnail.setType(Thumbnail.Type.DEFAULT);
+        thumbnail.setUrl("Thumbnail URL");
+        thumbnail.setWidth(100);
+        thumbnail.setHeight(100);
+
         var video = Video.builder()
                 .title("Video title")
-                .thumbnailUrl("Thumbnail URL")
+                .thumbnails(List.of(thumbnail))
                 .videoUrl("Video URL")
                 .uploadDate(LocalDateTime.now())
                 .build();

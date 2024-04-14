@@ -1,6 +1,7 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.exception.ApplicationException;
+import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.service.StorageService;
 import org.springframework.context.annotation.Profile;
@@ -15,6 +16,7 @@ import video.api.client.api.models.VideoCreationPayload;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Objects;
 
 @Service
@@ -31,8 +33,13 @@ public class StorageServiceImpl implements StorageService {
             var video = client.videos().create(new VideoCreationPayload().title(videoFile.getName()));
             video = client.videos().upload(video.getVideoId(), videoFile);
             Files.delete(videoFile.toPath());
+            var thumbnail = new Thumbnail();
+            thumbnail.setType(Thumbnail.Type.DEFAULT);
+            thumbnail.setUrl(Objects.requireNonNull(Objects.requireNonNull(video.getAssets()).getThumbnail()).toString());
+            thumbnail.setWidth(100);
+            thumbnail.setHeight(100);
             return VideoDto.builder()
-                    .thumbnailUrl(Objects.requireNonNull(Objects.requireNonNull(video.getAssets()).getThumbnail()).toURL().toString())
+                    .thumbnails(List.of(thumbnail))
                     .videoUrl(Objects.requireNonNull(video.getAssets().getMp4()).toString())
                     .build();
         } catch (ApiException | IOException e) {

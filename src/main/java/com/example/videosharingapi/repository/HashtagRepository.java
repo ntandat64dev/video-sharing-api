@@ -15,12 +15,12 @@ public interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
     Hashtag findByTag(String tag);
 
     @Transactional
-    default Hashtag saveIfNotExist(Hashtag hashTag) {
+    default Hashtag saveIfAbsent(Hashtag hashTag) {
         var savedTag = findByTag(hashTag.getTag());
         if (savedTag != null) return savedTag;
         else return save(hashTag);
     }
 
-    @Query("SELECT h FROM Hashtag h JOIN VideoHashtag vh ON h.id = vh.id.hashtagId JOIN Video v ON v.id = vh.id.videoId WHERE v.user.id = :userId")
+    @Query("SELECT h FROM Hashtag h JOIN Video v WHERE v.user.id = :userId")
     List<Hashtag> findAllByUserId(UUID userId);
 }

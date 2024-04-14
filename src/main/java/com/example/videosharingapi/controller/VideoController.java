@@ -52,7 +52,7 @@ public class VideoController {
     public ResponseEntity<VideoDto> uploadVideo(@RequestParam @ValidFile MultipartFile videoFile,
                                                 @RequestPart @Valid VideoDto metadata) {
         var storedVideo = storageService.store(videoFile);
-        metadata.setThumbnailUrl(storedVideo.getThumbnailUrl());
+        metadata.setThumbnails(storedVideo.getThumbnails());
         metadata.setVideoUrl(storedVideo.getVideoUrl());
         metadata.setDurationSec(storedVideo.getDurationSec());
         var videoDto = videoService.saveVideo(metadata);

@@ -5,7 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.Check;
 
 import java.time.LocalDateTime;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -28,8 +28,13 @@ public class Video extends AuditableEntity {
     @Column(length = 1000000)
     private String description;
 
-    @Column(nullable = false)
-    private String thumbnailUrl;
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "video_thumbnail",
+            joinColumns = @JoinColumn(name = "video_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "thumbnail_id", nullable = false)
+    )
+    private List<Thumbnail> thumbnails;
 
     @Column(nullable = false)
     private String videoUrl;
@@ -51,8 +56,13 @@ public class Video extends AuditableEntity {
 
     private String location;
 
-    @OneToMany(mappedBy = "video")
-    private Set<VideoHashtag> videoHashtags;
+    @ManyToMany
+    @JoinTable(
+            name = "video_hashtag",
+            joinColumns = @JoinColumn(name = "video_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "hashtag_id", nullable = false)
+    )
+    private List<Hashtag> hashtags;
 
     @OneToOne(mappedBy = "video", cascade = CascadeType.ALL)
     private VideoSpec videoSpec;

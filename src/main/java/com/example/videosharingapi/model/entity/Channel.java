@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Getter
@@ -17,16 +18,21 @@ public class Channel extends AuditableEntity {
     private UUID id;
 
     @Column(length = 64, nullable = false)
-    private String name;
+    private String title;
 
     @Column(length = 1000)
     private String description;
 
-    @Column(nullable = false)
-    private String pictureUrl;
-
     @Column(nullable = false, updatable = false)
-    private LocalDateTime joinDate;
+    private LocalDateTime publishedAt;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "channel_thumbnail",
+            joinColumns = @JoinColumn(name = "channel_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "thumbnail_id", nullable = false)
+    )
+    private List<Thumbnail> thumbnails;
 
     @OneToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, unique = true)

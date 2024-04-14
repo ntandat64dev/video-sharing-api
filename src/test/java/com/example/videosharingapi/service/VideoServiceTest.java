@@ -1,6 +1,7 @@
 package com.example.videosharingapi.service;
 
 import com.example.videosharingapi.model.entity.Hashtag;
+import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.model.entity.VideoRating;
 import com.example.videosharingapi.payload.VideoDto;
@@ -18,6 +19,7 @@ import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -36,7 +38,6 @@ public class VideoServiceTest {
     private @Autowired VideoService videoService;
     private @Autowired VideoRatingRepository videoRatingRepository;
     private @Autowired HashtagRepository hashtagRepository;
-    private @Autowired VideoHashtagRepository videoHashtagRepository;
 
     private User user;
 
@@ -46,12 +47,17 @@ public class VideoServiceTest {
     }
 
     private VideoDto.VideoDtoBuilder createVideoDtoBuilder() {
+        var thumbnail = new Thumbnail();
+        thumbnail.setType(Thumbnail.Type.DEFAULT);
+        thumbnail.setUrl("Video thumbnail URL");
+        thumbnail.setWidth(100);
+        thumbnail.setHeight(100);
         return VideoDto.builder()
                 .title("Video title")
                 .description("Video description")
                 .durationSec(1000)
                 .uploadDate(LocalDateTime.now())
-                .thumbnailUrl("Video thumbnail URL")
+                .thumbnails(List.of(thumbnail))
                 .videoUrl("Video thumbnail URL")
                 .hashtags(Set.of("music", "pop"))
                 .userId(user.getId())
@@ -106,16 +112,6 @@ public class VideoServiceTest {
         videoService.saveVideo(videoDto);
         assertThat(hashtagRepository.findAll().stream().map(Hashtag::getTag))
                 .containsExactlyInAnyOrder("music", "pop", "sport");
-    }
-
-    @Test
-    @Transactional
-    public void givenVideoDtoObject_whenSave_thenVideoHashtagIsAlsoSaved() {
-        var videoDto = createVideoDtoBuilder().build();
-        var savedVideo = videoService.saveVideo(videoDto);
-        var videoHashtags = videoHashtagRepository.findByVideoId(savedVideo.getId());
-        assertThat(videoHashtags.stream().map(videoHashtag -> videoHashtag.getHashtag().getTag()))
-                .containsExactlyInAnyOrder("music", "pop");
     }
 
     @Test

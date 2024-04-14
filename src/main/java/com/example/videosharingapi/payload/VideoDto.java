@@ -1,5 +1,6 @@
 package com.example.videosharingapi.payload;
 
+import com.example.videosharingapi.model.entity.Thumbnail;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -9,6 +10,7 @@ import lombok.Data;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -21,7 +23,7 @@ public final class VideoDto {
     @NotBlank(message = "{validation.video.title.required}")
     private String title;
     private String description;
-    private String thumbnailUrl;
+    private List<Thumbnail> thumbnails;
     private String videoUrl;
     private Integer durationSec;
     private LocalDateTime uploadDate;
