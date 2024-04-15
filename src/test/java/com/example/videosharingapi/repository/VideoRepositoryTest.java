@@ -3,7 +3,7 @@ package com.example.videosharingapi.repository;
 import com.example.videosharingapi.config.AuditingConfig;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.Video;
-import com.example.videosharingapi.model.entity.Visibility;
+import com.example.videosharingapi.model.entity.Privacy;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -25,7 +25,7 @@ public class VideoRepositoryTest {
 
     private @Autowired UserRepository userRepository;
     private @Autowired VideoRepository videoRepository;
-    private @Autowired VisibilityRepository visibilityRepository;
+    private @Autowired PrivacyRepository privacyRepository;
 
     @Test
     public void givenVideoObject_whenSave_thenReturnSavedVideo() {
@@ -40,11 +40,11 @@ public class VideoRepositoryTest {
                 .title("Video title")
                 .thumbnails(List.of(thumbnail))
                 .videoUrl("Video URL")
-                .uploadDate(LocalDateTime.now())
+                .publishedAt(LocalDateTime.now())
                 .build();
 
-        var visibility = visibilityRepository.findByLevel(Visibility.VisibilityLevel.PUBLIC);
-        video.setVisibility(visibility);
+        var privacy = privacyRepository.findByStatus(Privacy.Status.PUBLIC);
+        video.setPrivacy(privacy);
 
         var user = userRepository.getReferenceById(UUID.fromString("9eb456d7-1a59-4efa-9a21-e509bbba5eb4"));
         video.setUser(user);

@@ -12,18 +12,18 @@ import java.util.UUID;
 @Setter
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = { "playlistId", "priority" }))
-public class PlaylistVideo extends AuditableEntity {
+public class PlaylistItem extends AuditableEntity {
 
     @Getter
     @EqualsAndHashCode
     @Embeddable
-    public static class PlaylistVideoId implements Serializable {
+    public static class PlaylistItemId implements Serializable {
         private UUID playlistId;
         private UUID videoId;
     }
 
     @EmbeddedId
-    private PlaylistVideoId id = new PlaylistVideoId();
+    private PlaylistItemId id = new PlaylistItemId();
 
     @Column(nullable = false)
     private Byte priority;

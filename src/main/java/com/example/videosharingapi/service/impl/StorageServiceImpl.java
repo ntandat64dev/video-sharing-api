@@ -35,7 +35,8 @@ public class StorageServiceImpl implements StorageService {
             Files.delete(videoFile.toPath());
             var thumbnail = new Thumbnail();
             thumbnail.setType(Thumbnail.Type.DEFAULT);
-            thumbnail.setUrl(Objects.requireNonNull(Objects.requireNonNull(video.getAssets()).getThumbnail()).toString());
+            thumbnail.setUrl(Objects.requireNonNull(Objects.requireNonNull(video.getAssets())
+                    .getThumbnail()).toString());
             thumbnail.setWidth(100);
             thumbnail.setHeight(100);
             return VideoDto.builder()

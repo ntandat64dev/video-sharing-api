@@ -27,7 +27,7 @@ public class Playlist extends AuditableEntity {
     private Boolean isUserCreate;
 
     @Column(nullable = false)
-    private LocalDateTime updatedAt;
+    private LocalDateTime publishedAt;
 
     @ManyToOne
     @JoinColumn(nullable = false)
@@ -35,5 +35,5 @@ public class Playlist extends AuditableEntity {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Visibility visibility;
+    private Privacy privacy;
 }

@@ -35,7 +35,7 @@ public class CommentRating extends AuditableEntity {
     private Rating rating;
 
     @Column(nullable = false)
-    private LocalDateTime ratedAt;
+    private LocalDateTime publishedAt;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("commentId")

@@ -17,7 +17,7 @@ public class Subscription extends AuditableEntity {
     private UUID id;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime subscribedAt;
+    private LocalDateTime publishedAt;
 
     @ManyToOne
     @JoinColumn(nullable = false)

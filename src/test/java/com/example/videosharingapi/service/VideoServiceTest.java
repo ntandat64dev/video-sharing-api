@@ -28,12 +28,14 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
-@Sql(scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS,
+        config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS,
+        config = @SqlConfig(commentPrefix = "#"))
 public class VideoServiceTest {
 
     private @Autowired UserRepository userRepository;
-    private @Autowired VideoSpecRepository videoSpecRepository;
+    private @Autowired VideoStatisticRepository videoStatisticRepository;
     private @Autowired VideoRepository videoRepository;
     private @Autowired VideoService videoService;
     private @Autowired VideoRatingRepository videoRatingRepository;
@@ -61,7 +63,7 @@ public class VideoServiceTest {
                 .videoUrl("Video thumbnail URL")
                 .hashtags(Set.of("music", "pop"))
                 .userId(user.getId())
-                .visibility("private")
+                .privacy("private")
                 .isCommentAllowed(true)
                 .isMadeForKids(false)
                 .isAgeRestricted(false);
@@ -81,7 +83,8 @@ public class VideoServiceTest {
 
     @Test
     public void givenUserIdAndVideoId_whenGetRelatedVideos_thenReturnExpectedVideos() {
-        var relatedVideos = videoService.getRelatedVideos(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"), user.getId());
+        var relatedVideos = videoService.
+                getRelatedVideos(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"), user.getId());
         assertThat(relatedVideos).hasSize(2);
     }
 
@@ -98,11 +101,11 @@ public class VideoServiceTest {
 
     @Test
     @Transactional
-    public void givenVideoDtoObject_whenSave_thenVideoSpecIsAlsoSaved() {
+    public void givenVideoDtoObject_whenSave_thenVideoStatisticIsAlsoSaved() {
         var videoDto = createVideoDtoBuilder().build();
         var savedVideo = videoService.saveVideo(videoDto);
-        var videoSpec = videoSpecRepository.findById(savedVideo.getId());
-        assertThat(videoSpec).isPresent();
+        var videoStat = videoStatisticRepository.findById(savedVideo.getId());
+        assertThat(videoStat).isPresent();
     }
 
     @Test
@@ -124,21 +127,23 @@ public class VideoServiceTest {
 
     @Test
     @Transactional
-    public void givenViewRequest_whenViewVideo_thenVideoSpecUpdatedAsExpected() {
-        var video = videoRepository.findById(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978")).orElseThrow();
+    public void givenViewRequest_whenViewVideo_thenVideoStatisticUpdatedAsExpected() {
+        var video = videoRepository
+                .findById(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"))
+                .orElseThrow();
         var viewRequest = new ViewRequest();
         viewRequest.setVideoId(video.getId());
         viewRequest.setUserId(user.getId());
         viewRequest.setDuration(60);
         viewRequest.setViewedAt(LocalDateTime.now());
         videoService.viewVideo(viewRequest);
-        var videoSpec = videoSpecRepository.findById(video.getId());
-        assertThat(videoSpec).isPresent();
-        assertThat(videoSpec.get().getViewCount()).isEqualTo(1);
-        assertThat(videoSpec.get().getLikeCount()).isEqualTo(0);
-        assertThat(videoSpec.get().getDislikeCount()).isEqualTo(0);
-        assertThat(videoSpec.get().getCommentCount()).isEqualTo(0);
-        assertThat(videoSpec.get().getDownloadCount()).isEqualTo(0);
+        var videoStat = videoStatisticRepository.findById(video.getId());
+        assertThat(videoStat).isPresent();
+        assertThat(videoStat.get().getViewCount()).isEqualTo(1);
+        assertThat(videoStat.get().getLikeCount()).isEqualTo(0);
+        assertThat(videoStat.get().getDislikeCount()).isEqualTo(0);
+        assertThat(videoStat.get().getCommentCount()).isEqualTo(0);
+        assertThat(videoStat.get().getDownloadCount()).isEqualTo(0);
     }
 
     @Test
@@ -180,7 +185,7 @@ public class VideoServiceTest {
 
     @Test
     @Transactional
-    public void givenRatingRequest_whenRateVideo_thenVideoSpecUpdatedAsExpected() {
+    public void givenRatingRequest_whenRateVideo_thenVideoStatisticUpdatedAsExpected() {
         var videoId = UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978");
         var ratingRequest = new RatingRequest();
         ratingRequest.setUserId(user.getId());
@@ -190,30 +195,30 @@ public class VideoServiceTest {
         // Rate NONE while there is no VideoRating then ignore.
         ratingRequest.setRating(RatingRequest.RatingType.NONE);
         videoService.rateVideo(ratingRequest);
-        var videoSpec = videoSpecRepository.findById(videoId);
-        assertThat(videoSpec.orElseThrow().getLikeCount()).isEqualTo(0);
-        assertThat(videoSpec.orElseThrow().getDislikeCount()).isEqualTo(0);
+        var videoStat = videoStatisticRepository.findById(videoId);
+        assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
+        assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
         // Rate LIKE then VideoRating is created with LIKE type.
         ratingRequest.setRating(RatingRequest.RatingType.LIKE);
         videoService.rateVideo(ratingRequest);
-        videoSpec = videoSpecRepository.findById(videoId);
-        assertThat(videoSpec.orElseThrow().getLikeCount()).isEqualTo(1);
-        assertThat(videoSpec.orElseThrow().getDislikeCount()).isEqualTo(0);
+        videoStat = videoStatisticRepository.findById(videoId);
+        assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(1);
+        assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
         ratingRequest.setRating(RatingRequest.RatingType.DISLIKE);
         videoService.rateVideo(ratingRequest);
-        videoSpec = videoSpecRepository.findById(videoId);
-        assertThat(videoSpec.orElseThrow().getLikeCount()).isEqualTo(0);
-        assertThat(videoSpec.orElseThrow().getDislikeCount()).isEqualTo(1);
+        videoStat = videoStatisticRepository.findById(videoId);
+        assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
+        assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
 
         // Rate NONE while there is a VideoRating then delete it.
         ratingRequest.setRating(RatingRequest.RatingType.NONE);
         videoService.rateVideo(ratingRequest);
-        videoSpec = videoSpecRepository.findById(videoId);
-        assertThat(videoSpec.orElseThrow().getLikeCount()).isEqualTo(0);
-        assertThat(videoSpec.orElseThrow().getDislikeCount()).isEqualTo(0);
+        videoStat = videoStatisticRepository.findById(videoId);
+        assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
+        assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
     }
 
     @Test

@@ -28,6 +28,9 @@ public class Video extends AuditableEntity {
     @Column(length = 1000000)
     private String description;
 
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime publishedAt;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinTable(
             name = "video_thumbnail",
@@ -41,9 +44,6 @@ public class Video extends AuditableEntity {
 
     @Column(nullable = false)
     private Integer durationSec;
-
-    @Column(nullable = false, updatable = false)
-    private LocalDateTime uploadDate;
 
     @Column(name = "for_kids", nullable = false)
     private Boolean isMadeForKids;
@@ -65,18 +65,18 @@ public class Video extends AuditableEntity {
     private List<Hashtag> hashtags;
 
     @OneToOne(mappedBy = "video", cascade = CascadeType.ALL)
-    private VideoSpec videoSpec;
+    private VideoStatistic videoStatistic;
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Visibility visibility;
+    private Privacy privacy;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false)
     private User user;
 
-    public void setVideoSpec(VideoSpec videoSpec) {
-        videoSpec.setVideo(this);
-        this.videoSpec = videoSpec;
+    public void setVideoStatistic(VideoStatistic videoStatistic) {
+        videoStatistic.setVideo(this);
+        this.videoStatistic = videoStatistic;
     }
 }

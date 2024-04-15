@@ -9,7 +9,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-public class VideoSpec extends AuditableEntity {
+public class VideoStatistic extends AuditableEntity {
 
     @Id
     private UUID id;

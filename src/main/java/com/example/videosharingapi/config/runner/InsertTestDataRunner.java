@@ -21,26 +21,27 @@ import java.util.stream.Stream;
  */
 @Profile("init")
 @Component
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class InsertTestDataRunner implements ApplicationRunner {
 
     private @Autowired ChannelRepository channelRepository;
     private @Autowired CommentRatingRepository commentRatingRepository;
     private @Autowired CommentRepository commentRepository;
     private @Autowired PlaylistRepository playlistRepository;
-    private @Autowired PlaylistVideoRepository playlistVideoRepository;
+    private @Autowired PlaylistItemRepository playlistItemRepository;
     private @Autowired SubscriptionRepository subscriptionRepository;
     private @Autowired UserRepository userRepository;
     private @Autowired VideoRatingRepository videoRatingRepository;
     private @Autowired VideoRepository videoRepository;
     private @Autowired HashtagRepository hashtagRepository;
     private @Autowired ViewHistoryRepository viewHistoryRepository;
-    private @Autowired VisibilityRepository visibilityRepository;
+    private @Autowired PrivacyRepository privacyRepository;
 
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
-        visibilityRepository.saveAndFlush(new Visibility(Visibility.VisibilityLevel.PUBLIC));
-        visibilityRepository.saveAndFlush(new Visibility(Visibility.VisibilityLevel.PRIVATE));
+        var publicPrivacy = privacyRepository.saveAndFlush(new Privacy(Privacy.Status.PUBLIC));
+        var privatePrivacy = privacyRepository.saveAndFlush(new Privacy(Privacy.Status.PRIVATE));
 
         var users = new User[9];
         for (int i = 1; i < 10; i++) {
@@ -132,23 +133,22 @@ public class InsertTestDataRunner implements ApplicationRunner {
                     .thumbnails(List.of(defaultThumbnail, mediumThumbnail))
                     .videoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4")
                     .durationSec(new Random().nextInt(540, 3600))
-                    .uploadDate(LocalDateTime.of(2024, new Random().nextInt(1, 5), i % 30 != 0 ? i % 30 : 1,
-                            i % 24, 0, 0))
-                    .visibility(
-                            new Random().nextInt() % 3 == 0 ?
-                                    visibilityRepository.findByLevel(Visibility.VisibilityLevel.PRIVATE) :
-                                    visibilityRepository.findByLevel(Visibility.VisibilityLevel.PUBLIC)
-                    )
+                    .publishedAt(LocalDateTime.of(2024, new Random().nextInt(1, 5),
+                            i % 30 != 0 ? i % 30 : 1, i % 24, 0, 0))
+                    .privacy(new Random().nextInt() % 3 == 0 ? privatePrivacy : publicPrivacy)
                     .isCommentAllowed(i % 3 != 0)
                     .isMadeForKids(isMadeForKids)
                     .isAgeRestricted(!isMadeForKids && new Random().nextInt() % 3 == 0)
-                    .location(new Random().nextInt() % 3 == 0 ? locations[new Random().nextInt(locations.length)] : null)
+                    .location(new Random().nextInt() % 3 == 0 ?
+                            locations[new Random().nextInt(locations.length)] :
+                            null)
                     .user(users[new Random().nextInt(9)])
                     .build();
-            video.setVideoSpec(new VideoSpec());
+            video.setVideoStatistic(new VideoStatistic());
 
             Collections.shuffle(hashtags);
-            int start = new Random().nextInt(0, hashtags.size() - 5), end = start + new Random().nextInt(5);
+            int start = new Random().nextInt(0, hashtags.size() - 5),
+                    end = start + new Random().nextInt(5);
             video.setHashtags(hashtags.subList(start, end));
             videoRepository.saveAndFlush(video);
         }
@@ -162,7 +162,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
                     var subscription = new Subscription();
                     subscription.setUser(user);
                     subscription.setChannel(channel);
-                    subscription.setSubscribedAt(LocalDateTime.now());
+                    subscription.setPublishedAt(LocalDateTime.now());
                     subscriptionRepository.saveAndFlush(subscription);
                 }
             }
@@ -176,8 +176,9 @@ public class InsertTestDataRunner implements ApplicationRunner {
                     var viewHistory = new ViewHistory();
                     viewHistory.setUser(user);
                     viewHistory.setVideo(video);
-                    viewHistory.setViewedAt(LocalDateTime.now());
-                    viewHistory.setViewedDuration(new Random().nextInt(540, video.getDurationSec() + 1));
+                    viewHistory.setPublishedAt(LocalDateTime.now());
+                    viewHistory.setViewedDurationSec(new Random().nextInt(540,
+                            video.getDurationSec() + 1));
                     viewHistoryRepository.saveAndFlush(viewHistory);
                 }
             }
@@ -187,8 +188,10 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 var videoRating = new VideoRating();
                 videoRating.setUser(user);
                 videoRating.setVideo(video);
-                videoRating.setRatedAt(LocalDateTime.now());
-                videoRating.setRating(new Random().nextInt(10) > 2 ? VideoRating.Rating.LIKE : VideoRating.Rating.DISLIKE);
+                videoRating.setPublishedAt(LocalDateTime.now());
+                videoRating.setRating(new Random().nextInt(10) > 2 ?
+                        VideoRating.Rating.LIKE :
+                        VideoRating.Rating.DISLIKE);
                 videoRatingRepository.saveAndFlush(videoRating);
             }
 
@@ -197,9 +200,8 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 var comment = new Comment();
                 comment.setUser(user);
                 comment.setVideo(video);
-                comment.setContent("Good video");
-                comment.setCommentedAt(LocalDateTime.now());
-                comment.setIsReply(false);
+                comment.setText("Good video");
+                comment.setPublishedAt(LocalDateTime.now());
                 commentRepository.saveAndFlush(comment);
 
                 if (new Random().nextInt(50) == 0) {
@@ -208,10 +210,9 @@ public class InsertTestDataRunner implements ApplicationRunner {
                         var replyComment = new Comment();
                         replyComment.setUser(replyUser);
                         replyComment.setVideo(video);
-                        replyComment.setContent("Reply for %s".formatted(comment.getId()));
-                        replyComment.setCommentedAt(LocalDateTime.now());
+                        replyComment.setText("Reply for %s".formatted(comment.getId()));
+                        replyComment.setPublishedAt(LocalDateTime.now());
                         replyComment.setParent(comment);
-                        replyComment.setIsReply(true);
                         commentRepository.saveAndFlush(replyComment);
 
                         if (new Random().nextInt(80) == 0) {
@@ -220,8 +221,10 @@ public class InsertTestDataRunner implements ApplicationRunner {
                                 var replyCommentRating = new CommentRating();
                                 replyCommentRating.setComment(replyComment);
                                 replyCommentRating.setUser(commentUser);
-                                replyCommentRating.setRating(new Random().nextBoolean() ? CommentRating.Rating.LIKE : CommentRating.Rating.DISLIKE);
-                                replyCommentRating.setRatedAt(LocalDateTime.now());
+                                replyCommentRating.setRating(new Random().nextBoolean() ?
+                                        CommentRating.Rating.LIKE :
+                                        CommentRating.Rating.DISLIKE);
+                                replyCommentRating.setPublishedAt(LocalDateTime.now());
                                 commentRatingRepository.saveAndFlush(replyCommentRating);
                             }
                         }
@@ -234,8 +237,10 @@ public class InsertTestDataRunner implements ApplicationRunner {
                         var commentRating = new CommentRating();
                         commentRating.setComment(comment);
                         commentRating.setUser(commentUser);
-                        commentRating.setRating(new Random().nextBoolean() ? CommentRating.Rating.LIKE : CommentRating.Rating.DISLIKE);
-                        commentRating.setRatedAt(LocalDateTime.now());
+                        commentRating.setRating(new Random().nextBoolean() ?
+                                CommentRating.Rating.LIKE :
+                                CommentRating.Rating.DISLIKE);
+                        commentRating.setPublishedAt(LocalDateTime.now());
                         commentRatingRepository.saveAndFlush(commentRating);
                     }
                 }
@@ -247,24 +252,20 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 var playlist = new Playlist();
                 playlist.setUser(user);
                 playlist.setTitle("Playlist %s".formatted(i));
-                playlist.setUpdatedAt(LocalDateTime.now());
+                playlist.setPublishedAt(LocalDateTime.now());
                 playlist.setIsUserCreate(true);
-                playlist.setVisibility(
-                        new Random().nextInt() % 3 == 0 ?
-                                visibilityRepository.findByLevel(Visibility.VisibilityLevel.PRIVATE) :
-                                visibilityRepository.findByLevel(Visibility.VisibilityLevel.PUBLIC)
-                );
+                playlist.setPrivacy(new Random().nextInt() % 3 == 0 ? privatePrivacy : publicPrivacy);
                 playlistRepository.saveAndFlush(playlist);
 
                 Collections.shuffle(videos);
                 var randomVideos = videos.subList(0, new Random().nextInt(5));
                 byte index = 0;
                 for (var video : randomVideos) {
-                    var playlistVideo = new PlaylistVideo();
+                    var playlistVideo = new PlaylistItem();
                     playlistVideo.setPlaylist(playlist);
                     playlistVideo.setVideo(video);
                     playlistVideo.setPriority(index++);
-                    playlistVideoRepository.saveAndFlush(playlistVideo);
+                    playlistItemRepository.saveAndFlush(playlistVideo);
                 }
             }
         }

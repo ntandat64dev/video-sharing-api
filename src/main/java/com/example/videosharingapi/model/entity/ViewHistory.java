@@ -16,10 +16,10 @@ public class ViewHistory extends AuditableEntity {
     @GeneratedValue
     private UUID id;
 
-    private Integer viewedDuration;
+    private Integer viewedDurationSec;
 
     @Column(nullable = false, updatable = false)
-    private LocalDateTime viewedAt;
+    private LocalDateTime publishedAt;
 
     @ManyToOne
     @JoinColumn(nullable = false)

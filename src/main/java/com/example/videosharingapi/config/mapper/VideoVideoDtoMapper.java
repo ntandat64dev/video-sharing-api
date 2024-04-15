@@ -5,7 +5,7 @@ import com.example.videosharingapi.payload.ChannelDto;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.repository.ChannelRepository;
 import com.example.videosharingapi.repository.HashtagRepository;
-import com.example.videosharingapi.repository.VisibilityRepository;
+import com.example.videosharingapi.repository.PrivacyRepository;
 import jakarta.annotation.Nullable;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
@@ -19,30 +19,32 @@ import java.util.Set;
 import java.util.UUID;
 
 @Mapper(componentModel = "spring",
-        imports = { User.class, VideoSpec.class, LocaleContextHolder.class },
+        imports = { User.class, VideoStatistic.class, LocaleContextHolder.class },
         builder = @Builder(disableBuilder = true))
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public abstract class VideoVideoDtoMapper {
 
-    private @Autowired VisibilityRepository visibilityRepository;
+    private @Autowired PrivacyRepository privacyRepository;
     private @Autowired ChannelRepository channelRepository;
     private @Autowired HashtagRepository hashtagRepository;
 
     @Mapping(target = "user", expression = "java(User.builder().id(videoDto.getUserId()).build())")
-    @Mapping(target = "videoSpec", expression = "java(new VideoSpec())")
-    @Mapping(target = "uploadDate", defaultExpression = "java(LocalDateTime.now())")
+    @Mapping(target = "videoStatistic", expression = "java(new VideoStatistic())")
+    @Mapping(target = "publishedAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "hashtags", expression = "java(toHashtags(videoDto.getHashtags()))")
     public abstract Video videoDtoToVideo(VideoDto videoDto);
 
     @Mapping(target = "userId", expression = "java(video.getUser().getId())")
-    @Mapping(target = "visibility", expression = "java(video.getVisibility().getLevel().toString()" +
+    @Mapping(target = "privacy", expression = "java(video.getPrivacy().getStatus().toString()" +
             ".toLowerCase(LocaleContextHolder.getLocale()))")
-    @Mapping(target = "spec", source = "videoSpec")
+    @Mapping(target = "statistic", source = "videoStatistic")
     @Mapping(target = "channel", expression = "java(findChannel(video.getUser().getId()))")
+    @Mapping(target = "uploadDate", source = "publishedAt")
     public abstract VideoDto videoToVideoDto(Video video);
 
-    protected Visibility visibilityStringToVisibility(String visibilityString) {
-        var visibilityLevel = Visibility.VisibilityLevel.valueOf(visibilityString.toUpperCase());
-        return visibilityRepository.findByLevel(visibilityLevel);
+    protected Privacy privacyStatusToPrivacy(String status) {
+        var privacyStatus = Privacy.Status.valueOf(status.toUpperCase());
+        return privacyRepository.findByStatus(privacyStatus);
     }
 
     protected String hashtagToString(Hashtag hashtag) {

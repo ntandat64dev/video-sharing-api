@@ -34,7 +34,7 @@ public class User extends AuditableEntity {
 
     private LocalDate dateOfBirth;
 
-    @Column(name = "phone", length = 32, unique = true)
+    @Column(length = 32, unique = true)
     private String phoneNumber;
 
     private Byte gender;

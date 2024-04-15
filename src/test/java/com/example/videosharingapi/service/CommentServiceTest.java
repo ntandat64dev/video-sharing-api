@@ -11,8 +11,10 @@ import java.util.UUID;
 
 @SpringBootTest
 @ActiveProfiles("test")
-@Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
-@Sql(scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS,
+        config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS,
+        config = @SqlConfig(commentPrefix = "#"))
 public class CommentServiceTest {
 
     private @Autowired CommentService commentService;

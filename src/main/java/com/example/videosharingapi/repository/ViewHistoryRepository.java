@@ -11,6 +11,7 @@ import java.util.UUID;
 public interface ViewHistoryRepository extends JpaRepository<ViewHistory, UUID> {
     long countByVideoId(UUID videoId);
 
-    @Query("SELECT vh FROM ViewHistory vh WHERE vh.video.id = :videoId AND vh.user.id = :userId ORDER BY vh.viewedAt DESC LIMIT 1")
+    @Query("SELECT vh FROM ViewHistory vh WHERE vh.video.id = :videoId AND vh.user.id = :userId " +
+            "ORDER BY vh.publishedAt DESC LIMIT 1")
     ViewHistory findLatest(UUID videoId, UUID userId);
 }

@@ -2,7 +2,7 @@ package com.example.videosharingapi.payload;
 
 import jakarta.validation.constraints.Min;
 
-public record VideoSpecDto(
+public record VideoStatisticDto(
         @Min(0)
         long viewCount,
         @Min(0)

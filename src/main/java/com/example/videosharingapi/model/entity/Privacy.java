@@ -11,21 +11,21 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-public class Visibility extends AuditableEntity {
+public class Privacy extends AuditableEntity {
 
-    public enum VisibilityLevel {
+    public enum Status {
         PUBLIC, PRIVATE
     }
 
-    public Visibility(VisibilityLevel visibilityLevel) {
-        this.level = visibilityLevel;
+    public Privacy(Status status) {
+        this.status = status;
     }
 
     @Id
     @GeneratedValue
     private UUID id;
 
-    @Column(name = "visibility_level", nullable = false, unique = true)
+    @Column(nullable = false, unique = true)
     @Enumerated(EnumType.STRING)
-    private VisibilityLevel level;
+    private Status status;
 }

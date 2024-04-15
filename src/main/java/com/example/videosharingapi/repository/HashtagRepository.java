@@ -21,6 +21,6 @@ public interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
         else return save(hashTag);
     }
 
-    @Query("SELECT h FROM Hashtag h JOIN Video v WHERE v.user.id = :userId")
+    @Query("SELECT hashtag FROM Video v JOIN v.hashtags hashtag WHERE v.user.id = :userId")
     List<Hashtag> findAllByUserId(UUID userId);
 }

@@ -11,10 +11,10 @@ import org.mapstruct.factory.Mappers;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true))
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public abstract class UserUserDtoMapper {
 
-    @Autowired
-    private ChannelRepository channelRepository;
+    private @Autowired ChannelRepository channelRepository;
 
     @Mapping(target = "channel", expression = "java(findChannel(user))")
     public abstract UserDto userToUserDto(User user);

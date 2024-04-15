@@ -11,8 +11,8 @@ import java.util.UUID;
 public class CommentDto {
     private UUID id;
     private UUID videoId;
-    private String content;
+    private String text;
     private UUID parentId;
-    private LocalDateTime commentedAt;
+    private LocalDateTime publishedAt;
     private UUID commentedBy;
 }

@@ -32,18 +32,19 @@ public class VideoServiceImpl implements VideoService {
 
     private final MessageSource messageSource;
     private final VideoVideoDtoMapper videoVideoDtoMapper;
-    private final VideoSpecRepository videoSpecRepository;
+    private final VideoStatisticRepository videoStatisticRepository;
 
     public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository,
                             ViewHistoryRepository viewHistoryRepository, VideoRatingRepository videoRatingRepository,
-                            MessageSource messageSource, VideoVideoDtoMapper videoVideoDtoMapper, VideoSpecRepository videoSpecRepository) {
+                            MessageSource messageSource, VideoVideoDtoMapper videoVideoDtoMapper,
+                            VideoStatisticRepository videoStatisticRepository) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.viewHistoryRepository = viewHistoryRepository;
         this.videoRatingRepository = videoRatingRepository;
         this.messageSource = messageSource;
         this.videoVideoDtoMapper = videoVideoDtoMapper;
-        this.videoSpecRepository = videoSpecRepository;
+        this.videoStatisticRepository = videoStatisticRepository;
     }
 
     @Override
@@ -51,8 +52,9 @@ public class VideoServiceImpl implements VideoService {
     public VideoDto getVideoById(UUID videoId) {
         return videoRepository.findById(videoId)
                 .map(videoVideoDtoMapper::videoToVideoDto)
-                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND, messageSource.getMessage("exception.video.id.not-exist",
-                        new Object[] { videoId }, LocaleContextHolder.getLocale())));
+                .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND,
+                        messageSource.getMessage("exception.video.id.not-exist",
+                                new Object[] { videoId }, LocaleContextHolder.getLocale())));
     }
 
     @Override
@@ -82,7 +84,7 @@ public class VideoServiceImpl implements VideoService {
 
         var video = videoRepository.save(videoVideoDtoMapper.videoDtoToVideo(videoDto));
         videoDto.setId(video.getId());
-        videoDto.setUploadDate(video.getUploadDate());
+        videoDto.setUploadDate(video.getPublishedAt());
         return videoDto;
     }
 
@@ -96,22 +98,23 @@ public class VideoServiceImpl implements VideoService {
 
         var lastViewHistory = viewHistoryRepository.findLatest(viewRequest.getVideoId(), viewRequest.getUserId());
         if (lastViewHistory != null) {
-            if (ChronoUnit.SECONDS.between(lastViewHistory.getViewedAt(), viewRequest.getViewedAt()) > video.getDurationSec() &&
+            if (ChronoUnit.SECONDS
+                    .between(lastViewHistory.getPublishedAt(), viewRequest.getViewedAt()) > video.getDurationSec() &&
                     viewRequest.getDuration() >= 30) {
                 // If this view's duration greater than the last by video duration and video duration >= 30.
                 var viewHistory = new ViewHistory();
                 viewHistory.setVideo(video);
                 viewHistory.setUser(user);
-                viewHistory.setViewedAt(viewRequest.getViewedAt());
-                viewHistory.setViewedDuration(viewRequest.getDuration());
+                viewHistory.setPublishedAt(viewRequest.getViewedAt());
+                viewHistory.setViewedDurationSec(viewRequest.getDuration());
                 viewHistoryRepository.save(viewHistory);
             }
         } else {
             var viewHistory = new ViewHistory();
             viewHistory.setVideo(video);
             viewHistory.setUser(user);
-            viewHistory.setViewedAt(viewRequest.getViewedAt());
-            viewHistory.setViewedDuration(viewRequest.getDuration());
+            viewHistory.setPublishedAt(viewRequest.getViewedAt());
+            viewHistory.setViewedDurationSec(viewRequest.getDuration());
             viewHistoryRepository.save(viewHistory);
         }
 
@@ -136,17 +139,18 @@ public class VideoServiceImpl implements VideoService {
         if (videoRating == null && ratingRequest.getRating() == RatingRequest.RatingType.NONE) return;
         if (videoRating != null && videoRating.getRating().name().equals(ratingRequest.getRating().name())) return;
 
-        var videoSpec = videoSpecRepository.findById(video.getId());
-        if (videoSpec.isEmpty())
+        var videoStatistic = videoStatisticRepository.findById(video.getId());
+        if (videoStatistic.isEmpty())
             throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    messageSource.getMessage("message.some-thing-went-wrong", null, LocaleContextHolder.getLocale()));
+                    messageSource.getMessage("message.some-thing-went-wrong", null,
+                            LocaleContextHolder.getLocale()));
 
         if (videoRating != null) {
             if (ratingRequest.getRating() == RatingRequest.RatingType.NONE) {
                 videoRatingRepository.delete(videoRating);
             } else {
                 videoRating.setRating(VideoRating.Rating.valueOf(ratingRequest.getRating().name()));
-                videoRating.setRatedAt(ratingRequest.getRatedAt());
+                videoRating.setPublishedAt(ratingRequest.getRatedAt());
                 videoRatingRepository.save(videoRating);
             }
         } else {
@@ -154,7 +158,7 @@ public class VideoServiceImpl implements VideoService {
             videoRating.setVideo(video);
             videoRating.setUser(user);
             videoRating.setRating(VideoRating.Rating.valueOf(ratingRequest.getRating().name()));
-            videoRating.setRatedAt(ratingRequest.getRatedAt());
+            videoRating.setPublishedAt(ratingRequest.getRatedAt());
             videoRatingRepository.save(videoRating);
         }
     }
@@ -169,7 +173,7 @@ public class VideoServiceImpl implements VideoService {
                 ? RatingResponse.RatingType.NONE
                 : RatingResponse.RatingType.valueOf(videoRating.getRating().name()));
         ratingResponse.setRatedBy(userId);
-        ratingResponse.setRatedAt(videoRating != null ? videoRating.getRatedAt() : null);
+        ratingResponse.setRatedAt(videoRating != null ? videoRating.getPublishedAt() : null);
         return ratingResponse;
     }
 

@@ -42,23 +42,27 @@ public class AuthServiceImpl implements AuthService {
         var user = userRepository.findByEmailAndPassword(request.email(), request.password());
         if (user == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage("exception.email-password.incorrect", null, LocaleContextHolder.getLocale()));
+                    messageSource.getMessage("exception.email-password.incorrect", null,
+                            LocaleContextHolder.getLocale()));
         }
         var userDto = userUserDtoMapper.userToUserDto(user);
-        return new AuthResponse(messageSource.getMessage("message.login-success", null, LocaleContextHolder.getLocale()), userDto);
+        return new AuthResponse(messageSource.getMessage("message.login-success", null,
+                LocaleContextHolder.getLocale()), userDto);
     }
 
     @Override
     public AuthResponse signUp(AuthRequest request) {
         if (userRepository.existsByEmail(request.email())) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage("exception.email.exist", null, LocaleContextHolder.getLocale()));
+                    messageSource.getMessage("exception.email.exist", null,
+                            LocaleContextHolder.getLocale()));
         }
         var user = User.builder().email(request.email()).password(request.password()).build();
         userRepository.save(user);
         createChannel(user);
         var userDto = userUserDtoMapper.userToUserDto(user);
-        return new AuthResponse(messageSource.getMessage("message.signup-success", null, LocaleContextHolder.getLocale()), userDto);
+        return new AuthResponse(messageSource.getMessage("message.signup-success", null,
+                LocaleContextHolder.getLocale()), userDto);
     }
 
     private void createChannel(User user) {

@@ -22,8 +22,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
-@Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
-@Sql(scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS, config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS,
+        config = @SqlConfig(commentPrefix = "#"))
+@Sql(scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS,
+        config = @SqlConfig(commentPrefix = "#"))
 public class VideoControllerTest {
 
     private @Autowired MockMvc mockMvc;
@@ -41,12 +43,13 @@ public class VideoControllerTest {
     @Test
     public void givenMultipartFiles_whenPostVideo_thenResponseSuccessful() throws Exception {
         var user = userRepository.findByEmail("user@gmail.com");
-        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4", "video/mp4", "data".getBytes());
+        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4",
+                "video/mp4", "data".getBytes());
         var metadata = new MockMultipartFile("metadata", null, "application/json", """
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
-                    "visibility": "private",
+                    "privacy": "private",
                     "isCommentAllowed": true,
                     "isMadeForKids": false,
                     "isAgeRestricted": false,
@@ -61,13 +64,14 @@ public class VideoControllerTest {
 
     @Test
     public void givenMultipartFilesWithInvalidUserId_whenPostVideo_thenReturnErrorResponse() throws Exception {
-        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4", "video/mp4", "data".getBytes());
+        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4",
+                "video/mp4", "data".getBytes());
         var randomUserId = UUID.randomUUID().toString();
         var metadata = new MockMultipartFile("metadata", null, "application/json", """
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
-                    "visibility": "private",
+                    "privacy": "private",
                     "isCommentAllowed": true,
                     "isMadeForKids": false,
                     "isAgeRestricted": false,
@@ -89,7 +93,7 @@ public class VideoControllerTest {
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
-                    "visibility": "private",
+                    "privacy": "private",
                     "isCommentAllowed": true,
                     "isMadeForKids": false,
                     "isAgeRestricted": false,
@@ -106,7 +110,7 @@ public class VideoControllerTest {
         json = """
                 {
                     "description": "Video 3 description",
-                    "visibility": "private",
+                    "privacy": "private",
                     "isCommentAllowed": true,
                     "isMadeForKids": false,
                     "isAgeRestricted": false,
@@ -114,14 +118,15 @@ public class VideoControllerTest {
                 }""";
         metadata = new MockMultipartFile("metadata", null, "application/json",
                 json.formatted(user.getId()).getBytes());
-        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4", "video/mp4", "data".getBytes());
+        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4",
+                "video/mp4", "data".getBytes());
         mockMvc.perform(multipart("/api/videos")
                         .file(videoFileTest)
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(content().string(containsString("Video title is required")));
 
-        // Given missing visibility.
+        // Given missing privacy.
         json = """
                 {
                     "title": "Video 3",
@@ -137,19 +142,20 @@ public class VideoControllerTest {
                         .file(videoFileTest)
                         .file(metadata))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("Visibility is required")));
+                .andExpect(content().string(containsString("Privacy is required")));
 
         // Given missing user ID.
         json = """
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
-                    "visibility": "private",
+                    "privacy": "private",
                     "isCommentAllowed": true,
                     "isMadeForKids": false,
                     "isAgeRestricted": false
                 }""";
-        metadata = new MockMultipartFile("metadata", null, "application/json", json.getBytes());
+        metadata = new MockMultipartFile("metadata", null,
+                "application/json", json.getBytes());
         mockMvc.perform(multipart("/api/videos")
                         .file(videoFileTest)
                         .file(metadata))
@@ -158,14 +164,15 @@ public class VideoControllerTest {
     }
 
     @Test
-    public void givenInvalidVisibilityLevel_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenInvalidPrivacyStatus_whenPostVideo_thenReturnErrorResponse() throws Exception {
         var user = userRepository.findByEmail("user@gmail.com");
-        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4", "video/mp4", "data".getBytes());
+        var videoFileTest = new MockMultipartFile("videoFile", "video.mp4",
+                "video/mp4", "data".getBytes());
         var metadata = new MockMultipartFile("metadata", null, "application/json", """
                 {
                     "title": "Video 3",
                     "description": "Video 3 description",
-                    "visibility": "privates",
+                    "privacy": "privates",
                     "isCommentAllowed": true,
                     "isMadeForKids": false,
                     "isAgeRestricted": false,
@@ -175,6 +182,6 @@ public class VideoControllerTest {
                         .file(videoFileTest)
                         .file(metadata))
                 .andExpect(status().isBadRequest())
-                .andExpect(content().string(containsString("Visibility must either 'private' or 'public'.")));
+                .andExpect(content().string(containsString("Privacy must either 'private' or 'public'.")));
     }
 }

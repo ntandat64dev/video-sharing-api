@@ -35,11 +35,11 @@ public final class VideoDto {
     private Boolean isCommentAllowed;
     private String location;
     private Set<String> hashtags;
-    @NotBlank(message = "{validation.video.visibility.required}")
-    @Pattern(regexp = "(?i)(private|public)", message = "{validation.video.visibility.in-range}")
-    private String visibility;
+    @NotBlank(message = "{validation.video.privacy.required}")
+    @Pattern(regexp = "(?i)(private|public)", message = "{validation.video.privacy.in-range}")
+    private String privacy;
     @NotNull(message = "{validation.video.user-id.required}")
     private UUID userId;
-    private VideoSpecDto spec;
+    private VideoStatisticDto statistic;
     private ChannelDto channel;
 }
