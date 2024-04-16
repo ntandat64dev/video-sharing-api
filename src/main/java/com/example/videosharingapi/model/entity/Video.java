@@ -14,7 +14,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-@Check(constraints = "(for_kids = 1 AND age_restricted = 0) OR for_kids = 0")
+@Check(constraints = "(made_for_kids = 1 AND age_restricted = 0) OR made_for_kids = 0")
 public class Video extends AuditableEntity {
 
     @Id
@@ -45,14 +45,14 @@ public class Video extends AuditableEntity {
     @Column(nullable = false)
     private Integer durationSec;
 
-    @Column(name = "for_kids", nullable = false)
-    private Boolean isMadeForKids;
+    @Column(nullable = false)
+    private Boolean madeForKids;
 
-    @Column(name = "age_restricted", nullable = false)
-    private Boolean isAgeRestricted;
+    @Column(nullable = false)
+    private Boolean ageRestricted;
 
-    @Column(name = "comment_allowed", nullable = false)
-    private Boolean isCommentAllowed;
+    @Column(nullable = false)
+    private Boolean commentAllowed;
 
     private String location;
 

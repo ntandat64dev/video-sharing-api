@@ -1,7 +1,9 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.config.mapper.VideoVideoDtoMapper;
+import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.exception.ApplicationException;
+import com.example.videosharingapi.model.entity.Hashtag;
+import com.example.videosharingapi.model.entity.Video;
 import com.example.videosharingapi.model.entity.VideoRating;
 import com.example.videosharingapi.model.entity.ViewHistory;
 import com.example.videosharingapi.payload.VideoDto;
@@ -10,12 +12,15 @@ import com.example.videosharingapi.payload.request.ViewRequest;
 import com.example.videosharingapi.payload.response.RatingResponse;
 import com.example.videosharingapi.payload.response.ViewResponse;
 import com.example.videosharingapi.repository.*;
+import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
+import jakarta.annotation.Nullable;
 import org.springframework.context.MessageSource;
 import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.time.temporal.ChronoUnit;
 import java.util.List;
@@ -29,29 +34,35 @@ public class VideoServiceImpl implements VideoService {
     private final UserRepository userRepository;
     private final ViewHistoryRepository viewHistoryRepository;
     private final VideoRatingRepository videoRatingRepository;
+    private final VideoStatisticRepository videoStatisticRepository;
+    private final HashtagRepository hashtagRepository;
+
+    private final StorageService storageService;
 
     private final MessageSource messageSource;
-    private final VideoVideoDtoMapper videoVideoDtoMapper;
-    private final VideoStatisticRepository videoStatisticRepository;
+    private final VideoMapper videoMapper;
 
     public VideoServiceImpl(VideoRepository videoRepository, UserRepository userRepository,
                             ViewHistoryRepository viewHistoryRepository, VideoRatingRepository videoRatingRepository,
-                            MessageSource messageSource, VideoVideoDtoMapper videoVideoDtoMapper,
-                            VideoStatisticRepository videoStatisticRepository) {
+                            MessageSource messageSource, VideoMapper videoMapper,
+                            VideoStatisticRepository videoStatisticRepository, StorageService storageService,
+                            HashtagRepository hashtagRepository) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.viewHistoryRepository = viewHistoryRepository;
         this.videoRatingRepository = videoRatingRepository;
         this.messageSource = messageSource;
-        this.videoVideoDtoMapper = videoVideoDtoMapper;
+        this.videoMapper = videoMapper;
         this.videoStatisticRepository = videoStatisticRepository;
+        this.storageService = storageService;
+        this.hashtagRepository = hashtagRepository;
     }
 
     @Override
     @Transactional(readOnly = true)
     public VideoDto getVideoById(UUID videoId) {
         return videoRepository.findById(videoId)
-                .map(videoVideoDtoMapper::videoToVideoDto)
+                .map(videoMapper::toVideoDto)
                 .orElseThrow(() -> new ApplicationException(HttpStatus.NOT_FOUND,
                         messageSource.getMessage("exception.video.id.not-exist",
                                 new Object[] { videoId }, LocaleContextHolder.getLocale())));
@@ -62,7 +73,7 @@ public class VideoServiceImpl implements VideoService {
     public List<VideoDto> getRecommendVideos(UUID userId) {
         // TODO: Get actual recommend videos
         return videoRepository.findAllByUserId(userId).stream()
-                .map(videoVideoDtoMapper::videoToVideoDto)
+                .map(videoMapper::toVideoDto)
                 .collect(Collectors.toList());
     }
 
@@ -71,21 +82,31 @@ public class VideoServiceImpl implements VideoService {
     public List<VideoDto> getRelatedVideos(UUID videoId, UUID userId) {
         // TODO: Get actual related videos
         return videoRepository.findAllByUserId(userId).stream()
-                .map(videoVideoDtoMapper::videoToVideoDto)
+                .map(videoMapper::toVideoDto)
                 .collect(Collectors.toList());
     }
 
     @Override
-    public VideoDto saveVideo(VideoDto videoDto) {
-        if (!userRepository.existsById(videoDto.getUserId()))
+    public VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto) {
+        if (!userRepository.existsById(videoDto.getSnippet().getUserId()))
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.user.id.not-exist",
-                            new Object[] { videoDto.getUserId() }, LocaleContextHolder.getLocale()));
+                            new Object[] { videoDto.getSnippet().getUserId() }, LocaleContextHolder.getLocale()));
 
-        var video = videoRepository.save(videoVideoDtoMapper.videoDtoToVideo(videoDto));
+        storageService.store(videoFile, videoDto);
+        var video = videoRepository.save(videoMapper.toVideo(videoDto));
+        saveHashtags(videoDto.getSnippet().getHashtags(), video);
         videoDto.setId(video.getId());
-        videoDto.setUploadDate(video.getPublishedAt());
         return videoDto;
+    }
+
+    private void saveHashtags(@Nullable List<String> tags, Video video) {
+        if (tags == null) return;
+        var hashtags = tags.stream()
+                .map(Hashtag::new)
+                .map(hashtagRepository::saveIfAbsent)
+                .toList();
+        video.setHashtags(hashtags);
     }
 
     @Override

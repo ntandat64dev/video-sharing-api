@@ -30,9 +30,8 @@ public class AuthServiceTest {
     private @Autowired ChannelRepository channelRepository;
 
     @AfterEach
-    public void deleteSignedUpUserAndItsChannel(TestInfo testInfo) {
-        if (testInfo.getTags().contains("deleteSignedUpUserAndItsChannel")) {
-            channelRepository.deleteByUserEmail("user1@gmail.com");
+    public void deleteSignedUpUser(TestInfo testInfo) {
+        if (testInfo.getTags().contains("deleteSignedUpUser")) {
             userRepository.deleteByEmail("user1@gmail.com");
         }
     }
@@ -42,7 +41,7 @@ public class AuthServiceTest {
         var authRequest = new AuthRequest("user@gmail.com", "00000000");
         var authResponse = authService.signIn(authRequest);
         assertThat(authResponse.message()).isEqualTo("Sign in successfully.");
-        assertThat(authResponse.userInfo().getEmail()).isEqualTo("user@gmail.com");
+        assertThat(authResponse.userInfo().getSnippet().getEmail()).isEqualTo("user@gmail.com");
     }
 
     @Test
@@ -65,13 +64,13 @@ public class AuthServiceTest {
     }
 
     @Test
-    @Tag("deleteSignedUpUserAndItsChannel")
+    @Tag("deleteSignedUpUser")
     public void givenAuthRequest_whenSignUp_thenReturnSuccessfulResponse() {
         var authRequest = new AuthRequest("user1@gmail.com", "00000000");
         var authResponse = authService.signUp(authRequest);
         assertThat(authResponse.userInfo().getId()).isNotNull();
         assertThat(authResponse.message()).isEqualTo("Sign up successfully.");
-        assertThat(authResponse.userInfo().getEmail()).isEqualTo("user1@gmail.com");
+        assertThat(authResponse.userInfo().getSnippet().getEmail()).isEqualTo("user1@gmail.com");
     }
 
     @Test
@@ -81,7 +80,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    @Tag("deleteSignedUpUserAndItsChannel")
+    @Tag("deleteSignedUpUser")
     public void givenAuthRequest_whenSignUp_thenChannelIsCreated() {
         var authRequest = new AuthRequest("user1@gmail.com", "00000000");
         var authResponse = authService.signUp(authRequest);

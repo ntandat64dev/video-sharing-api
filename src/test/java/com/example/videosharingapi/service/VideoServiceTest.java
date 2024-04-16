@@ -4,6 +4,7 @@ import com.example.videosharingapi.model.entity.Hashtag;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.model.entity.VideoRating;
+import com.example.videosharingapi.payload.ThumbnailDto;
 import com.example.videosharingapi.payload.VideoDto;
 import com.example.videosharingapi.payload.request.RatingRequest;
 import com.example.videosharingapi.payload.request.ViewRequest;
@@ -13,18 +14,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @ActiveProfiles("test")
@@ -40,39 +45,50 @@ public class VideoServiceTest {
     private @Autowired VideoService videoService;
     private @Autowired VideoRatingRepository videoRatingRepository;
     private @Autowired HashtagRepository hashtagRepository;
+    private @Autowired ThumbnailRepository thumbnailRepository;
 
     private User user;
+    private @MockBean MultipartFile videoFile;
 
     @BeforeEach
-    public void setupUser() {
+    public void setUp() {
         user = userRepository.findByEmail("user@gmail.com");
+        when(videoFile.getSize()).thenReturn(1000L);
     }
 
-    private VideoDto.VideoDtoBuilder createVideoDtoBuilder() {
-        var thumbnail = new Thumbnail();
-        thumbnail.setType(Thumbnail.Type.DEFAULT);
-        thumbnail.setUrl("Video thumbnail URL");
-        thumbnail.setWidth(100);
-        thumbnail.setHeight(100);
-        return VideoDto.builder()
+    private VideoDto createVideoDto() {
+        var thumbnailDto = new ThumbnailDto();
+        thumbnailDto.setUrl("Video thumbnail URL");
+        thumbnailDto.setWidth(100);
+        thumbnailDto.setHeight(100);
+
+        var thumbnails = new HashMap<Thumbnail.Type, ThumbnailDto>();
+        thumbnails.put(Thumbnail.Type.DEFAULT, thumbnailDto);
+
+        var videoDto = new VideoDto();
+        videoDto.setSnippet(VideoDto.Snippet.builder()
                 .title("Video title")
                 .description("Video description")
-                .durationSec(1000)
-                .uploadDate(LocalDateTime.now())
-                .thumbnails(List.of(thumbnail))
+                .duration(Duration.ofSeconds(1000))
+                .publishedAt(LocalDateTime.now())
+                .thumbnails(thumbnails)
                 .videoUrl("Video thumbnail URL")
-                .hashtags(Set.of("music", "pop"))
+                .hashtags(List.of("music", "pop"))
                 .userId(user.getId())
+                .build());
+        videoDto.setStatus(VideoDto.Status.builder()
                 .privacy("private")
-                .isCommentAllowed(true)
-                .isMadeForKids(false)
-                .isAgeRestricted(false);
+                .commentAllowed(true)
+                .madeForKids(false)
+                .ageRestricted(false)
+                .build());
+        return videoDto;
     }
 
     @Test
     public void givenVideoId_whenGetVideoById_thenReturnExpectedVideo() {
         var video = videoService.getVideoById(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"));
-        assertThat(video.getTitle()).isEqualTo("Video 1");
+        assertThat(video.getSnippet().getTitle()).isEqualTo("Video 1");
     }
 
     @Test
@@ -91,8 +107,8 @@ public class VideoServiceTest {
     @Test
     @Transactional
     public void givenVideoDtoObject_whenSave_thenAssertVideoIsSaved() {
-        var videoDto = createVideoDtoBuilder().build();
-        videoService.saveVideo(videoDto);
+        var videoDto = createVideoDto();
+        videoService.saveVideo(videoFile, videoDto);
         var videos = videoRepository.findAllByUserId(user.getId());
         assertThat(videos).hasSize(3);
         var savedVideo = videos.stream().filter(video -> video.getTitle().equals("Video title")).findFirst();
@@ -101,9 +117,18 @@ public class VideoServiceTest {
 
     @Test
     @Transactional
+    public void givenVideoDtoObject_whenSave_thenVideoThumbnailsIsAlsoSaved() {
+        var videoDto = createVideoDto();
+        var savedVideo = videoService.saveVideo(videoFile, videoDto);
+        var thumbnails = thumbnailRepository.findAllByVideoId(savedVideo.getId());
+        assertThat(thumbnails).hasSize(1);
+    }
+
+    @Test
+    @Transactional
     public void givenVideoDtoObject_whenSave_thenVideoStatisticIsAlsoSaved() {
-        var videoDto = createVideoDtoBuilder().build();
-        var savedVideo = videoService.saveVideo(videoDto);
+        var videoDto = createVideoDto();
+        var savedVideo = videoService.saveVideo(videoFile, videoDto);
         var videoStat = videoStatisticRepository.findById(savedVideo.getId());
         assertThat(videoStat).isPresent();
     }
@@ -111,17 +136,17 @@ public class VideoServiceTest {
     @Test
     @Transactional
     public void givenVideoDtoObject_whenSave_thenHashtagsIsAlsoSaved() {
-        var videoDto = createVideoDtoBuilder().build();
-        videoService.saveVideo(videoDto);
+        var videoDto = createVideoDto();
+        videoService.saveVideo(videoFile, videoDto);
         assertThat(hashtagRepository.findAll().stream().map(Hashtag::getTag))
                 .containsExactlyInAnyOrder("music", "pop", "sport");
     }
 
     @Test
     public void givenVideoDtoObjectWithNullTitle_whenSave_thenErrorOccurAndVideoIsNotSaved() {
-        var videoDto1 = createVideoDtoBuilder().build();
-        videoDto1.setTitle(null);
-        assertThrows(Exception.class, () -> videoService.saveVideo(videoDto1));
+        var videoDto = createVideoDto();
+        videoDto.getSnippet().setTitle(null);
+        assertThrows(Exception.class, () -> videoService.saveVideo(videoFile, videoDto));
         assertThat(videoRepository.findAll()).hasSize(3);
     }
 

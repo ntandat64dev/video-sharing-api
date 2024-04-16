@@ -1,6 +1,6 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.config.mapper.CommentCommentDtoMapper;
+import com.example.videosharingapi.mapper.CommentMapper;
 import com.example.videosharingapi.payload.CommentDto;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.service.CommentService;
@@ -13,11 +13,11 @@ import java.util.UUID;
 @Transactional
 public class CommentServiceImpl implements CommentService {
 
-    private final CommentCommentDtoMapper commentCommentDtoMapper;
+    private final CommentMapper commentMapper;
     private final CommentRepository commentRepository;
 
-    public CommentServiceImpl(CommentCommentDtoMapper commentCommentDtoMapper, CommentRepository commentRepository) {
-        this.commentCommentDtoMapper = commentCommentDtoMapper;
+    public CommentServiceImpl(CommentMapper commentMapper, CommentRepository commentRepository) {
+        this.commentMapper = commentMapper;
         this.commentRepository = commentRepository;
     }
 
@@ -25,7 +25,7 @@ public class CommentServiceImpl implements CommentService {
     @Transactional(readOnly = true)
     public CommentDto getMostLikeComment(UUID videoId) {
         // TODO: Implement
-        return commentCommentDtoMapper.commentToCommentDto(commentRepository.findByVideoId(videoId).stream()
+        return commentMapper.toCommentDto(commentRepository.findByVideoId(videoId).stream()
                 .findFirst()
                 .orElse(null));
     }

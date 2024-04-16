@@ -23,6 +23,8 @@ public class Comment extends AuditableEntity {
     @Column(nullable = false, updatable = false)
     private LocalDateTime publishedAt;
 
+    private LocalDateTime updatedAt;
+
     @ManyToOne
     private Comment parent;
 

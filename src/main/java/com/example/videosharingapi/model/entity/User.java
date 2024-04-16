@@ -1,9 +1,6 @@
 package com.example.videosharingapi.model.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -41,4 +38,8 @@ public class User extends AuditableEntity {
 
     @Column(length = 64)
     private String country;
+
+    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(nullable = false, unique = true)
+    private Channel channel;
 }

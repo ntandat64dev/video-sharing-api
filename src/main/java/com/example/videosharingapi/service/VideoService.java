@@ -5,6 +5,7 @@ import com.example.videosharingapi.payload.request.RatingRequest;
 import com.example.videosharingapi.payload.request.ViewRequest;
 import com.example.videosharingapi.payload.response.RatingResponse;
 import com.example.videosharingapi.payload.response.ViewResponse;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -16,7 +17,7 @@ public interface VideoService {
 
     List<VideoDto> getRelatedVideos(UUID videoId, UUID userId);
 
-    VideoDto saveVideo(VideoDto videoDto);
+    VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto);
 
     ViewResponse viewVideo(ViewRequest viewRequest);
 

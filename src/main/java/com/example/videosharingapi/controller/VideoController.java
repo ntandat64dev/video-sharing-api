@@ -6,7 +6,6 @@ import com.example.videosharingapi.payload.request.RatingRequest;
 import com.example.videosharingapi.payload.request.ViewRequest;
 import com.example.videosharingapi.payload.response.RatingResponse;
 import com.example.videosharingapi.payload.response.ViewResponse;
-import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -19,15 +18,13 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/videos")
+@RequestMapping("/api/v1/videos")
 @Validated
 public class VideoController {
     private final VideoService videoService;
-    private final StorageService storageService;
 
-    public VideoController(VideoService videoService, StorageService storageService) {
+    public VideoController(VideoService videoService) {
         this.videoService = videoService;
-        this.storageService = storageService;
     }
 
     @GetMapping("/{videoId}")
@@ -51,12 +48,8 @@ public class VideoController {
     @PostMapping
     public ResponseEntity<VideoDto> uploadVideo(@RequestParam @ValidFile MultipartFile videoFile,
                                                 @RequestPart @Valid VideoDto metadata) {
-        var storedVideo = storageService.store(videoFile);
-        metadata.setThumbnails(storedVideo.getThumbnails());
-        metadata.setVideoUrl(storedVideo.getVideoUrl());
-        metadata.setDurationSec(storedVideo.getDurationSec());
-        var videoDto = videoService.saveVideo(metadata);
-        return new ResponseEntity<>(videoDto, HttpStatus.CREATED);
+        var response = videoService.saveVideo(videoFile, metadata);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PostMapping("/view")

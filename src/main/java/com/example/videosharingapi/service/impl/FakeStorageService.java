@@ -1,5 +1,6 @@
 package com.example.videosharingapi.service.impl;
 
+import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.payload.VideoDto;
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.Duration;
 import java.util.List;
 
 @Service
@@ -17,8 +19,14 @@ import java.util.List;
 @Profile({ "dev", "test" })
 public class FakeStorageService implements StorageService {
 
+    private final ThumbnailMapper thumbnailMapper;
+
+    public FakeStorageService(ThumbnailMapper thumbnailMapper) {
+        this.thumbnailMapper = thumbnailMapper;
+    }
+
     @Override
-    public VideoDto store(MultipartFile file) {
+    public void store(MultipartFile file, VideoDto videoDto) {
         if (file.isEmpty()) {
             throw new ApplicationException(HttpStatus.valueOf(400), "Video file is empty!");
         }
@@ -32,10 +40,8 @@ public class FakeStorageService implements StorageService {
         thumbnail.setWidth(100);
         thumbnail.setHeight(100);
 
-        return VideoDto.builder()
-                .thumbnails(List.of(thumbnail))
-                .videoUrl(videoUrl)
-                .durationSec(duration)
-                .build();
+        videoDto.getSnippet().setThumbnails(thumbnailMapper.toMap(List.of(thumbnail)));
+        videoDto.getSnippet().setVideoUrl(videoUrl);
+        videoDto.getSnippet().setDuration(Duration.ofSeconds(duration));
     }
 }

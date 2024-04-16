@@ -1,6 +1,6 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.config.mapper.UserUserDtoMapper;
+import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.model.entity.Channel;
 import com.example.videosharingapi.model.entity.Thumbnail;
@@ -26,14 +26,14 @@ public class AuthServiceImpl implements AuthService {
     private final ChannelRepository channelRepository;
 
     private final MessageSource messageSource;
-    private final UserUserDtoMapper userUserDtoMapper;
+    private final UserMapper userMapper;
 
     public AuthServiceImpl(UserRepository userRepository, ChannelRepository channelRepository,
-                           MessageSource messageSource, UserUserDtoMapper userUserDtoMapper) {
+                           MessageSource messageSource, UserMapper userMapper) {
         this.userRepository = userRepository;
         this.channelRepository = channelRepository;
         this.messageSource = messageSource;
-        this.userUserDtoMapper = userUserDtoMapper;
+        this.userMapper = userMapper;
     }
 
     @Override
@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
                     messageSource.getMessage("exception.email-password.incorrect", null,
                             LocaleContextHolder.getLocale()));
         }
-        var userDto = userUserDtoMapper.userToUserDto(user);
+        var userDto = userMapper.toUserDto(user);
         return new AuthResponse(messageSource.getMessage("message.login-success", null,
                 LocaleContextHolder.getLocale()), userDto);
     }
@@ -58,9 +58,9 @@ public class AuthServiceImpl implements AuthService {
                             LocaleContextHolder.getLocale()));
         }
         var user = User.builder().email(request.email()).password(request.password()).build();
-        userRepository.save(user);
         createChannel(user);
-        var userDto = userUserDtoMapper.userToUserDto(user);
+        userRepository.save(user);
+        var userDto = userMapper.toUserDto(user);
         return new AuthResponse(messageSource.getMessage("message.signup-success", null,
                 LocaleContextHolder.getLocale()), userDto);
     }
@@ -84,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
         mediumThumbnail.setHeight(200);
 
         channel.setThumbnails(List.of(defaultThumbnail, mediumThumbnail));
-        channel.setUser(user);
         channelRepository.save(channel);
+        user.setChannel(channel);
     }
 }

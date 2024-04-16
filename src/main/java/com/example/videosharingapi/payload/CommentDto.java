@@ -9,10 +9,33 @@ import java.util.UUID;
 @Getter
 @Setter
 public class CommentDto {
+
+    @Getter
+    @Setter
+    public static class Snippet {
+
+        private UUID videoId;
+
+        private UUID authorId;
+
+        private String authorDisplayName;
+
+        private String authorProfileImageUrl;
+
+        private String text;
+
+        private UUID parentId;
+
+        private Integer likeCount;
+
+        private Integer dislikeCount;
+
+        private LocalDateTime publishedAt;
+
+        private LocalDateTime updatedAt;
+    }
+
     private UUID id;
-    private UUID videoId;
-    private String text;
-    private UUID parentId;
-    private LocalDateTime publishedAt;
-    private UUID commentedBy;
+
+    private Snippet snippet;
 }

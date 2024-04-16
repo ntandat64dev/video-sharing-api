@@ -33,8 +33,4 @@ public class Channel extends AuditableEntity {
             inverseJoinColumns = @JoinColumn(name = "thumbnail_id", nullable = false)
     )
     private List<Thumbnail> thumbnails;
-
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, unique = true)
-    private User user;
 }
