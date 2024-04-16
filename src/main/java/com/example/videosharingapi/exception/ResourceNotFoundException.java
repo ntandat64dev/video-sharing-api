@@ -12,7 +12,7 @@ public class ResourceNotFoundException extends ApplicationException {
     private final long fieldValue;
 
     public ResourceNotFoundException(String resourceName, String fieldName, long fieldValue) {
-        super(HttpStatus.NOT_FOUND, String.format("%s not found with %s = '%s'", resourceName, fieldName, fieldValue));
+        super(HttpStatus.NOT_FOUND, "%s not found with %s = '%s'".formatted(resourceName, fieldName, fieldValue));
         this.resourceName = resourceName;
         this.fieldName = fieldName;
         this.fieldValue = fieldValue;

@@ -21,7 +21,8 @@ public class UserServiceImpl implements UserService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<String> getHashtag(UUID userId) {
+    public List<String> getBrowseKeywords(UUID userId) {
+        // TODO
         return hashtagRepository.findAllByUserId(userId).stream()
                 .map(Hashtag::getTag)
                 .collect(Collectors.toList());

@@ -1,11 +1,11 @@
-package com.example.videosharingapi.payload;
+package com.example.videosharingapi.dto;
 
 import lombok.Getter;
 import lombok.Setter;
 
 @Getter
 @Setter
-public class ThumbnailDto {
+public final class ThumbnailDto {
 
     private String url;
 

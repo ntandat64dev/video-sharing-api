@@ -1,14 +1,12 @@
 package com.example.videosharingapi.service;
 
+import com.example.videosharingapi.dto.ThumbnailDto;
+import com.example.videosharingapi.dto.VideoDto;
+import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.model.entity.Hashtag;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.model.entity.VideoRating;
-import com.example.videosharingapi.payload.ThumbnailDto;
-import com.example.videosharingapi.payload.VideoDto;
-import com.example.videosharingapi.payload.request.RatingRequest;
-import com.example.videosharingapi.payload.request.ViewRequest;
-import com.example.videosharingapi.payload.response.RatingResponse;
 import com.example.videosharingapi.repository.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -86,14 +84,8 @@ public class VideoServiceTest {
     }
 
     @Test
-    public void givenVideoId_whenGetVideoById_thenReturnExpectedVideo() {
-        var video = videoService.getVideoById(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"));
-        assertThat(video.getSnippet().getTitle()).isEqualTo("Video 1");
-    }
-
-    @Test
-    public void givenUserId_whenGetRecommendVideos_thenReturnExpectedVideos() {
-        var recommendVideos = videoService.getRecommendVideos(user.getId());
+    public void givenUserId_whenGetVideos_thenReturnExpectedVideosByAllCategories() {
+        var recommendVideos = videoService.getVideosByAllCategories(user.getId());
         assertThat(recommendVideos).hasSize(2);
     }
 
@@ -152,58 +144,29 @@ public class VideoServiceTest {
 
     @Test
     @Transactional
-    public void givenViewRequest_whenViewVideo_thenVideoStatisticUpdatedAsExpected() {
-        var video = videoRepository
-                .findById(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"))
-                .orElseThrow();
-        var viewRequest = new ViewRequest();
-        viewRequest.setVideoId(video.getId());
-        viewRequest.setUserId(user.getId());
-        viewRequest.setDuration(60);
-        viewRequest.setViewedAt(LocalDateTime.now());
-        videoService.viewVideo(viewRequest);
-        var videoStat = videoStatisticRepository.findById(video.getId());
-        assertThat(videoStat).isPresent();
-        assertThat(videoStat.get().getViewCount()).isEqualTo(1);
-        assertThat(videoStat.get().getLikeCount()).isEqualTo(0);
-        assertThat(videoStat.get().getDislikeCount()).isEqualTo(0);
-        assertThat(videoStat.get().getCommentCount()).isEqualTo(0);
-        assertThat(videoStat.get().getDownloadCount()).isEqualTo(0);
-    }
-
-    @Test
-    @Transactional
     public void givenRatingRequest_whenRateVideo_thenVideoRatingUpdatedAsExpected() {
         var videoId = UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978");
-        var ratingRequest = new RatingRequest();
-        ratingRequest.setUserId(user.getId());
-        ratingRequest.setVideoId(videoId);
-        ratingRequest.setRatedAt(LocalDateTime.now());
 
         // Rate NONE while there is no VideoRating then ignore.
-        ratingRequest.setRating(RatingRequest.RatingType.NONE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.NONE);
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), videoId);
         assertThat(videoRating).isNull();
 
         // Rate LIKE then VideoRating is created with LIKE type.
-        ratingRequest.setRating(RatingRequest.RatingType.LIKE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.LIKE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), videoId);
         assertThat(videoRating).isNotNull();
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.LIKE);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
-        ratingRequest.setRating(RatingRequest.RatingType.DISLIKE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.DISLIKE);
         var videoRating2 = videoRatingRepository.findByUserIdAndVideoId(user.getId(), videoId);
         assertThat(videoRating2).isNotNull();
         assertThat(videoRating2.getId()).isEqualTo(videoRating.getId());
         assertThat(videoRating2.getRating()).isEqualTo(VideoRating.Rating.DISLIKE);
 
         // Rate NONE while there is a VideoRating then delete it.
-        ratingRequest.setRating(RatingRequest.RatingType.NONE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.NONE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), videoId);
         assertThat(videoRating).isNull();
     }
@@ -212,35 +175,27 @@ public class VideoServiceTest {
     @Transactional
     public void givenRatingRequest_whenRateVideo_thenVideoStatisticUpdatedAsExpected() {
         var videoId = UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978");
-        var ratingRequest = new RatingRequest();
-        ratingRequest.setUserId(user.getId());
-        ratingRequest.setVideoId(videoId);
-        ratingRequest.setRatedAt(LocalDateTime.now());
 
         // Rate NONE while there is no VideoRating then ignore.
-        ratingRequest.setRating(RatingRequest.RatingType.NONE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.NONE);
         var videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
         // Rate LIKE then VideoRating is created with LIKE type.
-        ratingRequest.setRating(RatingRequest.RatingType.LIKE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.LIKE);
         videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(1);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
-        ratingRequest.setRating(RatingRequest.RatingType.DISLIKE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.DISLIKE);
         videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
 
         // Rate NONE while there is a VideoRating then delete it.
-        ratingRequest.setRating(RatingRequest.RatingType.NONE);
-        videoService.rateVideo(ratingRequest);
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.NONE);
         videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
@@ -252,35 +207,26 @@ public class VideoServiceTest {
         var userId = user.getId();
 
         // When there is no VideoRating.
-        var ratingResponse = videoService.getRating(videoId, userId);
-        assertThat(ratingResponse.getRating()).isEqualTo(RatingResponse.RatingType.NONE);
-        assertThat(ratingResponse.getRatedAt()).isNull();
+        var videoRatingDto = videoService.getRating(videoId, userId);
+        assertThat(videoRatingDto.getRating()).isEqualTo(VideoRatingDto.NONE);
+        assertThat(videoRatingDto.getPublishedAt()).isNull();
 
         // When there is VideoRating with LIKE type.
-        var ratingRequest = new RatingRequest();
-        ratingRequest.setUserId(user.getId());
-        ratingRequest.setVideoId(videoId);
-        ratingRequest.setRatedAt(LocalDateTime.parse("2024-04-10T12:00:00.123456"));
-        ratingRequest.setRating(RatingRequest.RatingType.LIKE);
-        videoService.rateVideo(ratingRequest);
-        ratingResponse = videoService.getRating(videoId, userId);
-        assertThat(ratingResponse).isNotNull();
-        assertThat(ratingResponse.getRating()).isEqualTo(RatingResponse.RatingType.LIKE);
-        assertThat(ratingResponse.getRatedAt()).isEqualTo(LocalDateTime.parse("2024-04-10T12:00:00.123456"));
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.LIKE);
+        videoRatingDto = videoService.getRating(videoId, userId);
+        assertThat(videoRatingDto).isNotNull();
+        assertThat(videoRatingDto.getRating()).isEqualTo(VideoRatingDto.LIKE);
 
         // When update VideoRating to DISLIKE type.
-        ratingRequest.setRating(RatingRequest.RatingType.DISLIKE);
-        videoService.rateVideo(ratingRequest);
-        ratingResponse = videoService.getRating(videoId, userId);
-        assertThat(ratingResponse).isNotNull();
-        assertThat(ratingResponse.getRating()).isEqualTo(RatingResponse.RatingType.DISLIKE);
-        assertThat(ratingResponse.getRatedAt()).isEqualTo(LocalDateTime.parse("2024-04-10T12:00:00.123456"));
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.DISLIKE);
+        videoRatingDto = videoService.getRating(videoId, userId);
+        assertThat(videoRatingDto).isNotNull();
+        assertThat(videoRatingDto.getRating()).isEqualTo(VideoRatingDto.DISLIKE);
 
         // When update VideoRating to NONE type.
-        ratingRequest.setRating(RatingRequest.RatingType.NONE);
-        videoService.rateVideo(ratingRequest);
-        ratingResponse = videoService.getRating(videoId, userId);
-        assertThat(ratingResponse.getRating()).isEqualTo(RatingResponse.RatingType.NONE);
-        assertThat(ratingResponse.getRatedAt()).isNull();
+        videoService.rateVideo(videoId, user.getId(), VideoRatingDto.NONE);
+        videoRatingDto = videoService.getRating(videoId, userId);
+        assertThat(videoRatingDto.getRating()).isEqualTo(VideoRatingDto.NONE);
+        assertThat(videoRatingDto.getPublishedAt()).isNull();
     }
 }

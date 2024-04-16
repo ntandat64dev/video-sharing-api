@@ -1,4 +1,4 @@
-package com.example.videosharingapi.payload;
+package com.example.videosharingapi.dto;
 
 import com.example.videosharingapi.model.entity.Thumbnail;
 import jakarta.validation.Valid;
@@ -20,11 +20,15 @@ public final class VideoDto {
     @Data
     @AllArgsConstructor
     @Builder
-    public static class Snippet {
+    public static final class Snippet {
         private LocalDateTime publishedAt;
 
         @NotNull(message = "{validation.video.user-id.required}")
         private UUID userId;
+
+        private String channelTitle;
+
+        private String channelImageUrl;
 
         @NotBlank(message = "{validation.video.title.required}")
         private String title;
@@ -45,7 +49,7 @@ public final class VideoDto {
     @Data
     @AllArgsConstructor
     @Builder
-    public static class Status {
+    public static final class Status {
 
         @NotBlank(message = "{validation.video.privacy.required}")
         @Pattern(regexp = "(?i)(private|public)", message = "{validation.video.privacy.in-range}")
@@ -64,7 +68,7 @@ public final class VideoDto {
     @Data
     @AllArgsConstructor
     @Builder
-    public static class Statistic {
+    public static final class Statistic {
         private Long viewCount;
 
         private Long likeCount;

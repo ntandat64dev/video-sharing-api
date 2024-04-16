@@ -1,6 +1,6 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.payload.CommentDto;
+import com.example.videosharingapi.dto.CommentDto;
 import com.example.videosharingapi.service.CommentService;
 import com.example.videosharingapi.service.impl.CommentServiceImpl;
 import org.springframework.http.HttpStatus;
@@ -23,8 +23,8 @@ public class CommentController {
         this.commentService = commentService;
     }
 
-    @GetMapping("/most-like")
+    @GetMapping("/top-level")
     public ResponseEntity<CommentDto> getMostLikeComment(UUID videoId) {
-        return new ResponseEntity<>(commentService.getMostLikeComment(videoId), HttpStatus.OK);
+        return new ResponseEntity<>(commentService.getTopLevelComment(videoId), HttpStatus.OK);
     }
 }

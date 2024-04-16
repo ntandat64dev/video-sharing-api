@@ -1,4 +1,4 @@
-package com.example.videosharingapi.payload.response;
+package com.example.videosharingapi.dto.response;
 
 import org.springframework.http.HttpStatus;
 

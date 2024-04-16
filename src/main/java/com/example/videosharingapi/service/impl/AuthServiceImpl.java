@@ -1,12 +1,11 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.mapper.UserMapper;
+import com.example.videosharingapi.dto.UserDto;
 import com.example.videosharingapi.exception.ApplicationException;
+import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.model.entity.Channel;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.payload.request.AuthRequest;
-import com.example.videosharingapi.payload.response.AuthResponse;
 import com.example.videosharingapi.repository.ChannelRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
@@ -28,8 +27,10 @@ public class AuthServiceImpl implements AuthService {
     private final MessageSource messageSource;
     private final UserMapper userMapper;
 
-    public AuthServiceImpl(UserRepository userRepository, ChannelRepository channelRepository,
-                           MessageSource messageSource, UserMapper userMapper) {
+    public AuthServiceImpl(
+            UserRepository userRepository, ChannelRepository channelRepository,
+            MessageSource messageSource, UserMapper userMapper
+    ) {
         this.userRepository = userRepository;
         this.channelRepository = channelRepository;
         this.messageSource = messageSource;
@@ -38,31 +39,27 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public AuthResponse signIn(AuthRequest request) {
-        var user = userRepository.findByEmailAndPassword(request.email(), request.password());
+    public UserDto signIn(String email, String password) {
+        var user = userRepository.findByEmailAndPassword(email, password);
         if (user == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.email-password.incorrect", null,
                             LocaleContextHolder.getLocale()));
         }
-        var userDto = userMapper.toUserDto(user);
-        return new AuthResponse(messageSource.getMessage("message.login-success", null,
-                LocaleContextHolder.getLocale()), userDto);
+        return userMapper.toUserDto(user);
     }
 
     @Override
-    public AuthResponse signUp(AuthRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
+    public UserDto signUp(String email, String password) {
+        if (userRepository.existsByEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.email.exist", null,
                             LocaleContextHolder.getLocale()));
         }
-        var user = User.builder().email(request.email()).password(request.password()).build();
+        var user = User.builder().email(email).password(password).build();
         createChannel(user);
         userRepository.save(user);
-        var userDto = userMapper.toUserDto(user);
-        return new AuthResponse(messageSource.getMessage("message.signup-success", null,
-                LocaleContextHolder.getLocale()), userDto);
+        return userMapper.toUserDto(user);
     }
 
     private void createChannel(User user) {

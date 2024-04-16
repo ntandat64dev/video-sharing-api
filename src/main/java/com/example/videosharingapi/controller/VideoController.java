@@ -1,11 +1,8 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.config.validation.ValidFile;
-import com.example.videosharingapi.payload.VideoDto;
-import com.example.videosharingapi.payload.request.RatingRequest;
-import com.example.videosharingapi.payload.request.ViewRequest;
-import com.example.videosharingapi.payload.response.RatingResponse;
-import com.example.videosharingapi.payload.response.ViewResponse;
+import com.example.videosharingapi.dto.VideoDto;
+import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.service.VideoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -27,15 +24,9 @@ public class VideoController {
         this.videoService = videoService;
     }
 
-    @GetMapping("/{videoId}")
-    public ResponseEntity<VideoDto> getVideoById(@PathVariable UUID videoId) {
-        var response = videoService.getVideoById(videoId);
-        return new ResponseEntity<>(response, HttpStatus.OK);
-    }
-
-    @GetMapping("/recommend")
+    @GetMapping("/category/all")
     public ResponseEntity<List<VideoDto>> getRecommendVideos(UUID userId) {
-        var response = videoService.getRecommendVideos(userId);
+        var response = videoService.getVideosByAllCategories(userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
@@ -52,20 +43,14 @@ public class VideoController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @PostMapping("/view")
-    public ResponseEntity<ViewResponse> postView(@RequestBody @Valid ViewRequest viewRequest) {
-        var viewResponse = videoService.viewVideo(viewRequest);
-        return new ResponseEntity<>(viewResponse, HttpStatus.OK);
-    }
-
     @PostMapping("/rate")
-    public ResponseEntity<Void> rate(@RequestBody @Valid RatingRequest ratingRequest) {
-        videoService.rateVideo(ratingRequest);
+    public ResponseEntity<?> rateVideo(UUID videoId, UUID userId, String rating) {
+        videoService.rateVideo(videoId, userId, rating);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/rate")
-    public ResponseEntity<RatingResponse> getRating(UUID videoId, UUID userId) {
+    public ResponseEntity<VideoRatingDto> getRating(UUID videoId, UUID userId) {
         return new ResponseEntity<>(videoService.getRating(videoId, userId), HttpStatus.OK);
     }
 }

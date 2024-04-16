@@ -3,7 +3,7 @@ package com.example.videosharingapi.mapper;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.model.entity.Video;
 import com.example.videosharingapi.model.entity.VideoStatistic;
-import com.example.videosharingapi.payload.VideoDto;
+import com.example.videosharingapi.dto.VideoDto;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -33,6 +33,8 @@ public abstract class VideoMapper {
 
     @Mapping(target = "duration", expression = "java(Duration.ofSeconds(video.getDurationSec()))")
     @Mapping(target = "userId", source = "user.id")
+    @Mapping(target = "channelTitle", source = "user.channel.title")
+    @Mapping(target = "channelImageUrl", source = "user.channel.thumbnails", qualifiedByName = "defaultUrl")
     protected abstract VideoDto.Snippet mapSnippet(Video video);
 
     @Mapping(target = "privacy", source = "privacy.status")

@@ -1,7 +1,7 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.payload.VideoDto;
+import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.RandomStringUtils;
@@ -65,8 +65,9 @@ public class VideoControllerTest {
     }
 
     @Test
-    public void givenGetRecommendVideosUri_whenGet_thenReturnSuccessfulResponse() throws Exception {
-        mockMvc.perform(get("/api/v1/videos/recommend")
+    public void givenGetVideosByCategoryUri_whenGet_thenReturnSuccessfulResponse() throws Exception {
+        // Category All
+        mockMvc.perform(get("/api/v1/videos/category/all")
                         .param("userId", user.getId().toString()))
                 .andExpect(status().isOk())
                 .andExpect(content().string(containsString("Video 1")))

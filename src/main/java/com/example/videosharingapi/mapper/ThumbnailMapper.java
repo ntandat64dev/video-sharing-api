@@ -1,9 +1,10 @@
 package com.example.videosharingapi.mapper;
 
 import com.example.videosharingapi.model.entity.Thumbnail;
-import com.example.videosharingapi.payload.ThumbnailDto;
+import com.example.videosharingapi.dto.ThumbnailDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.Named;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,15 @@ public interface ThumbnailMapper {
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "type", ignore = true)
     Thumbnail toThumbnail(ThumbnailDto thumbnailDto);
+
+    @Named("defaultUrl")
+    default String getDefaultThumbnailUrl(List<Thumbnail> thumbnails) {
+        return thumbnails.stream()
+                .filter(thumbnail -> thumbnail.getType() == Thumbnail.Type.DEFAULT)
+                .findFirst()
+                .orElseThrow()
+                .getUrl();
+    }
 
     default Map<Thumbnail.Type, ThumbnailDto> toMap(List<Thumbnail> value) {
         return value.stream().collect(Collectors.toMap(Thumbnail::getType, this::toThumbnailDto));

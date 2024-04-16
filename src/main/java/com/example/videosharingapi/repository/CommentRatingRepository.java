@@ -8,8 +8,5 @@ import java.util.UUID;
 
 @Repository
 public interface CommentRatingRepository extends JpaRepository<CommentRating, CommentRating.CommentRatingId> {
-
-    CommentRating findByUserIdAndCommentId(UUID userId, UUID commentId);
-
     long countByCommentIdAndRating(UUID commentId, CommentRating.Rating rating);
 }

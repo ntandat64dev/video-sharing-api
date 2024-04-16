@@ -1,7 +1,6 @@
 package com.example.videosharingapi.service;
 
 import com.example.videosharingapi.exception.ApplicationException;
-import com.example.videosharingapi.payload.request.AuthRequest;
 import com.example.videosharingapi.repository.ChannelRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import org.junit.jupiter.api.AfterEach;
@@ -37,53 +36,43 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void givenAuthRequest_whenSignIn_thenReturnSuccessfulResponse() {
-        var authRequest = new AuthRequest("user@gmail.com", "00000000");
-        var authResponse = authService.signIn(authRequest);
-        assertThat(authResponse.message()).isEqualTo("Sign in successfully.");
-        assertThat(authResponse.userInfo().getSnippet().getEmail()).isEqualTo("user@gmail.com");
+    public void givenEmailAndPassword_whenSignIn_thenReturnSuccessfulResponse() {
+        var response = authService.signIn("user@gmail.com", "00000000");
+        assertThat(response.getSnippet().getEmail()).isEqualTo("user@gmail.com");
     }
 
     @Test
-    public void givenAuthRequestWithWrongUserInfo_whenSignIn_thenReturnErrorResponse() {
+    public void givenInvalidEmailAndPassword_whenSignIn_thenReturnErrorResponse() {
         // Given invalid email format.
-        var invalidEmailRequest = new AuthRequest("user@", "00000000");
-        assertThrows(ApplicationException.class, () -> authService.signIn(invalidEmailRequest));
+        assertThrows(ApplicationException.class, () -> authService.signIn("user@", "00000000"));
 
         // Given an empty email.
-        var invalidEmailRequest2 = new AuthRequest("", "00000000");
-        assertThrows(ApplicationException.class, () -> authService.signIn(invalidEmailRequest2));
+        assertThrows(ApplicationException.class, () -> authService.signIn("", "00000000"));
 
         // Given invalid password length.
-        var invalidPasswordRequest = new AuthRequest("user@gmail.com", "0000");
-        assertThrows(ApplicationException.class, () -> authService.signIn(invalidPasswordRequest));
+        assertThrows(ApplicationException.class, () -> authService.signIn("user@gmail.com", "0000"));
 
         // Given an empty password.
-        var invalidPasswordRequest2 = new AuthRequest("user@gmail.com", "");
-        assertThrows(ApplicationException.class, () -> authService.signIn(invalidPasswordRequest2));
+        assertThrows(ApplicationException.class, () -> authService.signIn("user@gmail.com", ""));
     }
 
     @Test
     @Tag("deleteSignedUpUser")
-    public void givenAuthRequest_whenSignUp_thenReturnSuccessfulResponse() {
-        var authRequest = new AuthRequest("user1@gmail.com", "00000000");
-        var authResponse = authService.signUp(authRequest);
-        assertThat(authResponse.userInfo().getId()).isNotNull();
-        assertThat(authResponse.message()).isEqualTo("Sign up successfully.");
-        assertThat(authResponse.userInfo().getSnippet().getEmail()).isEqualTo("user1@gmail.com");
+    public void givenEmailAndPassword_whenSignUp_thenReturnSuccessfulResponse() {
+        var response = authService.signUp("user1@gmail.com", "00000000");
+        assertThat(response.getId()).isNotNull();
+        assertThat(response.getSnippet().getEmail()).isEqualTo("user1@gmail.com");
     }
 
     @Test
-    public void givenAuthRequestWithEmailWhichAlreadyExists_whenSignUp_thenReturnErrorResponse() {
-        var authRequest = new AuthRequest("user@gmail.com", "00000000");
-        assertThrows(ApplicationException.class, () -> authService.signUp(authRequest));
+    public void givenEmailWhichAlreadyExists_whenSignUp_thenReturnErrorResponse() {
+        assertThrows(ApplicationException.class, () -> authService.signUp("user@gmail.com", "00000000"));
     }
 
     @Test
     @Tag("deleteSignedUpUser")
-    public void givenAuthRequest_whenSignUp_thenChannelIsCreated() {
-        var authRequest = new AuthRequest("user1@gmail.com", "00000000");
-        var authResponse = authService.signUp(authRequest);
-        assertThat(channelRepository.findByUserId(authResponse.userInfo().getId())).isNotNull();
+    public void givenEmailAndPassword_whenSignUp_thenChannelIsCreated() {
+        var authResponse = authService.signUp("user1@gmail.com", "00000000");
+        assertThat(channelRepository.findByUserId(authResponse.getId())).isNotNull();
     }
 }

@@ -1,4 +1,4 @@
-package com.example.videosharingapi.payload;
+package com.example.videosharingapi.dto;
 
 import com.example.videosharingapi.model.entity.Thumbnail;
 import lombok.Getter;
@@ -10,11 +10,11 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class ChannelDto {
+public final class ChannelDto {
 
     @Getter
     @Setter
-    public static class Snippet {
+    public static final class Snippet {
 
         private String title;
 

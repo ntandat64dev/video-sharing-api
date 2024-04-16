@@ -9,6 +9,8 @@ import org.springframework.test.context.jdbc.SqlConfig;
 
 import java.util.UUID;
 
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+
 @SpringBootTest
 @ActiveProfiles("test")
 @Sql(scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS,
@@ -22,6 +24,7 @@ public class CommentServiceTest {
     @Test
     public void whenSave() {
         var videoId = UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978");
-        commentService.getMostLikeComment(videoId);
+        var commentDto = commentService.getTopLevelComment(videoId);
+        assertThat(commentDto).isNull();
     }
 }

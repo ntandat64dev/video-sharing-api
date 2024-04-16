@@ -1,9 +1,9 @@
 package com.example.videosharingapi.service;
 
-import com.example.videosharingapi.payload.CommentDto;
+import com.example.videosharingapi.dto.CommentDto;
 
 import java.util.UUID;
 
 public interface CommentService {
-    CommentDto getMostLikeComment(UUID videoId);
+    CommentDto getTopLevelComment(UUID videoId);
 }

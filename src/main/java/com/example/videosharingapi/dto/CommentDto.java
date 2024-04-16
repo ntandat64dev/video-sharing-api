@@ -1,4 +1,4 @@
-package com.example.videosharingapi.payload;
+package com.example.videosharingapi.dto;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -8,11 +8,11 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class CommentDto {
+public final class CommentDto {
 
     @Getter
     @Setter
-    public static class Snippet {
+    public static final class Snippet {
 
         private UUID videoId;
 
@@ -26,16 +26,25 @@ public class CommentDto {
 
         private UUID parentId;
 
-        private Integer likeCount;
-
-        private Integer dislikeCount;
-
         private LocalDateTime publishedAt;
 
         private LocalDateTime updatedAt;
     }
 
+    @Getter
+    @Setter
+    public static final class Statistic {
+
+        private Integer likeCount;
+
+        private Integer dislikeCount;
+
+        private Integer replyCount;
+    }
+
     private UUID id;
 
     private Snippet snippet;
+
+    private Statistic statistic;
 }

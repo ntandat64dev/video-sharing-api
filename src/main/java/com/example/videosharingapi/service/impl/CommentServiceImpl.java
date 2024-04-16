@@ -1,7 +1,7 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.mapper.CommentMapper;
-import com.example.videosharingapi.payload.CommentDto;
+import com.example.videosharingapi.dto.CommentDto;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.service.CommentService;
 import org.springframework.stereotype.Service;
@@ -23,7 +23,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     @Transactional(readOnly = true)
-    public CommentDto getMostLikeComment(UUID videoId) {
+    public CommentDto getTopLevelComment(UUID videoId) {
         // TODO: Implement
         return commentMapper.toCommentDto(commentRepository.findByVideoId(videoId).stream()
                 .findFirst()

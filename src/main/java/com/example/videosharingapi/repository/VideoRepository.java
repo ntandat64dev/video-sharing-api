@@ -9,8 +9,5 @@ import java.util.UUID;
 
 @Repository
 public interface VideoRepository extends JpaRepository<Video, UUID> {
-
     List<Video> findAllByUserId(UUID userId);
-
-    List<Video> findByTitle(String title);
 }

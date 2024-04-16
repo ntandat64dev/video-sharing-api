@@ -1,8 +1,10 @@
 package com.example.videosharingapi.exception.handler;
 
+import com.example.videosharingapi.dto.response.ErrorResponse;
 import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.exception.ResourceNotFoundException;
-import com.example.videosharingapi.payload.response.ErrorResponse;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,11 +25,13 @@ import java.util.HashMap;
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
-    protected ResponseEntity<Object> handleExceptionInternal(Exception ex,
-                                                             Object body,
-                                                             @NotNull HttpHeaders headers,
-                                                             HttpStatusCode statusCode,
-                                                             @NotNull WebRequest request) {
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception ex,
+            Object body,
+            @NotNull HttpHeaders headers,
+            HttpStatusCode statusCode,
+            @NotNull WebRequest request
+    ) {
         var errorResponse = new ErrorResponse(
                 HttpStatus.valueOf(statusCode.value()),
                 ex.getLocalizedMessage(),
@@ -36,10 +40,12 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     }
 
     @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
-                                                                  @NotNull HttpHeaders headers,
-                                                                  @NotNull HttpStatusCode status,
-                                                                  @NotNull WebRequest request) {
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex,
+            @NotNull HttpHeaders headers,
+            @NotNull HttpStatusCode status,
+            @NotNull WebRequest request
+    ) {
         var errors = new HashMap<>();
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             var fieldName = ((FieldError) error).getField();
@@ -49,6 +55,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         var errorResponse = new ErrorResponse(
                 HttpStatus.BAD_REQUEST,
                 errors.toString(),
+                new Timestamp(System.currentTimeMillis()));
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolationException(ConstraintViolationException ex) {
+        var errors = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .toArray(String[]::new);
+        var errorResponse = new ErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                String.join("; ", errors),
                 new Timestamp(System.currentTimeMillis()));
         return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }

@@ -15,6 +15,12 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+// TODO: Update this class
+// TODO: Test getTopLevelComment
+// TODO: Update data-h2.sql
+// TODO: Update validation message
+// TODO: Refactor test method name
+
 /**
  * Automatically update {@link VideoStatistic} when data in {@link ViewHistoryRepository},
  * {@link VideoRatingRepository} and {@link CommentRepository} get updated. This behavior like {@code trigger} in DBMS.

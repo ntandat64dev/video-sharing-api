@@ -1,4 +1,4 @@
-package com.example.videosharingapi.payload;
+package com.example.videosharingapi.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -15,7 +15,7 @@ public final class UserDto {
 
     @Getter
     @Setter
-    public static class Snippet {
+    public static final class Snippet {
 
         @NotBlank(message = "{validation.user.email.required}")
         private String email;

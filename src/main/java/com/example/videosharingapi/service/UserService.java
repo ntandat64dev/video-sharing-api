@@ -4,5 +4,5 @@ import java.util.List;
 import java.util.UUID;
 
 public interface UserService {
-    List<String> getHashtag(UUID userId);
+    List<String> getBrowseKeywords(UUID userId);
 }
