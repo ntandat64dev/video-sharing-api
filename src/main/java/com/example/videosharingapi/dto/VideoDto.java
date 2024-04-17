@@ -23,7 +23,7 @@ public final class VideoDto {
     public static final class Snippet {
         private LocalDateTime publishedAt;
 
-        @NotNull(message = "{validation.video.user-id.required}")
+        @NotNull(message = "{validation.user.id.required}")
         private UUID userId;
 
         private String channelTitle;

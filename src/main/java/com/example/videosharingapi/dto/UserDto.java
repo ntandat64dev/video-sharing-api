@@ -17,7 +17,6 @@ public final class UserDto {
     @Setter
     public static final class Snippet {
 
-        @NotBlank(message = "{validation.user.email.required}")
         private String email;
 
         private LocalDate dateOfBirth;
@@ -28,7 +27,6 @@ public final class UserDto {
 
         private String country;
 
-        @NotNull(message = "{validation.user.channel.required}")
         private ChannelDto channel;
     }
 

@@ -36,7 +36,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void givenEmailAndPassword_whenSignIn_thenReturnSuccessfulResponse() {
+    public void givenEmailAndPassword_whenSignIn_thenReturnSuccessful() {
         var response = authService.signIn("user@gmail.com", "00000000");
         assertThat(response.getSnippet().getEmail()).isEqualTo("user@gmail.com");
     }
@@ -58,7 +58,7 @@ public class AuthServiceTest {
 
     @Test
     @Tag("deleteSignedUpUser")
-    public void givenEmailAndPassword_whenSignUp_thenReturnSuccessfulResponse() {
+    public void givenEmailAndPassword_whenSignUp_thenReturnSuccessful() {
         var response = authService.signUp("user1@gmail.com", "00000000");
         assertThat(response.getId()).isNotNull();
         assertThat(response.getSnippet().getEmail()).isEqualTo("user1@gmail.com");

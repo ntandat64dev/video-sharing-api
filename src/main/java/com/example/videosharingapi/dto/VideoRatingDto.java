@@ -9,7 +9,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class VideoRatingDto {
+public final class VideoRatingDto {
     public static final String LIKE = "like";
     public static final String DISLIKE = "dislike";
     public static final String NONE = "none";

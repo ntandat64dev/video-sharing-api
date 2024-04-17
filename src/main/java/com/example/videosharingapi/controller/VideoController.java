@@ -43,14 +43,14 @@ public class VideoController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
+    @GetMapping("/rate")
+    public ResponseEntity<VideoRatingDto> getRating(UUID videoId, UUID userId) {
+        return new ResponseEntity<>(videoService.getRating(videoId, userId), HttpStatus.OK);
+    }
+
     @PostMapping("/rate")
     public ResponseEntity<?> rateVideo(UUID videoId, UUID userId, String rating) {
         videoService.rateVideo(videoId, userId, rating);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
-
-    @GetMapping("/rate")
-    public ResponseEntity<VideoRatingDto> getRating(UUID videoId, UUID userId) {
-        return new ResponseEntity<>(videoService.getRating(videoId, userId), HttpStatus.OK);
     }
 }

@@ -22,9 +22,9 @@ public class CommentServiceTest {
     private @Autowired CommentService commentService;
 
     @Test
-    public void whenSave() {
+    public void givenCommentId_whenGetTopLevelComment_thenReturnSuccessful() {
         var videoId = UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978");
         var commentDto = commentService.getTopLevelComment(videoId);
-        assertThat(commentDto).isNull();
+        assertThat(commentDto.getId()).isNotNull();
     }
 }

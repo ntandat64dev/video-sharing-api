@@ -15,12 +15,6 @@ import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-// TODO: Update this class
-// TODO: Test getTopLevelComment
-// TODO: Update data-h2.sql
-// TODO: Update validation message
-// TODO: Refactor test method name
-
 /**
  * Automatically update {@link VideoStatistic} when data in {@link ViewHistoryRepository},
  * {@link VideoRatingRepository} and {@link CommentRepository} get updated. This behavior like {@code trigger} in DBMS.
@@ -62,7 +56,8 @@ public class UpdateVideoStatisticAspect {
             execution(* com.example.videosharingapi.repository.VideoRatingRepository.saveAndFlush(*))""")
     public Object updateLikeCountWhenSave(ProceedingJoinPoint joinPoint) throws Throwable {
         var videoRating = (VideoRating) joinPoint.getArgs()[0];
-        var ratedBefore = videoRatingRepository.existsByUserIdAndVideoId(videoRating.getUser().getId(),
+        var ratedBefore = videoRatingRepository.existsByUserIdAndVideoId(
+                videoRating.getUser().getId(),
                 videoRating.getVideo().getId());
         var result = joinPoint.proceed();
         videoStatisticRepository.findById(videoRating.getVideo().getId()).ifPresent(stat -> {

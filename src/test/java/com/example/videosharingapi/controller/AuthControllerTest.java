@@ -27,7 +27,7 @@ public class AuthControllerTest {
     private @Autowired MockMvc mockMvc;
 
     @Test
-    public void givenLoginURI_whenMockMVC_thenVerifyResponse() throws Exception {
+    public void givenEmailAndPassword_whenLogin_thenReturnSuccessful() throws Exception {
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("email", "user@gmail.com")
                         .param("password", "00000000")
@@ -37,7 +37,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void givenLoginURIWithIncorrectInfo_whenMockMVC_thenVerifyResponse() throws Exception {
+    public void givenInvalidEmailAndPassword_whenLogin_thenReturnErrorResponse() throws Exception {
         // Given wrong email or password.
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("email", "user@gmail.com")
@@ -64,7 +64,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void givenSignUpURI_whenMockMVC_thenVerifyResponse() throws Exception {
+    public void givenEmailAndPassword_whenSignUp_thenReturnSuccessful() throws Exception {
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user1@gmail.com")
                         .param("password", "11111111")
@@ -73,7 +73,7 @@ public class AuthControllerTest {
     }
 
     @Test
-    public void givenSignUpURIWithIncorrectInfo_whenMockMVC_thenVerifyResponse() throws Exception {
+    public void givenInvalidEmailAndPassword_whenSignUp_thenReturnErrorResponse() throws Exception {
         // Given email that already exists.
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user@gmail.com")
