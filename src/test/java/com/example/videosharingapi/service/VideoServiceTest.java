@@ -44,6 +44,7 @@ public class VideoServiceTest {
     private @Autowired ThumbnailRepository thumbnailRepository;
 
     private final UUID userId = UUID.fromString("3f06af63-a93c-11e4-9797-00505690773f");
+    private final UUID videoId = UUID.fromString("e65707b4-e9dc-4d40-9a1d-72667570bd6f");
     private @MockBean MultipartFile videoFile;
 
     @BeforeEach
@@ -135,8 +136,6 @@ public class VideoServiceTest {
     @Test
     @Transactional
     public void givenRatingRequest_whenRateVideo_thenVideoRatingUpdatedAsExpected() {
-        var videoId = UUID.fromString("e65707b4-e9dc-4d40-9a1d-72667570bd6f");
-
         // Rate NONE while there is no VideoRating then ignore.
         videoService.rateVideo(videoId, userId, VideoRatingDto.NONE);
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
@@ -164,8 +163,6 @@ public class VideoServiceTest {
     @Test
     @Transactional
     public void givenRatingRequest_whenRateVideo_thenVideoStatisticUpdatedAsExpected() {
-        var videoId = UUID.fromString("e65707b4-e9dc-4d40-9a1d-72667570bd6f");
-
         // Rate NONE while there is no VideoRating then ignore.
         videoService.rateVideo(videoId, userId, VideoRatingDto.NONE);
         var videoStat = videoStatisticRepository.findById(videoId);
@@ -193,8 +190,6 @@ public class VideoServiceTest {
 
     @Test
     public void givenVideoIdAndUserId_whenGetRating_thenReturnExpectedRatingResponse() {
-        var videoId = UUID.fromString("e65707b4-e9dc-4d40-9a1d-72667570bd6f");
-
         // When there is no VideoRating.
         var videoRatingDto = videoService.getRating(videoId, userId);
         assertThat(videoRatingDto.getRating()).isEqualTo(VideoRatingDto.NONE);

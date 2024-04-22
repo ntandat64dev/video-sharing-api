@@ -34,7 +34,7 @@ public abstract class VideoMapper {
     @Mapping(target = "duration", expression = "java(Duration.ofSeconds(video.getDurationSec()))")
     @Mapping(target = "userId", source = "user.id")
     @Mapping(target = "channelTitle", source = "user.channel.title")
-    @Mapping(target = "channelImageUrl", source = "user.channel.thumbnails", qualifiedByName = "defaultUrl")
+    @Mapping(target = "channelImageUrl", source = "user.channel.thumbnails", qualifiedByName = "getDefaultUrl")
     protected abstract VideoDto.Snippet mapSnippet(Video video);
 
     @Mapping(target = "privacy", source = "privacy.status")

@@ -31,7 +31,6 @@ public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
     private final VideoRatingRepository videoRatingRepository;
-    private final VideoStatisticRepository videoStatisticRepository;
     private final HashtagRepository hashtagRepository;
 
     private final StorageService storageService;
@@ -43,18 +42,28 @@ public class VideoServiceImpl implements VideoService {
     public VideoServiceImpl(
             VideoRepository videoRepository, UserRepository userRepository, VideoMapper videoMapper,
             VideoRatingRepository videoRatingRepository, MessageSource messageSource,
-            VideoStatisticRepository videoStatisticRepository, StorageService storageService,
-            HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper
+            StorageService storageService, HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper
     ) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.videoRatingRepository = videoRatingRepository;
         this.messageSource = messageSource;
         this.videoMapper = videoMapper;
-        this.videoStatisticRepository = videoStatisticRepository;
         this.storageService = storageService;
         this.hashtagRepository = hashtagRepository;
         this.videoRatingMapper = videoRatingMapper;
+    }
+
+    @Override
+    public VideoDto getVideoById(UUID id) {
+        if (!videoRepository.existsById(id)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
+                messageSource.getMessage("exception.video.id.not-exist",
+                        null, LocaleContextHolder.getLocale()));
+
+        return videoRepository
+                .findById(id)
+                .map(videoMapper::toVideoDto)
+                .orElseThrow();
     }
 
     @Override
@@ -80,7 +89,7 @@ public class VideoServiceImpl implements VideoService {
         if (!userRepository.existsById(videoDto.getSnippet().getUserId()))
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.user.id.not-exist",
-                            new Object[] { videoDto.getSnippet().getUserId() }, LocaleContextHolder.getLocale()));
+                            new Object[]{videoDto.getSnippet().getUserId()}, LocaleContextHolder.getLocale()));
 
         storageService.store(videoFile, videoDto);
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
@@ -108,12 +117,6 @@ public class VideoServiceImpl implements VideoService {
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), video.getId());
         if (videoRating == null && Objects.equals(rating, VideoRatingDto.NONE)) return;
         if (videoRating != null && videoRating.getRating().name().equalsIgnoreCase(rating)) return;
-
-        var videoStatistic = videoStatisticRepository.findById(video.getId());
-        if (videoStatistic.isEmpty())
-            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR,
-                    messageSource.getMessage("message.some-thing-went-wrong", null,
-                            LocaleContextHolder.getLocale()));
 
         if (videoRating != null) {
             if (Objects.equals(rating, VideoRatingDto.NONE)) {
@@ -145,9 +148,9 @@ public class VideoServiceImpl implements VideoService {
     private void checkUserIdAndVideoIdExistent(UUID userId, UUID videoId) throws ApplicationException {
         if (!userRepository.existsById(userId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
                 messageSource.getMessage("exception.user.id.not-exist",
-                        new Object[] { userId }, LocaleContextHolder.getLocale()));
+                        new Object[]{userId}, LocaleContextHolder.getLocale()));
         if (!videoRepository.existsById(videoId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
                 messageSource.getMessage("exception.video.id.not-exist",
-                        new Object[] { videoId }, LocaleContextHolder.getLocale()));
+                        new Object[]{videoId}, LocaleContextHolder.getLocale()));
     }
 }

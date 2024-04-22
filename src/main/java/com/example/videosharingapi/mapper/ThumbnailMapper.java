@@ -20,7 +20,7 @@ public interface ThumbnailMapper {
     @Mapping(target = "type", ignore = true)
     Thumbnail toThumbnail(ThumbnailDto thumbnailDto);
 
-    @Named("defaultUrl")
+    @Named("getDefaultUrl")
     default String getDefaultThumbnailUrl(List<Thumbnail> thumbnails) {
         return thumbnails.stream()
                 .filter(thumbnail -> thumbnail.getType() == Thumbnail.Type.DEFAULT)

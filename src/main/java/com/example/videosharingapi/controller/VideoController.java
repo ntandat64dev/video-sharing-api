@@ -24,6 +24,12 @@ public class VideoController {
         this.videoService = videoService;
     }
 
+    @GetMapping
+    public ResponseEntity<VideoDto> getVideo(UUID videoId) {
+        var response = videoService.getVideoById(videoId);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
     @GetMapping("/category/all")
     public ResponseEntity<List<VideoDto>> getRecommendVideos(UUID userId) {
         var response = videoService.getVideosByAllCategories(userId);

@@ -1,5 +1,6 @@
 package com.example.videosharingapi.dto;
 
+import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -12,6 +13,7 @@ public final class CommentDto {
 
     @Getter
     @Setter
+    @Builder
     public static final class Snippet {
 
         private UUID videoId;

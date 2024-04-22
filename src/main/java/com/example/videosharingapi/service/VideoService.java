@@ -9,6 +9,8 @@ import java.util.UUID;
 
 public interface VideoService {
 
+    VideoDto getVideoById(UUID id);
+
     List<VideoDto> getVideosByAllCategories(UUID userId);
 
     List<VideoDto> getRelatedVideos(UUID videoId, UUID userId);
