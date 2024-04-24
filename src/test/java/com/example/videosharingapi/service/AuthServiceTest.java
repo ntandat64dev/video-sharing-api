@@ -1,19 +1,16 @@
 package com.example.videosharingapi.service;
 
 import com.example.videosharingapi.exception.ApplicationException;
-import com.example.videosharingapi.repository.ChannelRepository;
 import com.example.videosharingapi.repository.UserRepository;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Tag;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.jdbc.SqlConfig;
+import org.springframework.transaction.annotation.Transactional;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 @SpringBootTest
@@ -26,14 +23,6 @@ public class AuthServiceTest {
 
     private @Autowired AuthService authService;
     private @Autowired UserRepository userRepository;
-    private @Autowired ChannelRepository channelRepository;
-
-    @AfterEach
-    public void deleteSignedUpUser(TestInfo testInfo) {
-        if (testInfo.getTags().contains("deleteSignedUpUser")) {
-            userRepository.deleteByEmail("user1@gmail.com");
-        }
-    }
 
     @Test
     public void givenEmailAndPassword_whenSignIn_thenReturnSuccessful() {
@@ -57,7 +46,7 @@ public class AuthServiceTest {
     }
 
     @Test
-    @Tag("deleteSignedUpUser")
+    @Transactional
     public void givenEmailAndPassword_whenSignUp_thenReturnSuccessful() {
         var response = authService.signUp("user1@gmail.com", "00000000");
         assertThat(response.getId()).isNotNull();
@@ -65,14 +54,26 @@ public class AuthServiceTest {
     }
 
     @Test
-    public void givenEmailWhichAlreadyExists_whenSignUp_thenReturnErrorResponse() {
-        assertThrows(ApplicationException.class, () -> authService.signUp("user@gmail.com", "00000000"));
+    @Transactional
+    public void givenEmailAndPassword_whenSignUp_thenAssertUserIsCreated() {
+        var response = authService.signUp("user1@gmail.com", "00000000");
+        var user = userRepository.findById(response.getId()).orElseThrow();
+        assertThat(user.getEmail()).isEqualTo("user1@gmail.com");
+        assertThat(user.getPassword()).isEqualTo("00000000");
+        assertThat(user.getDateOfBirth()).isNull();
+        assertThat(user.getPhoneNumber()).isNull();
+        assertThat(user.getGender()).isNull();
+        assertThat(user.getCountry()).isNull();
+        assertThat(user.getUsername()).isEqualTo("user1");
+        assertThat(user.getBio()).isNull();
+        assertThat(user.getPublishedAt()).isEqualTo(response.getSnippet().getPublishedAt());
+        assertThat(user.getThumbnails()).hasSize(2);
     }
 
     @Test
-    @Tag("deleteSignedUpUser")
-    public void givenEmailAndPassword_whenSignUp_thenChannelIsCreated() {
-        var authResponse = authService.signUp("user1@gmail.com", "00000000");
-        assertThat(channelRepository.findByUserId(authResponse.getId())).isNotNull();
+    public void givenEmailWhichAlreadyExists_whenSignUp_thenReturnErrorResponse() {
+        assertThrows(ApplicationException.class,
+                () -> authService.signUp("user@gmail.com", "00000000"),
+                "exception.email.exist");
     }
 }

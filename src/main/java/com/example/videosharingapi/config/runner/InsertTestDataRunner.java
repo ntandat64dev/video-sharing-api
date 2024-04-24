@@ -21,12 +21,11 @@ import java.util.stream.Stream;
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class InsertTestDataRunner implements ApplicationRunner {
 
-    private @Autowired ChannelRepository channelRepository;
     private @Autowired CommentRatingRepository commentRatingRepository;
     private @Autowired CommentRepository commentRepository;
     private @Autowired PlaylistRepository playlistRepository;
     private @Autowired PlaylistItemRepository playlistItemRepository;
-    private @Autowired SubscriptionRepository subscriptionRepository;
+    private @Autowired FollowRepository followRepository;
     private @Autowired UserRepository userRepository;
     private @Autowired VideoRatingRepository videoRatingRepository;
     private @Autowired VideoRepository videoRepository;
@@ -41,11 +40,14 @@ public class InsertTestDataRunner implements ApplicationRunner {
         var privatePrivacy = privacyRepository.saveAndFlush(new Privacy(Privacy.Status.PRIVATE));
 
         var users = new User[9];
-        var channels = new Channel[9];
         for (int i = 1; i < 10; i++) {
-            var channel = new Channel();
-            channel.setTitle("user%s".formatted(i));
-            channel.setPublishedAt(LocalDateTime.now());
+            var user = new User(
+                    "user%s@gmail.com".formatted(i),
+                    new String(new char[8]).replace("\0", String.valueOf(i % 9))
+            );
+
+            user.setUsername("user%s".formatted(i));
+            user.setPublishedAt(LocalDateTime.now());
 
             var defaultThumbnail = new Thumbnail();
             defaultThumbnail.setType(Thumbnail.Type.DEFAULT);
@@ -59,26 +61,21 @@ public class InsertTestDataRunner implements ApplicationRunner {
             mediumThumbnail.setWidth(200);
             mediumThumbnail.setHeight(200);
 
-            channel.setThumbnails(List.of(defaultThumbnail, mediumThumbnail));
-            channelRepository.saveAndFlush(channel);
-            channels[i - 1] = channel;
+            user.setThumbnails(List.of(defaultThumbnail, mediumThumbnail));
 
-            var user = new User("%s@gmail.com".formatted(channel.getTitle()),
-                    new String(new char[8]).replace("\0", String.valueOf(i % 9)));
-            user.setChannel(channel);
             userRepository.saveAndFlush(user);
             users[i - 1] = user;
         }
 
-        for (var channel : channels) {
-            for (var user : users) {
-                if (user.getChannel().getId() == channel.getId()) continue;
+        for (var user : users) {
+            for (var follower : users) {
+                if (user.getId() == follower.getId()) continue;
                 if (new Random().nextInt(10) < 3) {
-                    var subscription = new Subscription();
+                    var subscription = new Follow();
                     subscription.setUser(user);
-                    subscription.setChannel(channel);
+                    subscription.setFollower(follower);
                     subscription.setPublishedAt(LocalDateTime.now());
-                    subscriptionRepository.saveAndFlush(subscription);
+                    followRepository.saveAndFlush(subscription);
                 }
             }
         }

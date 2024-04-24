@@ -48,8 +48,8 @@ public abstract class CommentMapper {
 
     @Mapping(target = "videoId", source = "video.id")
     @Mapping(target = "authorId", source = "user.id")
-    @Mapping(target = "authorDisplayName", source = "user.channel.title")
-    @Mapping(target = "authorProfileImageUrl", source = "user.channel.thumbnails", qualifiedByName = "getDefaultUrl")
+    @Mapping(target = "authorDisplayName", source = "user.username")
+    @Mapping(target = "authorProfileImageUrl", source = "user.thumbnails", qualifiedByName = "getDefaultUrl")
     @Mapping(target = "parentId", source = "parent.id")
     public abstract CommentDto.Snippet mapSnippet(Comment comment);
 

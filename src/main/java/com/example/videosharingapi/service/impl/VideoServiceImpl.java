@@ -70,7 +70,8 @@ public class VideoServiceImpl implements VideoService {
     @Transactional(readOnly = true)
     public List<VideoDto> getVideosByAllCategories(UUID userId) {
         // TODO: Get actual recommend videos
-        return videoRepository.findAllByUserId(userId).stream()
+        return videoRepository.findAll().stream()
+                .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
                 .collect(Collectors.toList());
     }
@@ -79,7 +80,8 @@ public class VideoServiceImpl implements VideoService {
     @Transactional(readOnly = true)
     public List<VideoDto> getRelatedVideos(UUID videoId, UUID userId) {
         // TODO: Get actual related videos
-        return videoRepository.findAllByUserId(userId).stream()
+        return videoRepository.findAll().stream()
+                .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
                 .collect(Collectors.toList());
     }
@@ -89,7 +91,7 @@ public class VideoServiceImpl implements VideoService {
         if (!userRepository.existsById(videoDto.getSnippet().getUserId()))
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.user.id.not-exist",
-                            new Object[]{videoDto.getSnippet().getUserId()}, LocaleContextHolder.getLocale()));
+                            new Object[] { videoDto.getSnippet().getUserId() }, LocaleContextHolder.getLocale()));
 
         storageService.store(videoFile, videoDto);
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
@@ -148,9 +150,9 @@ public class VideoServiceImpl implements VideoService {
     private void checkUserIdAndVideoIdExistent(UUID userId, UUID videoId) throws ApplicationException {
         if (!userRepository.existsById(userId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
                 messageSource.getMessage("exception.user.id.not-exist",
-                        new Object[]{userId}, LocaleContextHolder.getLocale()));
+                        new Object[] { userId }, LocaleContextHolder.getLocale()));
         if (!videoRepository.existsById(videoId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
                 messageSource.getMessage("exception.video.id.not-exist",
-                        new Object[]{videoId}, LocaleContextHolder.getLocale()));
+                        new Object[] { videoId }, LocaleContextHolder.getLocale()));
     }
 }

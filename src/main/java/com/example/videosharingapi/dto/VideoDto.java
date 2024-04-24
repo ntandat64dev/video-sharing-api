@@ -26,9 +26,9 @@ public final class VideoDto {
         @NotNull(message = "{validation.user.id.required}")
         private UUID userId;
 
-        private String channelTitle;
+        private String username;
 
-        private String channelImageUrl;
+        private String userImageUrl;
 
         @NotBlank(message = "{validation.video.title.required}")
         private String title;

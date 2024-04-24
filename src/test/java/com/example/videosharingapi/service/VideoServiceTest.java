@@ -82,6 +82,30 @@ public class VideoServiceTest {
     }
 
     @Test
+    public void givenVideoId_whenGetVideo_thenReturnExpectedVideo() {
+        var video = videoService.getVideoById(videoId);
+        assertThat(video.getSnippet().getTitle()).isEqualTo("Video 3");
+        assertThat(video.getSnippet().getUserId())
+                .isEqualTo(UUID.fromString("a05990b1-9110-40b1-aa4c-03951b0705de"));
+        assertThat(video.getSnippet().getThumbnails()).hasSize(1);
+        assertThat(video.getSnippet().getThumbnails().get(Thumbnail.Type.DEFAULT).getUrl())
+                .isEqualTo("Video 3 default thumbnail");
+    }
+
+    @Test
+    public void givenUserId_whenGetVideosByAllCategories_thenReturnSuccessful() {
+        var recommendVideos = videoService.getVideosByAllCategories(userId);
+        assertThat(recommendVideos).hasSize(2);
+    }
+
+    @Test
+    public void givenUserIdAndVideoId_whenGetRelatedVideos_thenReturnSuccessful() {
+        var relatedVideos = videoService.
+                getRelatedVideos(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"), userId);
+        assertThat(relatedVideos).hasSize(2);
+    }
+
+    @Test
     @Transactional
     public void givenVideoDtoObject_whenSave_thenAssertVideoIsSaved() {
         var videoDto = createVideoDto();
@@ -125,12 +149,6 @@ public class VideoServiceTest {
         videoDto.getSnippet().setTitle(null);
         assertThrows(Exception.class, () -> videoService.saveVideo(videoFile, videoDto));
         assertThat(videoRepository.findAll()).hasSize(3);
-    }
-
-    @Test
-    public void givenUserId_whenGetVideosByAllCategories_thenReturnSuccessful() {
-        var recommendVideos = videoService.getVideosByAllCategories(userId);
-        assertThat(recommendVideos).hasSize(2);
     }
 
     @Test
@@ -212,12 +230,5 @@ public class VideoServiceTest {
         videoRatingDto = videoService.getRating(videoId, userId);
         assertThat(videoRatingDto.getRating()).isEqualTo(VideoRatingDto.NONE);
         assertThat(videoRatingDto.getPublishedAt()).isNull();
-    }
-
-    @Test
-    public void givenUserIdAndVideoId_whenGetRelatedVideos_thenReturnSuccessful() {
-        var relatedVideos = videoService.
-                getRelatedVideos(UUID.fromString("37b32dc2-b0e0-45ab-8469-1ad89a90b978"), userId);
-        assertThat(relatedVideos).hasSize(2);
     }
 }

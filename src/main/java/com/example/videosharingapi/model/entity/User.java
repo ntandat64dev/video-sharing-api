@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @NoArgsConstructor
@@ -39,7 +41,20 @@ public class User extends AuditableEntity {
     @Column(length = 64)
     private String country;
 
-    @OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(nullable = false, unique = true)
-    private Channel channel;
+    @Column(length = 64, nullable = false)
+    private String username;
+
+    @Column(length = 1000)
+    private String bio;
+
+    @Column(nullable = false, updatable = false)
+    private LocalDateTime publishedAt;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinTable(
+            name = "user_thumbnail",
+            joinColumns = @JoinColumn(name = "user_id", nullable = false),
+            inverseJoinColumns = @JoinColumn(name = "thumbnail_id", nullable = false)
+    )
+    private List<Thumbnail> thumbnails;
 }

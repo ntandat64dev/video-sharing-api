@@ -10,7 +10,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Entity
-public class Subscription extends AuditableEntity {
+public class Follow extends AuditableEntity {
 
     @Id
     @GeneratedValue
@@ -25,5 +25,5 @@ public class Subscription extends AuditableEntity {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Channel channel;
+    private User follower;
 }
