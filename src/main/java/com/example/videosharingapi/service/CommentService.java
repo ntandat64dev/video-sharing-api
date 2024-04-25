@@ -9,6 +9,4 @@ public interface CommentService {
     List<CommentDto> getCommentsByVideoId(UUID videoId);
 
     CommentDto postComment(CommentDto commentDto);
-
-    CommentDto getTopLevelComment(UUID videoId);
 }

@@ -5,11 +5,11 @@ import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
-@Documented
-@Target({ ElementType.METHOD, ElementType.FIELD, ElementType.CONSTRUCTOR, ElementType.PARAMETER })
+@Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
+@Documented
 @Constraint(validatedBy = FileUploadValidator.class)
-public @interface ValidFile {
+public @interface FileUploadConstraint {
     String message() default "{validation.video.file.invalid}";
 
     Class<?>[] groups() default {};

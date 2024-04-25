@@ -42,9 +42,9 @@ VALUES  (X'37b32dc2b0e045ab84691ad89a90b978', 'admin', NOW(), 'admin', NOW(), 'V
 
 # VideoStatistic
 INSERT INTO `video_statistic`(created_by, created_date, modified_by, modified_date, comment_count, dislike_count, download_count, like_count, view_count, video_id)
-VALUES  ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 2, 0, X'37b32dc2b0e045ab84691ad89a90b978'),
-        ('admin', NOW(), 'admin', NOW(), 2, 1, 0, 1, 0, X'f7d9b74b750c4f4983405bcb8450ae14'),
-        ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 0, 0, X'e65707b4e9dc4d409a1d72667570bd6f');
+VALUES  ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 2, 4, X'37b32dc2b0e045ab84691ad89a90b978'),
+        ('admin', NOW(), 'admin', NOW(), 2, 1, 0, 1, 3, X'f7d9b74b750c4f4983405bcb8450ae14'),
+        ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 0, 2, X'e65707b4e9dc4d409a1d72667570bd6f');
 
 # VideoHashtag
 INSERT INTO `video_hashtag`(video_id, hashtag_id)

@@ -32,7 +32,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Transactional(readOnly = true)
-    public UserDto signIn(String email, String password) {
+    public UserDto login(String email, String password) {
         var user = userRepository.findByEmailAndPassword(email, password);
         if (user == null) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
@@ -43,29 +43,34 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
-    public UserDto signUp(String email, String password) {
+    public UserDto signup(String email, String password) {
         if (userRepository.existsByEmail(email)) {
             throw new ApplicationException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.email.exist", null,
                             LocaleContextHolder.getLocale()));
         }
-        var user = User.builder().email(email).password(password).build();
 
-        user.setUsername(user.getEmail().substring(0, user.getEmail().indexOf('@')));
-        user.setPublishedAt(LocalDateTime.now());
+        var user = User.builder()
+                .email(email)
+                .username(email.substring(0, email.indexOf('@')))
+                .password(password)
+                .publishedAt(LocalDateTime.now())
+                .build();
 
         var url = "https://ui-avatars.com/api/?name=%s&size=%s&background=0D8ABC&color=fff&rouded=true&bold=true";
-        var defaultThumbnail = new Thumbnail();
-        defaultThumbnail.setType(Thumbnail.Type.DEFAULT);
-        defaultThumbnail.setUrl(url.formatted(user.getUsername(), 100));
-        defaultThumbnail.setWidth(100);
-        defaultThumbnail.setHeight(100);
+        var defaultThumbnail = Thumbnail.builder()
+                .type(Thumbnail.Type.DEFAULT)
+                .url(url.formatted(user.getUsername(), 100))
+                .width(100)
+                .height(100)
+                .build();
 
-        var mediumThumbnail = new Thumbnail();
-        mediumThumbnail.setType(Thumbnail.Type.MEDIUM);
-        mediumThumbnail.setUrl(url.formatted(user.getUsername(), 200));
-        mediumThumbnail.setWidth(200);
-        mediumThumbnail.setHeight(200);
+        var mediumThumbnail = Thumbnail.builder()
+                .type(Thumbnail.Type.MEDIUM)
+                .url(url.formatted(user.getUsername(), 200))
+                .width(200)
+                .height(200)
+                .build();
 
         user.setThumbnails(List.of(defaultThumbnail, mediumThumbnail));
 

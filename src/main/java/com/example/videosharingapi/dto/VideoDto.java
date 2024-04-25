@@ -1,6 +1,9 @@
 package com.example.videosharingapi.dto;
 
+import com.example.videosharingapi.config.validation.IdExistsConstraint;
 import com.example.videosharingapi.model.entity.Thumbnail;
+import com.example.videosharingapi.model.entity.User;
+import com.example.videosharingapi.model.entity.Video;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +27,7 @@ public final class VideoDto {
         private LocalDateTime publishedAt;
 
         @NotNull(message = "{validation.user.id.required}")
+        @IdExistsConstraint(entity = User.class)
         private UUID userId;
 
         private String username;
@@ -80,6 +84,7 @@ public final class VideoDto {
         private Long downloadCount;
     }
 
+    @IdExistsConstraint(entity = Video.class)
     private UUID id;
 
     @Valid

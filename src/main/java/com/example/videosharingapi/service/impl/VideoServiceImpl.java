@@ -2,19 +2,18 @@ package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
-import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.mapper.VideoRatingMapper;
 import com.example.videosharingapi.model.entity.Hashtag;
 import com.example.videosharingapi.model.entity.Video;
 import com.example.videosharingapi.model.entity.VideoRating;
-import com.example.videosharingapi.repository.*;
+import com.example.videosharingapi.repository.HashtagRepository;
+import com.example.videosharingapi.repository.UserRepository;
+import com.example.videosharingapi.repository.VideoRatingRepository;
+import com.example.videosharingapi.repository.VideoRepository;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
 import jakarta.annotation.Nullable;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -35,19 +34,17 @@ public class VideoServiceImpl implements VideoService {
 
     private final StorageService storageService;
 
-    private final MessageSource messageSource;
     private final VideoMapper videoMapper;
     private final VideoRatingMapper videoRatingMapper;
 
     public VideoServiceImpl(
             VideoRepository videoRepository, UserRepository userRepository, VideoMapper videoMapper,
-            VideoRatingRepository videoRatingRepository, MessageSource messageSource,
-            StorageService storageService, HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper
+            VideoRatingRepository videoRatingRepository, StorageService storageService,
+            HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper
     ) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
         this.videoRatingRepository = videoRatingRepository;
-        this.messageSource = messageSource;
         this.videoMapper = videoMapper;
         this.storageService = storageService;
         this.hashtagRepository = hashtagRepository;
@@ -56,10 +53,6 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public VideoDto getVideoById(UUID id) {
-        if (!videoRepository.existsById(id)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                messageSource.getMessage("exception.video.id.not-exist",
-                        null, LocaleContextHolder.getLocale()));
-
         return videoRepository
                 .findById(id)
                 .map(videoMapper::toVideoDto)
@@ -88,11 +81,6 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto) {
-        if (!userRepository.existsById(videoDto.getSnippet().getUserId()))
-            throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage("exception.user.id.not-exist",
-                            new Object[] { videoDto.getSnippet().getUserId() }, LocaleContextHolder.getLocale()));
-
         storageService.store(videoFile, videoDto);
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
         saveHashtags(videoDto.getSnippet().getHashtags(), video);
@@ -111,8 +99,6 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public void rateVideo(UUID videoId, UUID userId, String rating) {
-        checkUserIdAndVideoIdExistent(userId, videoId);
-
         var video = videoRepository.getReferenceById(videoId);
         var user = userRepository.getReferenceById(userId);
 
@@ -141,18 +127,8 @@ public class VideoServiceImpl implements VideoService {
     @Override
     @Transactional(readOnly = true)
     public VideoRatingDto getRating(UUID videoId, UUID userId) {
-        checkUserIdAndVideoIdExistent(userId, videoId);
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         if (videoRating == null) return videoRatingMapper.fromNullVideoRating(videoId, userId);
         return videoRatingMapper.toVideoRatingDto(videoRating);
-    }
-
-    private void checkUserIdAndVideoIdExistent(UUID userId, UUID videoId) throws ApplicationException {
-        if (!userRepository.existsById(userId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                messageSource.getMessage("exception.user.id.not-exist",
-                        new Object[] { userId }, LocaleContextHolder.getLocale()));
-        if (!videoRepository.existsById(videoId)) throw new ApplicationException(HttpStatus.BAD_REQUEST,
-                messageSource.getMessage("exception.video.id.not-exist",
-                        new Object[] { videoId }, LocaleContextHolder.getLocale()));
     }
 }

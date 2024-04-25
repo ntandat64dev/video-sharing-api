@@ -22,27 +22,27 @@ public class AuthController {
         this.authService = authService;
     }
 
-    @PostMapping(value = { "/signin", "/login" })
-    public ResponseEntity<UserDto> signIn(
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> login(
             @Email(message = "{validation.email.invalid}")
             @NotBlank(message = "{validation.email.required}")
             String email,
             @Size(min = 8, message = "{validation.password.length}")
             String password
     ) {
-        var response = authService.signIn(email, password);
+        var response = authService.login(email, password);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
-    @PostMapping(value = { "/signup", "/register" })
-    public ResponseEntity<UserDto> signUp(
+    @PostMapping("/signup")
+    public ResponseEntity<UserDto> signup(
             @Email(message = "{validation.email.invalid}")
             @NotBlank(message = "{validation.email.required}")
             String email,
             @Size(min = 8, message = "{validation.password.length}")
             String password
     ) {
-        var response = authService.signUp(email, password);
+        var response = authService.signup(email, password);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

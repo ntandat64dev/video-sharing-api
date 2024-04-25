@@ -58,17 +58,15 @@ public abstract class CommentMapper {
     @Mapping(target = "replyCount", expression = "java(getReplyCount(comment))")
     public abstract CommentDto.Statistic mapStatistic(Comment comment);
 
-    protected Integer getLikeCount(Comment comment) {
-        return Math.toIntExact(commentRatingRepository.countByCommentIdAndRating(comment.getId(),
-                CommentRating.Rating.LIKE));
+    protected Long getLikeCount(Comment comment) {
+        return commentRatingRepository.countByCommentIdAndRating(comment.getId(), CommentRating.Rating.LIKE);
     }
 
-    protected Integer getDislikeCount(Comment comment) {
-        return Math.toIntExact(commentRatingRepository.countByCommentIdAndRating(comment.getId(),
-                CommentRating.Rating.DISLIKE));
+    protected Long getDislikeCount(Comment comment) {
+        return commentRatingRepository.countByCommentIdAndRating(comment.getId(), CommentRating.Rating.DISLIKE);
     }
 
-    protected Integer getReplyCount(Comment comment) {
-        return Math.toIntExact(commentRepository.countByParentId(comment.getId()));
+    protected Long getReplyCount(Comment comment) {
+        return commentRepository.countByParentId(comment.getId());
     }
 }

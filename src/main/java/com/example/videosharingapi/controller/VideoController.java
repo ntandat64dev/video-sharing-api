@@ -1,8 +1,11 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.config.validation.ValidFile;
+import com.example.videosharingapi.config.validation.FileUploadConstraint;
+import com.example.videosharingapi.config.validation.IdExistsConstraint;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
+import com.example.videosharingapi.model.entity.User;
+import com.example.videosharingapi.model.entity.Video;
 import com.example.videosharingapi.service.VideoService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -25,37 +28,53 @@ public class VideoController {
     }
 
     @GetMapping
-    public ResponseEntity<VideoDto> getVideo(UUID videoId) {
+    public ResponseEntity<VideoDto> getVideo(@IdExistsConstraint(entity = Video.class) UUID videoId) {
         var response = videoService.getVideoById(videoId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/category/all")
-    public ResponseEntity<List<VideoDto>> getRecommendVideos(UUID userId) {
+    public ResponseEntity<List<VideoDto>> getRecommendVideos(@IdExistsConstraint(entity = User.class) UUID userId) {
         var response = videoService.getVideosByAllCategories(userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @GetMapping("/related")
-    public ResponseEntity<List<VideoDto>> getRelatedVideos(UUID videoId, UUID userId) {
+    public ResponseEntity<List<VideoDto>> getRelatedVideos(
+            @IdExistsConstraint(entity = Video.class)
+            UUID videoId,
+            @IdExistsConstraint(entity = User.class)
+            UUID userId
+    ) {
         var response = videoService.getRelatedVideos(videoId, userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<VideoDto> uploadVideo(@RequestParam @ValidFile MultipartFile videoFile,
+    public ResponseEntity<VideoDto> uploadVideo(@RequestParam @FileUploadConstraint MultipartFile videoFile,
                                                 @RequestPart @Valid VideoDto metadata) {
         var response = videoService.saveVideo(videoFile, metadata);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @GetMapping("/rate")
-    public ResponseEntity<VideoRatingDto> getRating(UUID videoId, UUID userId) {
+    public ResponseEntity<VideoRatingDto> getRating(
+            @IdExistsConstraint(entity = Video.class)
+            UUID videoId,
+            @IdExistsConstraint(entity = User.class)
+            UUID userId
+    ) {
         return new ResponseEntity<>(videoService.getRating(videoId, userId), HttpStatus.OK);
     }
 
     @PostMapping("/rate")
-    public ResponseEntity<?> rateVideo(UUID videoId, UUID userId, String rating) {
+    public ResponseEntity<?> rateVideo(
+            @IdExistsConstraint(entity = Video.class)
+            UUID videoId,
+            @IdExistsConstraint(entity = User.class)
+            UUID userId,
+            String rating
+    ) {
         videoService.rateVideo(videoId, userId, rating);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
