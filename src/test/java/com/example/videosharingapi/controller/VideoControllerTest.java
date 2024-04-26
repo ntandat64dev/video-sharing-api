@@ -22,7 +22,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Duration;
-import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -69,10 +68,7 @@ public class VideoControllerTest {
         videoDto.setSnippet(VideoDto.Snippet.builder()
                 .title("Video title")
                 .description("Video description")
-                .duration(Duration.ofSeconds(1000))
-                .publishedAt(LocalDateTime.now())
                 .thumbnails(thumbnails)
-                .videoUrl("Video thumbnail URL")
                 .hashtags(List.of("music", "pop"))
                 .userId(UUID.fromString(userId))
                 .build());
@@ -119,6 +115,7 @@ public class VideoControllerTest {
                 .andExpect(status().isCreated());
 
         assertThat(response.get().getSnippet().getTitle()).isEqualTo("Video title");
+        assertThat(response.get().getSnippet().getDuration()).isEqualTo(Duration.ofSeconds(1000));
     }
 
     @Test
@@ -195,7 +192,7 @@ public class VideoControllerTest {
                 .andExpect(status().isBadRequest());
 
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("User ID is required.");
+                .isEqualTo("'userId' must not be null");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -237,7 +234,7 @@ public class VideoControllerTest {
                 .andExpect(status().isBadRequest());
 
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Video title is required.");
+                .isEqualTo("'title' must not be blank");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -259,7 +256,7 @@ public class VideoControllerTest {
                 .andExpect(status().isBadRequest());
 
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Privacy is required.");
+                .isEqualTo("'privacy' must not be null");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -281,7 +278,7 @@ public class VideoControllerTest {
                 .andExpect(status().isBadRequest());
 
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Privacy must either 'private' or 'public'.");
+                .isEqualTo("'privacy' must match \"(?i)(private|public)\"");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -333,11 +330,15 @@ public class VideoControllerTest {
     @Transactional
     public void givenVideoIdAndUserId_whenRateVideo_thenVideoRatingUpdatedAsExpected() throws Exception {
         // Rate NONE while there is no VideoRating then ignore.
+        var response = new AtomicReference<VideoRatingDto>();
         mockMvc.perform(post("/api/v1/videos/rate")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
-                .andExpect(status().isNoContent());
+                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
+                .andExpect(status().isOk());
+
+        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.NONE);
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(
                 UUID.fromString(userId),
                 UUID.fromString(videoId));
@@ -348,7 +349,10 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
-                .andExpect(status().isNoContent());
+                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
+                .andExpect(status().isOk());
+
+        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.LIKE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(
                 UUID.fromString(userId),
                 UUID.fromString(videoId));
@@ -359,7 +363,10 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
-                .andExpect(status().isNoContent());
+                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
+                .andExpect(status().isOk());
+
+        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.DISLIKE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(
                 UUID.fromString(userId),
                 UUID.fromString(videoId));
@@ -370,7 +377,10 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
-                .andExpect(status().isNoContent());
+                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
+                .andExpect(status().isOk());
+
+        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.NONE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(
                 UUID.fromString(userId),
                 UUID.fromString(videoId));
@@ -385,7 +395,7 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         var videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
@@ -395,7 +405,7 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(1);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
@@ -405,7 +415,7 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
@@ -415,7 +425,7 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
         videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);

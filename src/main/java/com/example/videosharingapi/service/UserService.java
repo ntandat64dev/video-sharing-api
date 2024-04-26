@@ -15,5 +15,7 @@ public interface UserService {
 
     FollowDto follow(FollowDto followDto);
 
+    void unfollow(UUID followId);
+
     List<String> getBrowseKeywords(UUID userId);
 }

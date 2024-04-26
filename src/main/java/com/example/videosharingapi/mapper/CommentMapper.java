@@ -23,7 +23,7 @@ public abstract class CommentMapper {
     private @Autowired VideoRepository videoRepository;
 
     @Mapping(target = ".", source = "snippet")
-    @Mapping(target = "publishedAt", source = "snippet.publishedAt", defaultExpression = "java(LocalDateTime.now())")
+    @Mapping(target = "publishedAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "parent", expression = "java(findParent(commentDto))")
     @Mapping(target = "user", expression = "java(findUser(commentDto))")
     @Mapping(target = "video", expression = "java(findVideo(commentDto))")

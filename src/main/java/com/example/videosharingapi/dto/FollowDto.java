@@ -1,10 +1,8 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.config.validation.FollowExistsConstraint;
+import com.example.videosharingapi.config.validation.FollowNotExistsConstraint;
 import com.example.videosharingapi.config.validation.IdExistsConstraint;
-import com.example.videosharingapi.config.validation.group.OnCreate;
 import com.example.videosharingapi.config.validation.SelfFollowConstraint;
-import com.example.videosharingapi.model.entity.Follow;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
 import jakarta.validation.Valid;
@@ -18,8 +16,8 @@ import java.util.UUID;
 
 @Getter
 @Setter
-@SelfFollowConstraint(groups = OnCreate.class)
-@FollowExistsConstraint(groups = OnCreate.class)
+@SelfFollowConstraint
+@FollowNotExistsConstraint
 public class FollowDto {
 
     @Getter
@@ -48,7 +46,6 @@ public class FollowDto {
         private Map<Thumbnail.Type, ThumbnailDto> thumbnails;
     }
 
-    @IdExistsConstraint(entity = Follow.class)
     private UUID id;
 
     @Valid

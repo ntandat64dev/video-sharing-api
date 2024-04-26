@@ -6,7 +6,7 @@ import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 
-public class FollowExistsValidator implements ConstraintValidator<FollowExistsConstraint, FollowDto> {
+public class FollowNotExistsValidator implements ConstraintValidator<FollowNotExistsConstraint, FollowDto> {
 
     private @Autowired FollowRepository followRepository;
 

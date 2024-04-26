@@ -41,7 +41,7 @@ public abstract class UserMapper {
         return statistic;
     }
 
-    public User findUser(UUID userId) {
+    public User getUserById(UUID userId) {
         return userRepository.getReferenceById(userId);
     }
 }

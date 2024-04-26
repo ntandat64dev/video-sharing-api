@@ -17,7 +17,7 @@ public interface VideoService {
 
     VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto);
 
-    void rateVideo(UUID videoId, UUID userId, String rating);
+    VideoRatingDto rateVideo(UUID videoId, UUID userId, String rating);
 
     VideoRatingDto getRating(UUID videoId, UUID userId);
 }

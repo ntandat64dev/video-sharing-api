@@ -1,11 +1,12 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.config.validation.IdExistsConstraint;
-import com.example.videosharingapi.config.validation.group.OnCreate;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
+import com.example.videosharingapi.model.entity.Follow;
 import com.example.videosharingapi.model.entity.User;
 import com.example.videosharingapi.service.UserService;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -54,11 +55,20 @@ public class UserController {
     @PostMapping("/follows")
     public ResponseEntity<FollowDto> followUser(
             @RequestBody
-            @Validated(OnCreate.class)
+            @Validated
             FollowDto followDto
     ) {
         var response = userService.follow(followDto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @DeleteMapping("/follows")
+    public ResponseEntity<?> unfollowUser(
+            @IdExistsConstraint(message = "{exception.follow.does-not-exist}", entity = Follow.class)
+            @NotNull
+            UUID id) {
+        userService.unfollow(id);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/video-categories")

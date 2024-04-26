@@ -25,7 +25,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public List<CommentDto> getCommentsByVideoId(UUID videoId) {
-        return commentRepository.findByVideoId(videoId).stream()
+        return commentRepository.findByVideoIdAndParentIsNull(videoId).stream()
                 .map(commentMapper::toCommentDto)
                 .toList();
     }

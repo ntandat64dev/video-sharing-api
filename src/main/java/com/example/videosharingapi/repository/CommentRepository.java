@@ -10,7 +10,7 @@ import java.util.UUID;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, UUID> {
 
-    List<Comment> findByVideoId(UUID videoId);
+    List<Comment> findByVideoIdAndParentIsNull(UUID videoId);
 
     Long countByParentId(UUID parentId);
 }

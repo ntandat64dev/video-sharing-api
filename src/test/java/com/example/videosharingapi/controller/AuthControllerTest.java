@@ -67,7 +67,7 @@ public class AuthControllerTest {
                 .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
                 .andExpect(status().isBadRequest());
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Invalid email format.");
+                .isEqualTo("'email' must be a well-formed email address");
 
         // Given invalid password length.
         mockMvc.perform(post("/api/v1/auth/login")
@@ -77,7 +77,7 @@ public class AuthControllerTest {
                 .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
                 .andExpect(status().isBadRequest());
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Password must be at least 8 characters.");
+                .contains("'password' size must be between 8");
     }
 
     @Test
@@ -139,7 +139,7 @@ public class AuthControllerTest {
                 .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
                 .andExpect(status().isBadRequest());
         assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Invalid email format.");
+                .isEqualTo("'email' must be a well-formed email address");
 
         // Given invalid email format and invalid password length.
         mockMvc.perform(post("/api/v1/auth/signup")
@@ -149,7 +149,7 @@ public class AuthControllerTest {
                 .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
                 .andExpect(status().isBadRequest());
         assertThat(errorResponse.get().getErrorMessage())
-                .contains("Invalid email format.")
-                .contains("Password must be at least 8 characters.");
+                .contains("'email' must be a well-formed email address")
+                .contains("'password' size must be between 8");
     }
 }

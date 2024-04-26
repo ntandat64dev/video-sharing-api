@@ -68,14 +68,14 @@ public class VideoController {
     }
 
     @PostMapping("/rate")
-    public ResponseEntity<?> rateVideo(
+    public ResponseEntity<VideoRatingDto> rateVideo(
             @IdExistsConstraint(entity = Video.class)
             UUID videoId,
             @IdExistsConstraint(entity = User.class)
             UUID userId,
             String rating
     ) {
-        videoService.rateVideo(videoId, userId, rating);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        var response = videoService.rateVideo(videoId, userId, rating);
+        return new ResponseEntity<>(response, HttpStatus.OK);
     }
 }

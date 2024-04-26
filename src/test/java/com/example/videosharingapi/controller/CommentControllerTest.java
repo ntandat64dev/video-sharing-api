@@ -57,8 +57,7 @@ public class CommentControllerTest {
                 .andDo(result -> testUtil.toDto(result, response, CommentDto[].class))
                 .andExpect(status().isOk());
         assertThat(Arrays.stream(response.get()).map(CommentDto::getId)).containsExactly(
-                UUID.fromString("6c3239d6-5b33-461a-88dd-1e2150fb0324"),
-                UUID.fromString("6b342e72-e278-482a-b1e8-c66a142b40ca")
+                UUID.fromString("6c3239d6-5b33-461a-88dd-1e2150fb0324")
         );
     }
 

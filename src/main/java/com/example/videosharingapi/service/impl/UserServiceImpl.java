@@ -68,6 +68,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void unfollow(UUID followId) {
+        followRepository.deleteById(followId);
+    }
+
+    @Override
     @Transactional(readOnly = true)
     public List<String> getBrowseKeywords(UUID userId) {
         // TODO

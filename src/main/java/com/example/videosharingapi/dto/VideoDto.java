@@ -1,13 +1,14 @@
 package com.example.videosharingapi.dto;
 
 import com.example.videosharingapi.config.validation.IdExistsConstraint;
+import com.example.videosharingapi.config.validation.group.Save;
 import com.example.videosharingapi.model.entity.Thumbnail;
 import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.model.entity.Video;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Size;
 import lombok.*;
 
 import java.time.Duration;
@@ -26,7 +27,7 @@ public final class VideoDto {
     public static final class Snippet {
         private LocalDateTime publishedAt;
 
-        @NotNull(message = "{validation.user.id.required}")
+        @NotNull(message = "'userId' {jakarta.validation.constraints.NotNull.message}")
         @IdExistsConstraint(entity = User.class)
         private UUID userId;
 
@@ -34,17 +35,20 @@ public final class VideoDto {
 
         private String userImageUrl;
 
-        @NotBlank(message = "{validation.video.title.required}")
+        @NotBlank(message = "'title' {jakarta.validation.constraints.NotBlank.message}")
         private String title;
 
         private String description;
 
+        @NotNull(groups = Save.class)
         private String videoUrl;
 
+        @Size(min = 1, groups = Save.class)
         private Map<Thumbnail.Type, ThumbnailDto> thumbnails;
 
         private List<String> hashtags;
 
+        @NotNull(groups = Save.class)
         private Duration duration;
 
         private String location;
@@ -55,17 +59,19 @@ public final class VideoDto {
     @Builder
     public static final class Status {
 
-        @NotBlank(message = "{validation.video.privacy.required}")
-        @Pattern(regexp = "(?i)(private|public)", message = "{validation.video.privacy.in-range}")
+        @NotBlank(message = "'privacy' {jakarta.validation.constraints.NotNull.message}")
+        @Pattern(
+                regexp = "(?i)(private|public)",
+                message = "'privacy' {jakarta.validation.constraints.Pattern.message}")
         private String privacy;
 
-        @NotNull(message = "{validation.video.for-kids.required}")
+        @NotNull(message = "'madeForKids' {jakarta.validation.constraints.NotNull.message}")
         private Boolean madeForKids;
 
-        @NotNull(message = "{validation.video.age-restricted.required}")
+        @NotNull(message = "'ageRestricted' {jakarta.validation.constraints.NotNull.message}")
         private Boolean ageRestricted;
 
-        @NotNull(message = "{validation.video.comment-allowed.required}")
+        @NotNull(message = "'commentAllowed' {jakarta.validation.constraints.NotNull.message}")
         private Boolean commentAllowed;
     }
 
@@ -84,13 +90,14 @@ public final class VideoDto {
         private Long downloadCount;
     }
 
-    @IdExistsConstraint(entity = Video.class)
     private UUID id;
 
     @Valid
+    @NotNull(message = "'snippet' {jakarta.validation.constraints.NotNull.message}")
     private Snippet snippet;
 
     @Valid
+    @NotNull(message = "'status' {jakarta.validation.constraints.NotNull.message}")
     private Status status;
 
     private Statistic statistic;

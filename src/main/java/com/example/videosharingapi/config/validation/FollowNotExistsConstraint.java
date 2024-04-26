@@ -8,8 +8,8 @@ import java.lang.annotation.*;
 @Target({ ElementType.TYPE, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Constraint(validatedBy = FollowExistsValidator.class)
-public @interface FollowExistsConstraint {
+@Constraint(validatedBy = FollowNotExistsValidator.class)
+public @interface FollowNotExistsConstraint {
     String message() default "{exception.follow.already-exist}";
 
     Class<?>[] groups() default {};

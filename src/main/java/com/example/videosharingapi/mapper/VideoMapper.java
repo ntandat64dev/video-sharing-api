@@ -22,7 +22,7 @@ public abstract class VideoMapper {
     @Mapping(target = "videoStatistic", expression = "java(new VideoStatistic())")
     @Mapping(target = "durationSec",
             expression = "java(Math.toIntExact(videoDto.getSnippet().getDuration().toSeconds()))")
-    @Mapping(target = "publishedAt", source = "snippet.publishedAt", defaultExpression = "java(LocalDateTime.now())")
+    @Mapping(target = "publishedAt", expression = "java(LocalDateTime.now())")
     @Mapping(target = "hashtags", ignore = true)
     public abstract Video toVideo(VideoDto videoDto);
 

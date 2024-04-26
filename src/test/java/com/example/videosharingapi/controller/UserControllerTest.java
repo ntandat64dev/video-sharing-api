@@ -5,6 +5,7 @@ import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
 import com.example.videosharingapi.dto.response.ErrorResponse;
+import com.example.videosharingapi.repository.FollowRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,8 +20,7 @@ import java.util.UUID;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -32,6 +32,8 @@ public class UserControllerTest {
     private @Autowired TestUtil testUtil;
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
+
+    private @Autowired FollowRepository followRepository;
 
     private final String userId = "3f06af63-a93c-11e4-9797-00505690773f";
     private final String userId2 = "a05990b1-9110-40b1-aa4c-03951b0705de";
@@ -144,6 +146,35 @@ public class UserControllerTest {
 
         assertThat(errorResponse.get().getErrorMessage())
                 .isEqualTo("Subscribing to your own channel is not supported.");
+    }
+
+    @Test
+    @Transactional
+    public void givenFollowId_whenDelete_thenReturnSuccessful() throws Exception {
+        mockMvc.perform(delete("/api/v1/users/follows")
+                        .param("id", "f2cf8a48-02d6-4e04-a816-045521ee7b83"))
+                .andExpect(status().isNoContent());
+        assertThat(followRepository.existsById(UUID.fromString("f2cf8a48-02d6-4e04-a816-045521ee7b83")))
+                .isFalse();
+    }
+
+    @Test
+    @Transactional
+    public void givenInvalidFollowId_whenDelete_thenReturnError() throws Exception {
+        var errorResponse = new AtomicReference<ErrorResponse>();
+        mockMvc.perform(delete("/api/v1/users/follows")
+                        .param("id", ""))
+                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
+                .andExpect(status().isBadRequest());
+        assertThat(errorResponse.get().getErrorMessage())
+                .isEqualTo("must not be null");
+
+        mockMvc.perform(delete("/api/v1/users/follows")
+                        .param("id", UUID.randomUUID().toString()))
+                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
+                .andExpect(status().isBadRequest());
+        assertThat(errorResponse.get().getErrorMessage())
+                .contains("The follow that you are trying to delete cannot be found.");
     }
 
     @Test

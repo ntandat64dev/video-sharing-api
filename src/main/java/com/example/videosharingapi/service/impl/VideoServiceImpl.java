@@ -1,7 +1,9 @@
 package com.example.videosharingapi.service.impl;
 
+import com.example.videosharingapi.config.validation.group.Save;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
+import com.example.videosharingapi.exception.ApplicationException;
 import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.mapper.VideoRatingMapper;
 import com.example.videosharingapi.model.entity.Hashtag;
@@ -14,6 +16,9 @@ import com.example.videosharingapi.repository.VideoRepository;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
 import jakarta.annotation.Nullable;
+import jakarta.validation.Validator;
+import jakarta.validation.groups.Default;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,11 +41,12 @@ public class VideoServiceImpl implements VideoService {
 
     private final VideoMapper videoMapper;
     private final VideoRatingMapper videoRatingMapper;
+    private final Validator validator;
 
     public VideoServiceImpl(
             VideoRepository videoRepository, UserRepository userRepository, VideoMapper videoMapper,
             VideoRatingRepository videoRatingRepository, StorageService storageService,
-            HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper
+            HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper, Validator validator
     ) {
         this.videoRepository = videoRepository;
         this.userRepository = userRepository;
@@ -49,6 +55,7 @@ public class VideoServiceImpl implements VideoService {
         this.storageService = storageService;
         this.hashtagRepository = hashtagRepository;
         this.videoRatingMapper = videoRatingMapper;
+        this.validator = validator;
     }
 
     @Override
@@ -82,10 +89,18 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto) {
         storageService.store(videoFile, videoDto);
+
+        var constraintViolations = validator.validate(videoDto, Default.class, Save.class);
+        if (!constraintViolations.isEmpty()) {
+            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+        }
+
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
         saveHashtags(videoDto.getSnippet().getHashtags(), video);
-        videoDto.setId(video.getId());
-        return videoDto;
+
+        return videoRepository.findById(video.getId())
+                .map(videoMapper::toVideoDto)
+                .orElseThrow();
     }
 
     private void saveHashtags(@Nullable List<String> tags, Video video) {
@@ -98,17 +113,22 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public void rateVideo(UUID videoId, UUID userId, String rating) {
+    public VideoRatingDto rateVideo(UUID videoId, UUID userId, String rating) {
         var video = videoRepository.getReferenceById(videoId);
         var user = userRepository.getReferenceById(userId);
 
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), video.getId());
-        if (videoRating == null && Objects.equals(rating, VideoRatingDto.NONE)) return;
-        if (videoRating != null && videoRating.getRating().name().equalsIgnoreCase(rating)) return;
+        if (videoRating == null && Objects.equals(rating, VideoRatingDto.NONE)) {
+            return videoRatingMapper.fromNullVideoRating(videoId, userId);
+        }
+        if (videoRating != null && videoRating.getRating().name().equalsIgnoreCase(rating)) {
+            return videoRatingMapper.toVideoRatingDto(videoRating);
+        }
 
         if (videoRating != null) {
             if (Objects.equals(rating, VideoRatingDto.NONE)) {
                 videoRatingRepository.delete(videoRating);
+                return videoRatingMapper.fromNullVideoRating(videoId, userId);
             } else {
                 videoRating.setRating(VideoRating.Rating.valueOf(rating.toUpperCase()));
                 videoRating.setPublishedAt(LocalDateTime.now());
@@ -122,6 +142,7 @@ public class VideoServiceImpl implements VideoService {
             videoRating.setPublishedAt(LocalDateTime.now());
             videoRatingRepository.save(videoRating);
         }
+        return videoRatingMapper.toVideoRatingDto(videoRating);
     }
 
     @Override

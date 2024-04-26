@@ -51,7 +51,7 @@ public final class UserDto {
         private Long videoCount;
     }
 
-    @NotBlank(message = "{validation.user.id.required}")
+    @NotBlank(message = "'id' {jakarta.validation.constraints.NotBlank.message}")
     private UUID id;
 
     private Snippet snippet;
