@@ -12,7 +12,9 @@ import org.springframework.context.i18n.LocaleContextHolder;
 @Mapper(componentModel = "spring",
         imports = { User.class, VideoStatistic.class, LocaleContextHolder.class },
         builder = @Builder(disableBuilder = true),
-        uses = { HashtagMapper.class, PrivacyMapper.class, ThumbnailMapper.class, UserMapper.class })
+        uses = {
+                HashtagMapper.class, PrivacyMapper.class, ThumbnailMapper.class, UserMapper.class,
+                CategoryMapper.class })
 public abstract class VideoMapper {
 
     @Mapping(target = ".", source = "snippet")

@@ -54,6 +54,10 @@ public class Video extends AuditableEntity {
     @Column(nullable = false)
     private Boolean commentAllowed;
 
+    @ManyToOne
+    @JoinColumn(nullable = false)
+    private Category category;
+
     private String location;
 
     @ManyToMany

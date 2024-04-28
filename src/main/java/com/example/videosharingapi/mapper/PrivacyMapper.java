@@ -11,7 +11,7 @@ public abstract class PrivacyMapper {
 
     private @Autowired PrivacyRepository privacyRepository;
 
-    Privacy fromStatus(String status) {
+    public Privacy fromStatus(String status) {
         var privacyStatus = Privacy.Status.valueOf(status.toUpperCase());
         return privacyRepository.findByStatus(privacyStatus);
     }

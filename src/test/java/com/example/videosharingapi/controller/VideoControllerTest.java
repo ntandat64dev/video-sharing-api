@@ -2,6 +2,7 @@ package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.common.TestUtil;
+import com.example.videosharingapi.dto.CategoryDto;
 import com.example.videosharingapi.dto.ThumbnailDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
@@ -71,6 +72,7 @@ public class VideoControllerTest {
                 .thumbnails(thumbnails)
                 .hashtags(List.of("music", "pop"))
                 .userId(UUID.fromString(userId))
+                .category(new CategoryDto(UUID.fromString("8c1f4a20-24ec-44a2-9ad7-5df3d769ba61")))
                 .build());
         videoDto.setStatus(VideoDto.Status.builder()
                 .privacy("private")
@@ -235,6 +237,50 @@ public class VideoControllerTest {
 
         assertThat(errorResponse.get().getErrorMessage())
                 .isEqualTo("'title' must not be blank");
+        // Assert video is not saved.
+        assertThat(videoRepository.count()).isEqualTo(3);
+    }
+
+    @Test
+    @Transactional
+    public void givenMissingVideoCategory_whenPostVideo_thenReturnErrorResponse() throws Exception {
+        var videoDto = obtainVideoDto();
+        videoDto.getSnippet().setCategory(null);
+        var metadata = new MockMultipartFile(
+                "metadata", null,
+                "application/json", objectMapper.writeValueAsBytes(videoDto));
+
+        var errorResponse = new AtomicReference<ErrorResponse>();
+        mockMvc.perform(multipart("/api/v1/videos")
+                        .file(mockVideoFile)
+                        .file(metadata))
+                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
+                .andExpect(status().isBadRequest());
+
+        assertThat(errorResponse.get().getErrorMessage())
+                .isEqualTo("'category' must not be null");
+        // Assert video is not saved.
+        assertThat(videoRepository.count()).isEqualTo(3);
+    }
+
+    @Test
+    @Transactional
+    public void givenInvalidVideoCategory_whenPostVideo_thenReturnErrorResponse() throws Exception {
+        var videoDto = obtainVideoDto();
+        videoDto.getSnippet().getCategory().setId(UUID.randomUUID());
+        var metadata = new MockMultipartFile(
+                "metadata", null,
+                "application/json", objectMapper.writeValueAsBytes(videoDto));
+
+        var errorResponse = new AtomicReference<ErrorResponse>();
+        mockMvc.perform(multipart("/api/v1/videos")
+                        .file(mockVideoFile)
+                        .file(metadata))
+                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
+                .andExpect(status().isBadRequest());
+
+        assertThat(errorResponse.get().getErrorMessage())
+                .isEqualTo("ID does not exist.");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }

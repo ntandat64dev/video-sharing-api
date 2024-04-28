@@ -32,6 +32,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
     private @Autowired HashtagRepository hashtagRepository;
     private @Autowired ViewHistoryRepository viewHistoryRepository;
     private @Autowired PrivacyRepository privacyRepository;
+    private @Autowired CategoryRepository categoryRepository;
 
     @Override
     @Transactional
@@ -98,6 +99,14 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 "Barcelona, Spain", "Buenos Aires, Argentina", "Singapore", "Vienna, Austria", "Dublin, Ireland",
                 "Stockholm, Sweden", "Zurich, Switzerland", "Prague, Czech Republic", "Oslo, Norway" };
 
+        var categories = new ArrayList<>(Stream.of("Autos & Vehicles", "Comedy", "Education", "Entertainment",
+                        "Film & Animation", "Gaming", "Howto & Style", "Music", "News & Politics",
+                        "Nonprofits & Activism", "People & Blogs", "Pets & Animals", "Science & Technology", "Sports",
+                        "Travel & Events")
+                .map(Category::new)
+                .toList());
+        categoryRepository.saveAll(categories);
+
         var videos = new Video[49];
         for (int i = 1; i < 50; i++) {
             var isMadeForKids = new Random().nextInt() % 3 == 0;
@@ -126,6 +135,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
                     .commentAllowed(i % 3 != 0)
                     .madeForKids(isMadeForKids)
                     .ageRestricted(!isMadeForKids && new Random().nextInt() % 3 == 0)
+                    .category(categories.get(new Random().nextInt(categories.size())))
                     .location(new Random().nextInt() % 3 == 0 ?
                             locations[new Random().nextInt(locations.length)] :
                             null)

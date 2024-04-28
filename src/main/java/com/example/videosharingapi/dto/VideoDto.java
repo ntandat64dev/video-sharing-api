@@ -43,6 +43,10 @@ public final class VideoDto {
         @NotNull(groups = Save.class)
         private String videoUrl;
 
+        @Valid
+        @NotNull(message = "'category' {jakarta.validation.constraints.NotNull.message}")
+        private CategoryDto category;
+
         @Size(min = 1, groups = Save.class)
         private Map<Thumbnail.Type, ThumbnailDto> thumbnails;
 

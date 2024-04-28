@@ -34,11 +34,29 @@ INSERT INTO `hashtag`(id, created_by, created_date, modified_by, modified_date, 
 VALUES  (X'c7e8a20e70164d6f9a63b4c2268a0c02', 'admin', NOW(), 'admin', NOW(), 'music'),
         (X'88cd13bd559b4f91b9e15aca57cc3024', 'admin', NOW(), 'admin', NOW(), 'sport');
 
+# Category
+INSERT INTO `category`(id, created_by, created_date, modified_by, modified_date, category)
+VALUES (X'a82f3e3dbc9c4a168c900984c4cb16e1', 'admin', NOW(), 'admin', NOW(), 'Autos & Vehicles'),
+       (X'f2fe0cb61e394d5c86e8fa52212f731c', 'admin', NOW(), 'admin', NOW(), 'Comedy'),
+       (X'd073f837021e48b3b7d34b54e98a7a0b', 'admin', NOW(), 'admin', NOW(), 'Education'),
+       (X'8c1f4a2024ec44a29ad75df3d769ba61', 'admin', NOW(), 'admin', NOW(), 'Entertainment'),
+       (X'65e787e295b34f5cae6bf99903f9183b', 'admin', NOW(), 'admin', NOW(), 'Film & Animation'),
+       (X'b18712fb0cc74f498159c60d3a826ab1', 'admin', NOW(), 'admin', NOW(), 'Gaming'),
+       (X'b47a3808f64a4f48b173b50b7d6aef67', 'admin', NOW(), 'admin', NOW(), 'Howto & Style'),
+       (X'9c1e1e7db5254c658fe1f63cc365bc1a', 'admin', NOW(), 'admin', NOW(), 'Music'),
+       (X'e1b8b13d6a6843119468f7e640477d5c', 'admin', NOW(), 'admin', NOW(), 'News & Politics'),
+       (X'ae4c3b485f3f4878a6a58dc15ab19c41', 'admin', NOW(), 'admin', NOW(), 'Nonprofits & Activism'),
+       (X'8fca6c8a5a1842d2aa928f0a9935f40e', 'admin', NOW(), 'admin', NOW(), 'People & Blogs'),
+       (X'd3a616dbb1594bbd814f254f0a6c8237', 'admin', NOW(), 'admin', NOW(), 'Pets & Animals'),
+       (X'8b63d2edd235424f80decd3a1b5ee44c', 'admin', NOW(), 'admin', NOW(), 'Science & Technology'),
+       (X'c0f3f41e4778490b8c21254b5b5e3fbf', 'admin', NOW(), 'admin', NOW(), 'Sports'),
+       (X'eb0568d36b3d4f3087169a9d4b08f1f0', 'admin', NOW(), 'admin', NOW(), 'Travel & Events');
+
 # Video
-INSERT INTO `video`(id, created_by, created_date, modified_by, modified_date, description, duration_sec,   age_restricted, comment_allowed, made_for_kids, location, title, published_at, video_url, user_id, privacy_id)
-VALUES  (X'37b32dc2b0e045ab84691ad89a90b978', 'admin', NOW(), 'admin', NOW(), 'Video 1 description', 1000, false, true, false, 'New York, US', 'Video 1', '20240401T09:00', 'Video 1 video URL', X'3f06af63a93c11e4979700505690773f', X'ec386a4b04cd45a7afb63635c9183ba0'),
-        (X'f7d9b74b750c4f4983405bcb8450ae14', 'admin', NOW(), 'admin', NOW(), 'Video 2 description', 2000, false, true, false, 'Ha Noi, Vietnam', 'Video 2', '20240402T09:00', 'Video 2 video URL', X'3f06af63a93c11e4979700505690773f', X'f01121d2b6174c21844800059c6ff461'),
-        (X'e65707b4e9dc4d409a1d72667570bd6f', 'admin', NOW(), 'admin', NOW(), 'Video 3 description', 3000, false, false, true, 'Tokyo, Japan', 'Video 3', '20240403T09:00', 'Video 3 video URL', X'a05990b1911040b1aa4c03951b0705de', X'f01121d2b6174c21844800059c6ff461');
+INSERT INTO `video`(id, created_by, created_date, modified_by, modified_date, description, duration_sec, age_restricted, comment_allowed, made_for_kids, category_id, location, title, published_at, video_url, user_id, privacy_id)
+VALUES  (X'37b32dc2b0e045ab84691ad89a90b978', 'admin', NOW(), 'admin', NOW(), 'Video 1 description', 1000, false, true, false, X'a82f3e3dbc9c4a168c900984c4cb16e1' ,'New York, US', 'Video 1', '20240401T09:00', 'Video 1 video URL', X'3f06af63a93c11e4979700505690773f', X'ec386a4b04cd45a7afb63635c9183ba0'),
+        (X'f7d9b74b750c4f4983405bcb8450ae14', 'admin', NOW(), 'admin', NOW(), 'Video 2 description', 2000, false, true, false, X'f2fe0cb61e394d5c86e8fa52212f731c' ,'Ha Noi, Vietnam', 'Video 2', '20240402T09:00', 'Video 2 video URL', X'3f06af63a93c11e4979700505690773f', X'f01121d2b6174c21844800059c6ff461'),
+        (X'e65707b4e9dc4d409a1d72667570bd6f', 'admin', NOW(), 'admin', NOW(), 'Video 3 description', 3000, false, false, true, X'd073f837021e48b3b7d34b54e98a7a0b' ,'Tokyo, Japan', 'Video 3', '20240403T09:00', 'Video 3 video URL', X'a05990b1911040b1aa4c03951b0705de', X'f01121d2b6174c21844800059c6ff461');
 
 # VideoStatistic
 INSERT INTO `video_statistic`(created_by, created_date, modified_by, modified_date, comment_count, dislike_count, download_count, like_count, view_count, video_id)

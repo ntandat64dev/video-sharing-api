@@ -1,13 +1,7 @@
 package com.example.videosharingapi.config.validation;
 
-import com.example.videosharingapi.model.entity.Comment;
-import com.example.videosharingapi.model.entity.Follow;
-import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.model.entity.Video;
-import com.example.videosharingapi.repository.CommentRepository;
-import com.example.videosharingapi.repository.FollowRepository;
-import com.example.videosharingapi.repository.UserRepository;
-import com.example.videosharingapi.repository.VideoRepository;
+import com.example.videosharingapi.model.entity.*;
+import com.example.videosharingapi.repository.*;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +15,7 @@ public class IdExistsConstraintValidator implements ConstraintValidator<IdExists
     private @Autowired VideoRepository videoRepository;
     private @Autowired CommentRepository commentRepository;
     private @Autowired FollowRepository followRepository;
+    private @Autowired CategoryRepository categoryRepository;
 
     private JpaRepository<?, UUID> repository;
 
@@ -34,6 +29,8 @@ public class IdExistsConstraintValidator implements ConstraintValidator<IdExists
             repository = commentRepository;
         } else if (constraintAnnotation.entity() == Follow.class) {
             repository = followRepository;
+        } else if (constraintAnnotation.entity() == Category.class) {
+            repository = categoryRepository;
         }
     }
 
