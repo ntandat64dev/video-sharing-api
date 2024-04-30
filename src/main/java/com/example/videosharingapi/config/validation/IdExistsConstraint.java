@@ -10,7 +10,7 @@ import java.lang.annotation.*;
 @Documented
 @Constraint(validatedBy = IdExistsConstraintValidator.class)
 public @interface IdExistsConstraint {
-    String message() default "{validation.id.not-exists}";
+    String message() default "{validation.does-not-exist}";
 
     Class<?>[] groups() default {};
 

@@ -3,8 +3,8 @@ package com.example.videosharingapi.controller;
 import com.example.videosharingapi.config.validation.IdExistsConstraint;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
-import com.example.videosharingapi.model.entity.Follow;
-import com.example.videosharingapi.model.entity.User;
+import com.example.videosharingapi.entity.Follow;
+import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.service.UserService;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.http.HttpStatus;
@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -27,7 +26,7 @@ public class UserController {
     }
 
     @GetMapping
-    public ResponseEntity<UserDto> getUser(UUID userId) {
+    public ResponseEntity<UserDto> getUser(String userId) {
         var response = userService.getUserById(userId);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
@@ -35,10 +34,10 @@ public class UserController {
     @GetMapping("/follows")
     public ResponseEntity<List<FollowDto>> getFollowsByUserId(
             @IdExistsConstraint(entity = User.class)
-            UUID userId,
+            String userId,
             @RequestParam(required = false)
             @IdExistsConstraint(entity = User.class)
-            UUID forUserId
+            String forUserId
     ) {
         List<FollowDto> response = new ArrayList<>();
         if (forUserId != null) {
@@ -64,15 +63,15 @@ public class UserController {
 
     @DeleteMapping("/follows")
     public ResponseEntity<?> unfollowUser(
-            @IdExistsConstraint(message = "{exception.follow.does-not-exist}", entity = Follow.class)
+            @IdExistsConstraint(entity = Follow.class)
             @NotNull
-            UUID id) {
+            String id) {
         userService.unfollow(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/video-categories")
-    public List<String> getBrowseKeywords(@IdExistsConstraint(entity = User.class) UUID userId) {
+    public List<String> getBrowseKeywords(@IdExistsConstraint(entity = User.class) String userId) {
         return userService.getBrowseKeywords(userId);
     }
 }

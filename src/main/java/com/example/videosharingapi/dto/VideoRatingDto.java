@@ -5,7 +5,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -14,9 +13,9 @@ public final class VideoRatingDto {
     public static final String DISLIKE = "dislike";
     public static final String NONE = "none";
 
-    private UUID videoId;
+    private String videoId;
 
-    private UUID userId;
+    private String userId;
 
     private String rating;
 

@@ -1,17 +1,16 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
-import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.CategoryDto;
 import com.example.videosharingapi.dto.ThumbnailDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
-import com.example.videosharingapi.dto.response.ErrorResponse;
-import com.example.videosharingapi.model.entity.Hashtag;
-import com.example.videosharingapi.model.entity.Thumbnail;
-import com.example.videosharingapi.model.entity.VideoRating;
+import com.example.videosharingapi.entity.Hashtag;
+import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.entity.VideoRating;
 import com.example.videosharingapi.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,14 +21,13 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -44,12 +42,11 @@ public class VideoControllerTest {
     private @Autowired HashtagRepository hashtagRepository;
     private @Autowired VideoRatingRepository videoRatingRepository;
 
-    private @Autowired TestUtil testUtil;
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
 
-    private final String userId = "3f06af63-a93c-11e4-9797-00505690773f";
-    private final String videoId = "e65707b4-e9dc-4d40-9a1d-72667570bd6f";
+    private final String userId = "3f06af63";
+    private final String videoId = "e65707b4";
 
     private final MockMultipartFile mockVideoFile = new MockMultipartFile(
             "videoFile",
@@ -71,8 +68,8 @@ public class VideoControllerTest {
                 .description("Video description")
                 .thumbnails(thumbnails)
                 .hashtags(List.of("music", "pop"))
-                .userId(UUID.fromString(userId))
-                .category(new CategoryDto(UUID.fromString("8c1f4a20-24ec-44a2-9ad7-5df3d769ba61")))
+                .userId(userId)
+                .category(new CategoryDto("8c1f4a20"))
                 .build());
         videoDto.setStatus(VideoDto.Status.builder()
                 .privacy("private")
@@ -85,20 +82,15 @@ public class VideoControllerTest {
 
     @Test
     public void givenVideoId_whenGetVideo_thenReturnExpectedVideo() throws Exception {
-        var response = new AtomicReference<VideoDto>();
         mockMvc.perform(get("/api/v1/videos")
                         .param("videoId", videoId))
-                .andDo(result -> testUtil.toDto(result, response, VideoDto.class))
-                .andExpect(status().isOk());
-
-        assertThat(response.get().getSnippet().getTitle())
-                .isEqualTo("Video 3");
-        assertThat(response.get().getSnippet().getUserId())
-                .isEqualTo(UUID.fromString("a05990b1-9110-40b1-aa4c-03951b0705de"));
-        assertThat(response.get().getSnippet().getThumbnails())
-                .hasSize(1);
-        assertThat(response.get().getSnippet().getThumbnails().get(Thumbnail.Type.DEFAULT).getUrl())
-                .isEqualTo("Video 3 default thumbnail");
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.snippet.title").value("Video 3"))
+                .andExpect(jsonPath("$.snippet.userId")
+                        .value("a05990b1"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
+                .andExpect(jsonPath("$.snippet.thumbnails.DEFAULT.url")
+                        .value("Video 3 default thumbnail"));
     }
 
     @Test
@@ -109,15 +101,12 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var response = new AtomicReference<VideoDto>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, response, VideoDto.class))
-                .andExpect(status().isCreated());
-
-        assertThat(response.get().getSnippet().getTitle()).isEqualTo("Video title");
-        assertThat(response.get().getSnippet().getDuration()).isEqualTo(Duration.ofSeconds(1000));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.snippet.title").value("Video title"))
+                .andExpect(jsonPath("$.snippet.duration").value("PT16M40S"));
     }
 
     @Test
@@ -128,15 +117,15 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var response = new AtomicReference<VideoDto>();
-        mockMvc.perform(multipart("/api/v1/videos")
+        var result = mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, response, VideoDto.class))
-                .andExpect(status().isCreated());
+                .andExpect(status().isCreated())
+                .andReturn();
 
         // Assert Video is created.
-        var video = videoRepository.findById(response.get().getId());
+        var video = videoRepository
+                .findById(JsonPath.read(result.getResponse().getContentAsString(), "$.id"));
         assertThat(video).isPresent();
         assertThat(videoRepository.findAll()).hasSize(4);
 
@@ -159,20 +148,19 @@ public class VideoControllerTest {
     @Transactional
     public void givenInvalidUserId_whenPostVideo_thenReturnErrorResponse() throws Exception {
         var videoDto = obtainVideoDto();
-        videoDto.getSnippet().setUserId(UUID.randomUUID());
+        videoDto.getSnippet().setUserId(UUID.randomUUID().toString());
         var metadata = new MockMultipartFile(
                 "metadata",
                 null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.userId: does not exist"));
 
-        assertThat(errorResponse.get().getErrorMessage()).isEqualTo("ID does not exist.");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -186,15 +174,13 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.userId: must not be null"));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'userId' must not be null");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -207,14 +193,12 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Required part 'videoFile' is not present."));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Required part 'videoFile' is not present.");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -228,15 +212,13 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.title: must not be blank"));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'title' must not be blank");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -250,15 +232,13 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.category: must not be null"));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'category' must not be null");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -267,20 +247,18 @@ public class VideoControllerTest {
     @Transactional
     public void givenInvalidVideoCategory_whenPostVideo_thenReturnErrorResponse() throws Exception {
         var videoDto = obtainVideoDto();
-        videoDto.getSnippet().getCategory().setId(UUID.randomUUID());
+        videoDto.getSnippet().getCategory().setId(UUID.randomUUID().toString());
         var metadata = new MockMultipartFile(
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.category.id: does not exist"));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("ID does not exist.");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -294,15 +272,13 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("status.privacy: must not be blank"));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'privacy' must not be null");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
@@ -316,78 +292,67 @@ public class VideoControllerTest {
                 "metadata", null,
                 "application/json", objectMapper.writeValueAsBytes(videoDto));
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(mockVideoFile)
                         .file(metadata))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("status.privacy: must match \"(?i)(private|public)\""));
 
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'privacy' must match \"(?i)(private|public)\"");
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
     }
 
     @Test
     public void givenUserId_whenGetVideosByAllCategories_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<VideoDto[]>();
         mockMvc.perform(get("/api/v1/videos/category/all")
                         .param("userId", userId))
-                .andDo(result -> testUtil.toDto(result, response, VideoDto[].class))
-                .andExpect(status().isOk());
-        assertThat(response.get()).hasSize(1);
-        assertThat(response.get()[0].getId())
-                .isEqualTo(UUID.fromString("e65707b4-e9dc-4d40-9a1d-72667570bd6f"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("e65707b4"));
     }
 
     @Test
     public void givenVideoIdAndUserId_whenGetRating_thenReturnExpectedRatingResponse() throws Exception {
         // When there is no VideoRating.
-        var response = new AtomicReference<VideoRatingDto>();
         mockMvc.perform(get("/api/v1/videos/rate")
                         .param("userId", userId)
                         .param("videoId", videoId))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.NONE);
-        assertThat(response.get().getPublishedAt()).isNull();
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE))
+                .andExpect(jsonPath("$.publishedAt").doesNotExist());
 
         // When there is VideoRating with LIKE type.
         mockMvc.perform(get("/api/v1/videos/rate")
                         .param("userId", userId)
-                        .param("videoId", "37b32dc2-b0e0-45ab-8469-1ad89a90b978"))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.LIKE);
-        assertThat(response.get().getPublishedAt()).isNotNull();
+                        .param("videoId", "37b32dc2"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.LIKE))
+                .andExpect(jsonPath("$.publishedAt").isNotEmpty());
 
         // When there is VideoRating with DISLIKE type.
         mockMvc.perform(get("/api/v1/videos/rate")
-                        .param("userId", "a05990b1-9110-40b1-aa4c-03951b0705de")
-                        .param("videoId", "f7d9b74b-750c-4f49-8340-5bcb8450ae14"))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.DISLIKE);
-        assertThat(response.get().getPublishedAt()).isNotNull();
+                        .param("userId", "a05990b1")
+                        .param("videoId", "f7d9b74b"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.DISLIKE))
+                .andExpect(jsonPath("$.publishedAt").isNotEmpty());
     }
 
     @Test
     @Transactional
     public void givenVideoIdAndUserId_whenRateVideo_thenVideoRatingUpdatedAsExpected() throws Exception {
         // Rate NONE while there is no VideoRating then ignore.
-        var response = new AtomicReference<VideoRatingDto>();
         mockMvc.perform(post("/api/v1/videos/rate")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE));
 
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.NONE);
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                UUID.fromString(userId),
-                UUID.fromString(videoId));
+                userId,
+                videoId);
         assertThat(videoRating).isNull();
 
         // Rate LIKE then VideoRating is created with LIKE type.
@@ -395,13 +360,12 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.LIKE));
 
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.LIKE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                UUID.fromString(userId),
-                UUID.fromString(videoId));
+                userId,
+                videoId);
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.LIKE);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
@@ -409,13 +373,12 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.DISLIKE));
 
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.DISLIKE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                UUID.fromString(userId),
-                UUID.fromString(videoId));
+                userId,
+                videoId);
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.DISLIKE);
 
         // Rate NONE while there is a VideoRating then delete it.
@@ -423,13 +386,12 @@ public class VideoControllerTest {
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
-                .andDo(result -> testUtil.toDto(result, response, VideoRatingDto.class))
-                .andExpect(status().isOk());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE));
 
-        assertThat(response.get().getRating()).isEqualTo(VideoRatingDto.NONE);
         videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                UUID.fromString(userId),
-                UUID.fromString(videoId));
+                userId,
+                videoId);
         assertThat(videoRating).isNull();
     }
 
@@ -442,7 +404,7 @@ public class VideoControllerTest {
                         .param("videoId", videoId)
                         .param("rating", "none"))
                 .andExpect(status().isOk());
-        var videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
+        var videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
@@ -452,7 +414,7 @@ public class VideoControllerTest {
                         .param("videoId", videoId)
                         .param("rating", "like"))
                 .andExpect(status().isOk());
-        videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
+        videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(1);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
@@ -462,7 +424,7 @@ public class VideoControllerTest {
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
                 .andExpect(status().isOk());
-        videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
+        videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
 
@@ -472,19 +434,17 @@ public class VideoControllerTest {
                         .param("videoId", videoId)
                         .param("rating", "none"))
                 .andExpect(status().isOk());
-        videoStat = videoStatisticRepository.findById(UUID.fromString(videoId));
+        videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
     }
 
     @Test
     public void givenUserIdAndVideoId_whenGetRelatedVideos_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<VideoDto[]>();
         mockMvc.perform(get("/api/v1/videos/related")
                         .param("videoId", videoId)
                         .param("userId", userId))
-                .andDo(result -> testUtil.toDto(result, response, VideoDto[].class))
-                .andExpect(status().isOk());
-        assertThat(response.get()).hasSize(1);
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
     }
 }

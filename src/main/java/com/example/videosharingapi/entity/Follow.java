@@ -1,22 +1,19 @@
-package com.example.videosharingapi.model.entity;
+package com.example.videosharingapi.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
 @Entity
-public class ViewHistory extends AuditableEntity {
+public class Follow extends AuditableEntity {
 
     @Id
-    @GeneratedValue
-    private UUID id;
-
-    private Integer viewedDurationSec;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String id;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime publishedAt;
@@ -27,5 +24,5 @@ public class ViewHistory extends AuditableEntity {
 
     @ManyToOne
     @JoinColumn(nullable = false)
-    private Video video;
+    private User follower;
 }

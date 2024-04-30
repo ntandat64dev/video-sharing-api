@@ -1,7 +1,7 @@
 package com.example.videosharingapi.mapper;
 
 import com.example.videosharingapi.dto.FollowDto;
-import com.example.videosharingapi.model.entity.Follow;
+import com.example.videosharingapi.entity.Follow;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 

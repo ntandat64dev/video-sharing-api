@@ -1,6 +1,6 @@
 package com.example.videosharingapi.config.runner;
 
-import com.example.videosharingapi.model.entity.*;
+import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.ApplicationArguments;
@@ -70,7 +70,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
 
         for (var user : users) {
             for (var follower : users) {
-                if (user.getId() == follower.getId()) continue;
+                if (Objects.equals(user.getId(), follower.getId())) continue;
                 if (new Random().nextInt(10) < 3) {
                     var subscription = new Follow();
                     subscription.setUser(user);

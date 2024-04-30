@@ -5,19 +5,18 @@ import com.example.videosharingapi.dto.VideoRatingDto;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface VideoService {
 
-    VideoDto getVideoById(UUID id);
+    VideoDto getVideoById(String id);
 
-    List<VideoDto> getVideosByAllCategories(UUID userId);
+    List<VideoDto> getVideosByAllCategories(String userId);
 
-    List<VideoDto> getRelatedVideos(UUID videoId, UUID userId);
+    List<VideoDto> getRelatedVideos(String videoId, String userId);
 
     VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto);
 
-    VideoRatingDto rateVideo(UUID videoId, UUID userId, String rating);
+    VideoRatingDto rateVideo(String videoId, String userId, String rating);
 
-    VideoRatingDto getRating(UUID videoId, UUID userId);
+    VideoRatingDto getRating(String videoId, String userId);
 }

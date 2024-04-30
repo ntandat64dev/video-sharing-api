@@ -1,112 +1,112 @@
 # Privacy
 INSERT INTO `privacy`(id, created_by, created_date, modified_by, modified_date, status)
-VALUES  (X'ec386a4b04cd45a7afb63635c9183ba0', 'admin', NOW(), 'admin', NOW(), 'PRIVATE'),
-        (X'f01121d2b6174c21844800059c6ff461', 'admin', NOW(), 'admin', NOW(), 'PUBLIC');
+VALUES  ('ec386a4b', 'admin', NOW(), 'admin', NOW(), 'PRIVATE'),
+        ('f01121d2', 'admin', NOW(), 'admin', NOW(), 'PUBLIC');
 
 # Thumbnail
 INSERT INTO `thumbnail`(id, created_by, created_date, modified_by, modified_date, type, url, width, height)
-VALUES  (X'7e90877fcb284ff0a7960914c3f45e59', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 1 default thumbnail', 100, 100),
-        (X'f3e78681b700493c94af25cd95d53848', 'admin', NOW(), 'admin', NOW(), 'MEDIUM', 'User 1 medium thumbnail', 200, 200),
-        (X'a31aba86d50547e28ca9e71a163958f8', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 2 default thumbnail', 100, 100),
+VALUES  ('7e90877f', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 1 default thumbnail', 100, 100),
+        ('f3e78681', 'admin', NOW(), 'admin', NOW(), 'MEDIUM', 'User 1 medium thumbnail', 200, 200),
+        ('a31aba86', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 2 default thumbnail', 100, 100),
 
-        (X'b28257049f6443cababe780f40d0e8f1', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 1 default thumbnail', 720, 450),
-        (X'2c48d7cd0c0f449ab91c4c2ca083d227', 'admin', NOW(), 'admin', NOW(), 'MEDIUM', 'Video 1 medium thumbnail', 1024, 720),
-        (X'1243853b465c44179eb167f5b191c381', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 2 default thumbnail', 720, 450),
-        (X'78a1b2d45bad4b74893750d4d0b6e6a5', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 3 default thumbnail', 720, 450);
+        ('b2825704', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 1 default thumbnail', 720, 450),
+        ('2c48d7cd', 'admin', NOW(), 'admin', NOW(), 'MEDIUM', 'Video 1 medium thumbnail', 1024, 720),
+        ('1243853b', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 2 default thumbnail', 720, 450),
+        ('78a1b2d4', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 3 default thumbnail', 720, 450);
 
 # User
 INSERT INTO `user`(id, created_by, created_date, modified_by, modified_date, country, date_of_birth, email, gender, password, phone_number, username, bio, published_at)
-VALUES  (X'3f06af63a93c11e4979700505690773f', 'admin', NOW(), 'admin', NOW(), null, null, 'user@gmail.com', null, '00000000', null, 'user', null, NOW()),
-        (X'a05990b1911040b1aa4c03951b0705de', 'admin', NOW(), 'admin', NOW(), null, null, 'user2@gmail.com', null, '00000000', null,  'user1', null, NOW());
+VALUES  ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, 'user@gmail.com', null, '00000000', null, 'user', null, NOW()),
+        ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, 'user2@gmail.com', null, '00000000', null,  'user1', null, NOW());
 
 # UserThumbnail
 INSERT INTO `user_thumbnail`(user_id, thumbnail_id)
-VALUES  (X'3f06af63a93c11e4979700505690773f', X'7e90877fcb284ff0a7960914c3f45e59'),
-        (X'3f06af63a93c11e4979700505690773f', X'f3e78681b700493c94af25cd95d53848'),
-        (X'a05990b1911040b1aa4c03951b0705de', X'a31aba86d50547e28ca9e71a163958f8');
+VALUES  ('3f06af63', '7e90877f'),
+        ('3f06af63', 'f3e78681'),
+        ('a05990b1', 'a31aba86');
 
 # Follow
 INSERT INTO `follow`(id, created_by, created_date, modified_by, modified_date, published_at, follower_id, user_id)
-VALUES  (X'f2cf8a4802d64e04a816045521ee7b83', 'admin', NOW(), 'admin', NOW(), NOW(), X'a05990b1911040b1aa4c03951b0705de', X'3f06af63a93c11e4979700505690773f');
+VALUES  ('f2cf8a48', 'admin', NOW(), 'admin', NOW(), NOW(), 'a05990b1', '3f06af63');
 
 # Hashtag
 INSERT INTO `hashtag`(id, created_by, created_date, modified_by, modified_date, tag)
-VALUES  (X'c7e8a20e70164d6f9a63b4c2268a0c02', 'admin', NOW(), 'admin', NOW(), 'music'),
-        (X'88cd13bd559b4f91b9e15aca57cc3024', 'admin', NOW(), 'admin', NOW(), 'sport');
+VALUES  ('c7e8a20e', 'admin', NOW(), 'admin', NOW(), 'music'),
+        ('88cd13bd', 'admin', NOW(), 'admin', NOW(), 'sport');
 
 # Category
 INSERT INTO `category`(id, created_by, created_date, modified_by, modified_date, category)
-VALUES (X'a82f3e3dbc9c4a168c900984c4cb16e1', 'admin', NOW(), 'admin', NOW(), 'Autos & Vehicles'),
-       (X'f2fe0cb61e394d5c86e8fa52212f731c', 'admin', NOW(), 'admin', NOW(), 'Comedy'),
-       (X'd073f837021e48b3b7d34b54e98a7a0b', 'admin', NOW(), 'admin', NOW(), 'Education'),
-       (X'8c1f4a2024ec44a29ad75df3d769ba61', 'admin', NOW(), 'admin', NOW(), 'Entertainment'),
-       (X'65e787e295b34f5cae6bf99903f9183b', 'admin', NOW(), 'admin', NOW(), 'Film & Animation'),
-       (X'b18712fb0cc74f498159c60d3a826ab1', 'admin', NOW(), 'admin', NOW(), 'Gaming'),
-       (X'b47a3808f64a4f48b173b50b7d6aef67', 'admin', NOW(), 'admin', NOW(), 'Howto & Style'),
-       (X'9c1e1e7db5254c658fe1f63cc365bc1a', 'admin', NOW(), 'admin', NOW(), 'Music'),
-       (X'e1b8b13d6a6843119468f7e640477d5c', 'admin', NOW(), 'admin', NOW(), 'News & Politics'),
-       (X'ae4c3b485f3f4878a6a58dc15ab19c41', 'admin', NOW(), 'admin', NOW(), 'Nonprofits & Activism'),
-       (X'8fca6c8a5a1842d2aa928f0a9935f40e', 'admin', NOW(), 'admin', NOW(), 'People & Blogs'),
-       (X'd3a616dbb1594bbd814f254f0a6c8237', 'admin', NOW(), 'admin', NOW(), 'Pets & Animals'),
-       (X'8b63d2edd235424f80decd3a1b5ee44c', 'admin', NOW(), 'admin', NOW(), 'Science & Technology'),
-       (X'c0f3f41e4778490b8c21254b5b5e3fbf', 'admin', NOW(), 'admin', NOW(), 'Sports'),
-       (X'eb0568d36b3d4f3087169a9d4b08f1f0', 'admin', NOW(), 'admin', NOW(), 'Travel & Events');
+VALUES ('a82f3e3d', 'admin', NOW(), 'admin', NOW(), 'Autos & Vehicles'),
+       ('f2fe0cb6', 'admin', NOW(), 'admin', NOW(), 'Comedy'),
+       ('d073f837', 'admin', NOW(), 'admin', NOW(), 'Education'),
+       ('8c1f4a20', 'admin', NOW(), 'admin', NOW(), 'Entertainment'),
+       ('65e787e2', 'admin', NOW(), 'admin', NOW(), 'Film & Animation'),
+       ('b18712fb', 'admin', NOW(), 'admin', NOW(), 'Gaming'),
+       ('b47a3808', 'admin', NOW(), 'admin', NOW(), 'Howto & Style'),
+       ('9c1e1e7d', 'admin', NOW(), 'admin', NOW(), 'Music'),
+       ('e1b8b13d', 'admin', NOW(), 'admin', NOW(), 'News & Politics'),
+       ('ae4c3b48', 'admin', NOW(), 'admin', NOW(), 'Nonprofits & Activism'),
+       ('8fca6c8a', 'admin', NOW(), 'admin', NOW(), 'People & Blogs'),
+       ('d3a616db', 'admin', NOW(), 'admin', NOW(), 'Pets & Animals'),
+       ('8b63d2ed', 'admin', NOW(), 'admin', NOW(), 'Science & Technology'),
+       ('c0f3f41e', 'admin', NOW(), 'admin', NOW(), 'Sports'),
+       ('eb0568d3', 'admin', NOW(), 'admin', NOW(), 'Travel & Events');
 
 # Video
 INSERT INTO `video`(id, created_by, created_date, modified_by, modified_date, description, duration_sec, age_restricted, comment_allowed, made_for_kids, category_id, location, title, published_at, video_url, user_id, privacy_id)
-VALUES  (X'37b32dc2b0e045ab84691ad89a90b978', 'admin', NOW(), 'admin', NOW(), 'Video 1 description', 1000, false, true, false, X'a82f3e3dbc9c4a168c900984c4cb16e1' ,'New York, US', 'Video 1', '20240401T09:00', 'Video 1 video URL', X'3f06af63a93c11e4979700505690773f', X'ec386a4b04cd45a7afb63635c9183ba0'),
-        (X'f7d9b74b750c4f4983405bcb8450ae14', 'admin', NOW(), 'admin', NOW(), 'Video 2 description', 2000, false, true, false, X'f2fe0cb61e394d5c86e8fa52212f731c' ,'Ha Noi, Vietnam', 'Video 2', '20240402T09:00', 'Video 2 video URL', X'3f06af63a93c11e4979700505690773f', X'f01121d2b6174c21844800059c6ff461'),
-        (X'e65707b4e9dc4d409a1d72667570bd6f', 'admin', NOW(), 'admin', NOW(), 'Video 3 description', 3000, false, false, true, X'd073f837021e48b3b7d34b54e98a7a0b' ,'Tokyo, Japan', 'Video 3', '20240403T09:00', 'Video 3 video URL', X'a05990b1911040b1aa4c03951b0705de', X'f01121d2b6174c21844800059c6ff461');
+VALUES  ('37b32dc2', 'admin', NOW(), 'admin', NOW(), 'Video 1 description', 1000, false, true, false, 'a82f3e3d' ,'New York, US', 'Video 1', '20240401T09:00', 'Video 1 video URL', '3f06af63', 'ec386a4b'),
+        ('f7d9b74b', 'admin', NOW(), 'admin', NOW(), 'Video 2 description', 2000, false, true, false, 'f2fe0cb6' ,'Ha Noi, Vietnam', 'Video 2', '20240402T09:00', 'Video 2 video URL', '3f06af63', 'f01121d2'),
+        ('e65707b4', 'admin', NOW(), 'admin', NOW(), 'Video 3 description', 3000, false, false, true, 'd073f837' ,'Tokyo, Japan', 'Video 3', '20240403T09:00', 'Video 3 video URL', 'a05990b1', 'f01121d2');
 
 # VideoStatistic
 INSERT INTO `video_statistic`(created_by, created_date, modified_by, modified_date, comment_count, dislike_count, download_count, like_count, view_count, video_id)
-VALUES  ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 2, 4, X'37b32dc2b0e045ab84691ad89a90b978'),
-        ('admin', NOW(), 'admin', NOW(), 2, 1, 0, 1, 3, X'f7d9b74b750c4f4983405bcb8450ae14'),
-        ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 0, 2, X'e65707b4e9dc4d409a1d72667570bd6f');
+VALUES  ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 2, 4, '37b32dc2'),
+        ('admin', NOW(), 'admin', NOW(), 2, 1, 0, 1, 3, 'f7d9b74b'),
+        ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 0, 2, 'e65707b4');
 
 # VideoHashtag
 INSERT INTO `video_hashtag`(video_id, hashtag_id)
-VALUES  (X'37b32dc2b0e045ab84691ad89a90b978', X'c7e8a20e70164d6f9a63b4c2268a0c02'),
-        (X'e65707b4e9dc4d409a1d72667570bd6f', X'c7e8a20e70164d6f9a63b4c2268a0c02'),
-        (X'e65707b4e9dc4d409a1d72667570bd6f', X'88cd13bd559b4f91b9e15aca57cc3024');
+VALUES  ('37b32dc2', 'c7e8a20e'),
+        ('e65707b4', 'c7e8a20e'),
+        ('e65707b4', '88cd13bd');
 
 # VideoThumbnail
 INSERT INTO `video_thumbnail`(video_id, thumbnail_id)
-VALUES  (X'37b32dc2b0e045ab84691ad89a90b978', X'b28257049f6443cababe780f40d0e8f1'),
-        (X'37b32dc2b0e045ab84691ad89a90b978', X'2c48d7cd0c0f449ab91c4c2ca083d227'),
-        (X'f7d9b74b750c4f4983405bcb8450ae14', X'1243853b465c44179eb167f5b191c381'),
-        (X'e65707b4e9dc4d409a1d72667570bd6f', X'78a1b2d45bad4b74893750d4d0b6e6a5');
+VALUES  ('37b32dc2', 'b2825704'),
+        ('37b32dc2', '2c48d7cd'),
+        ('f7d9b74b', '1243853b'),
+        ('e65707b4', '78a1b2d4');
 
 # ViewHistory
 INSERT INTO `view_history`(id, created_by, created_date, modified_by, modified_date, published_at, viewed_duration_sec, user_id, video_id)
-VALUES  (X'12b63121ed4643a887f2d21c9fc0555c', 'admin', NOW(), 'admin', NOW(), NOW(), 50, X'3f06af63a93c11e4979700505690773f', X'37b32dc2b0e045ab84691ad89a90b978'),
-        (X'bc3b65e4ec3a4e8ea900935801e0197c', 'admin', NOW(), 'admin', NOW(), NOW(), 60, X'3f06af63a93c11e4979700505690773f', X'37b32dc2b0e045ab84691ad89a90b978'),
-        (X'9fec922c50dd40d49f9473d5378f2369', 'admin', NOW(), 'admin', NOW(), NOW(), 30, X'3f06af63a93c11e4979700505690773f', X'37b32dc2b0e045ab84691ad89a90b978'),
-        (X'f52911f246d946fcb1db04e109f2031b', 'admin', NOW(), 'admin', NOW(), NOW(), 50, X'3f06af63a93c11e4979700505690773f', X'f7d9b74b750c4f4983405bcb8450ae14'),
-        (X'ecb448c3da804b8dbc37687cf9e34709', 'admin', NOW(), 'admin', NOW(), NOW(), 50, X'3f06af63a93c11e4979700505690773f', X'f7d9b74b750c4f4983405bcb8450ae14'),
-        (X'4fa7564f2c09444991b6677f586423e7', 'admin', NOW(), 'admin', NOW(), NOW(), 75, X'3f06af63a93c11e4979700505690773f', X'e65707b4e9dc4d409a1d72667570bd6f'),
-        (X'd8a960e98f184781a2c9e4ef87b2640b', 'admin', NOW(), 'admin', NOW(), NOW(), 50, X'a05990b1911040b1aa4c03951b0705de', X'37b32dc2b0e045ab84691ad89a90b978'),
-        (X'9e277bd6518a4ab484f8cfaddbba5dd5', 'admin', NOW(), 'admin', NOW(), NOW(), 40, X'a05990b1911040b1aa4c03951b0705de', X'f7d9b74b750c4f4983405bcb8450ae14'),
-        (X'ea2e81a6d4b8488fbdb11f76d16cde8f', 'admin', NOW(), 'admin', NOW(), NOW(), 60, X'a05990b1911040b1aa4c03951b0705de', X'e65707b4e9dc4d409a1d72667570bd6f');
+VALUES  ('12b63121', 'admin', NOW(), 'admin', NOW(), NOW(), 50, '3f06af63', '37b32dc2'),
+        ('bc3b65e4', 'admin', NOW(), 'admin', NOW(), NOW(), 60, '3f06af63', '37b32dc2'),
+        ('9fec922c', 'admin', NOW(), 'admin', NOW(), NOW(), 30, '3f06af63', '37b32dc2'),
+        ('f52911f2', 'admin', NOW(), 'admin', NOW(), NOW(), 50, '3f06af63', 'f7d9b74b'),
+        ('ecb448c3', 'admin', NOW(), 'admin', NOW(), NOW(), 50, '3f06af63', 'f7d9b74b'),
+        ('4fa7564f', 'admin', NOW(), 'admin', NOW(), NOW(), 75, '3f06af63', 'e65707b4'),
+        ('d8a960e9', 'admin', NOW(), 'admin', NOW(), NOW(), 50, 'a05990b1', '37b32dc2'),
+        ('9e277bd6', 'admin', NOW(), 'admin', NOW(), NOW(), 40, 'a05990b1', 'f7d9b74b'),
+        ('ea2e81a6', 'admin', NOW(), 'admin', NOW(), NOW(), 60, 'a05990b1', 'e65707b4');
 
 # VideoRating
 INSERT INTO `video_rating`(id, created_by, created_date, modified_by, modified_date, published_at, rating, video_id, user_id)
-VALUES  (X'56a0f368e1644cf793eb0db7a3737ed2', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', X'37b32dc2b0e045ab84691ad89a90b978', X'3f06af63a93c11e4979700505690773f'),
-        (X'd7e57cc4393b41bc84ca293ae080fbf4', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', X'f7d9b74b750c4f4983405bcb8450ae14', X'3f06af63a93c11e4979700505690773f'),
-        (X'ce4eec6859d14124be614176b5e16ee8', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', X'37b32dc2b0e045ab84691ad89a90b978', X'a05990b1911040b1aa4c03951b0705de'),
-        (X'e2c3f28dea294758b593696f789ecea4', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', X'f7d9b74b750c4f4983405bcb8450ae14', X'a05990b1911040b1aa4c03951b0705de');
+VALUES  ('56a0f368', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '37b32dc2', '3f06af63'),
+        ('d7e57cc4', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', 'f7d9b74b', '3f06af63'),
+        ('ce4eec68', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '37b32dc2', 'a05990b1'),
+        ('e2c3f28d', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', 'f7d9b74b', 'a05990b1');
 
 # Comment
 INSERT INTO `comment`(id, created_by, created_date, modified_by, modified_date, published_at, text, updated_at, parent_id, user_id, video_id)
-VALUES  (X'6c3239d65b33461a88dd1e2150fb0324', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, X'3f06af63a93c11e4979700505690773f', X'37b32dc2b0e045ab84691ad89a90b978'),
-        (X'6b342e72e278482ab1e8c66a142b40ca', 'admin', NOW(), 'admin', NOW(), NOW(), 'Reply', null, X'6c3239d65b33461a88dd1e2150fb0324', X'a05990b1911040b1aa4c03951b0705de', X'37b32dc2b0e045ab84691ad89a90b978'),
-        (X'0feb708a636749a48cfc33e3706cd82c', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, X'3f06af63a93c11e4979700505690773f', X'f7d9b74b750c4f4983405bcb8450ae14'),
-        (X'24e257fa872d4f669eedb6031bf92d80', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, X'a05990b1911040b1aa4c03951b0705de', X'f7d9b74b750c4f4983405bcb8450ae14'),
-        (X'3c9a264ed5f34d929171c450534b7746', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, X'3f06af63a93c11e4979700505690773f', X'e65707b4e9dc4d409a1d72667570bd6f'),
-        (X'3a1e053952db4d70b129a2390d0e4fb4', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, X'a05990b1911040b1aa4c03951b0705de', X'e65707b4e9dc4d409a1d72667570bd6f');
+VALUES  ('6c3239d6', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, '3f06af63', '37b32dc2'),
+        ('6b342e72', 'admin', NOW(), 'admin', NOW(), NOW(), 'Reply', null, '6c3239d6', 'a05990b1', '37b32dc2'),
+        ('0feb708a', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, '3f06af63', 'f7d9b74b'),
+        ('24e257fa', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, 'a05990b1', 'f7d9b74b'),
+        ('3c9a264e', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, '3f06af63', 'e65707b4'),
+        ('3a1e0539', 'admin', NOW(), 'admin', NOW(), NOW(), 'Good video', null, null, 'a05990b1', 'e65707b4');
 
 # CommentRating
 INSERT INTO `comment_rating`(id, created_by, created_date, modified_by, modified_date, published_at, rating, comment_id, user_id)
-VALUES  (X'33921ebbae2b433aa50e06ee7f9ad889', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', X'6c3239d65b33461a88dd1e2150fb0324', X'a05990b1911040b1aa4c03951b0705de'),
-        (X'85baf0bb24b14970ba24918cc45594ad', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', X'24e257fa872d4f669eedb6031bf92d80', X'3f06af63a93c11e4979700505690773f'),
-        (X'def0075f6f354601bebb94b6eaeeb9fa', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', X'3a1e053952db4d70b129a2390d0e4fb4', X'3f06af63a93c11e4979700505690773f');
+VALUES  ('33921ebb', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '6c3239d6', 'a05990b1'),
+        ('85baf0bb', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '24e257fa', '3f06af63'),
+        ('def0075f', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', '3a1e0539', '3f06af63');

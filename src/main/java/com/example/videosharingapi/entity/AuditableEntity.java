@@ -1,4 +1,4 @@
-package com.example.videosharingapi.model.entity;
+package com.example.videosharingapi.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.EntityListeners;

@@ -2,7 +2,7 @@ package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.mapper.ThumbnailMapper;
-import com.example.videosharingapi.model.entity.Thumbnail;
+import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.service.StorageService;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;

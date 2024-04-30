@@ -24,10 +24,10 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(
-            @Email(message = "'email' {jakarta.validation.constraints.Email.message}")
-            @NotBlank(message = "'email' {jakarta.validation.constraints.NotBlank.message}")
+            @Email
+            @NotBlank
             String email,
-            @Size(min = 8, message = "'password' {jakarta.validation.constraints.Size.message}")
+            @Size(min = 8)
             String password
     ) {
         var response = authService.login(email, password);
@@ -36,10 +36,10 @@ public class AuthController {
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signup(
-            @Email(message = "'email' {jakarta.validation.constraints.Email.message}")
-            @NotBlank(message = "'email' {jakarta.validation.constraints.NotBlank.message}")
+            @Email
+            @NotBlank
             String email,
-            @Size(min = 8, message = "'password' {jakarta.validation.constraints.Size.message}")
+            @Size(min = 8)
             String password
     ) {
         var response = authService.signup(email, password);

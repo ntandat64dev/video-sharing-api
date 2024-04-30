@@ -4,18 +4,17 @@ import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
 
 import java.util.List;
-import java.util.UUID;
 
 public interface UserService {
-    UserDto getUserById(UUID userId);
+    UserDto getUserById(String userId);
 
-    List<FollowDto> getFollowsByUserId(UUID userId);
+    List<FollowDto> getFollowsByUserId(String userId);
 
-    FollowDto getFollowsByFollowerIdAndUserId(UUID followerId, UUID userId);
+    FollowDto getFollowsByFollowerIdAndUserId(String followerId, String userId);
 
     FollowDto follow(FollowDto followDto);
 
-    void unfollow(UUID followId);
+    void unfollow(String followId);
 
-    List<String> getBrowseKeywords(UUID userId);
+    List<String> getBrowseKeywords(String userId);
 }

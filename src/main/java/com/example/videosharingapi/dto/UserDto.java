@@ -1,13 +1,12 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.model.entity.Thumbnail;
+import com.example.videosharingapi.entity.Thumbnail;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
-import java.util.UUID;
 
 @Data
 @AllArgsConstructor
@@ -51,8 +50,8 @@ public final class UserDto {
         private Long videoCount;
     }
 
-    @NotBlank(message = "'id' {jakarta.validation.constraints.NotBlank.message}")
-    private UUID id;
+    @NotBlank
+    private String id;
 
     private Snippet snippet;
 

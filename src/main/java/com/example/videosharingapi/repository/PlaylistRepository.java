@@ -1,11 +1,9 @@
 package com.example.videosharingapi.repository;
 
-import com.example.videosharingapi.model.entity.Playlist;
+import com.example.videosharingapi.entity.Playlist;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
-
 @Repository
-public interface PlaylistRepository extends JpaRepository<Playlist, UUID> {
+public interface PlaylistRepository extends JpaRepository<Playlist, String> {
 }

@@ -1,7 +1,7 @@
 package com.example.videosharingapi.mapper;
 
 import com.example.videosharingapi.dto.UserDto;
-import com.example.videosharingapi.model.entity.User;
+import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.repository.FollowRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.repository.VideoRepository;
@@ -10,8 +10,6 @@ import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
-
-import java.util.UUID;
 
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true), uses = ThumbnailMapper.class)
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
@@ -41,7 +39,7 @@ public abstract class UserMapper {
         return statistic;
     }
 
-    public User getUserById(UUID userId) {
+    public User getUserById(String userId) {
         return userRepository.getReferenceById(userId);
     }
 }

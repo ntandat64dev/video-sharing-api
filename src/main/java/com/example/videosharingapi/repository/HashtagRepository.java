@@ -1,16 +1,15 @@
 package com.example.videosharingapi.repository;
 
-import com.example.videosharingapi.model.entity.Hashtag;
+import com.example.videosharingapi.entity.Hashtag;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
+public interface HashtagRepository extends JpaRepository<Hashtag, String> {
 
     Hashtag findByTag(String tag);
 
@@ -22,5 +21,5 @@ public interface HashtagRepository extends JpaRepository<Hashtag, UUID> {
     }
 
     @Query("SELECT hashtag FROM Video v JOIN v.hashtags hashtag WHERE v.user.id = :userId")
-    List<Hashtag> findAllByUserId(UUID userId);
+    List<Hashtag> findAllByUserId(String userId);
 }

@@ -1,4 +1,4 @@
-package com.example.videosharingapi.model.entity;
+package com.example.videosharingapi.entity;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -22,9 +21,9 @@ public class CommentRating extends AuditableEntity {
     @EqualsAndHashCode
     @Embeddable
     public static class CommentRatingId implements Serializable {
-        @GeneratedValue
-        private UUID id;
-        private UUID commentId;
+        @GeneratedValue(strategy = GenerationType.UUID)
+        private String id;
+        private String commentId;
     }
 
     @EmbeddedId

@@ -8,7 +8,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.UUID;
 
 @Service
 @Transactional
@@ -24,7 +23,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public List<CommentDto> getCommentsByVideoId(UUID videoId) {
+    public List<CommentDto> getCommentsByVideoId(String videoId) {
         return commentRepository.findByVideoIdAndParentIsNull(videoId).stream()
                 .map(commentMapper::toCommentDto)
                 .toList();

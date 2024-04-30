@@ -1,9 +1,9 @@
 package com.example.videosharingapi.repository;
 
 import com.example.videosharingapi.config.AuditingConfig;
-import com.example.videosharingapi.model.entity.Thumbnail;
-import com.example.videosharingapi.model.entity.Video;
-import com.example.videosharingapi.model.entity.Privacy;
+import com.example.videosharingapi.entity.Privacy;
+import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.entity.Video;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -13,7 +13,6 @@ import org.springframework.test.context.ActiveProfiles;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.UUID;
 
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 
@@ -46,7 +45,7 @@ public class VideoRepositoryTest {
         var privacy = privacyRepository.findByStatus(Privacy.Status.PUBLIC);
         video.setPrivacy(privacy);
 
-        var user = userRepository.getReferenceById(UUID.fromString("9eb456d7-1a59-4efa-9a21-e509bbba5eb4"));
+        var user = userRepository.getReferenceById("9eb456d7");
         video.setUser(user);
         video.setDurationSec(1200);
 

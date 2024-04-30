@@ -1,11 +1,9 @@
 package com.example.videosharingapi.mapper;
 
 import com.example.videosharingapi.dto.VideoRatingDto;
-import com.example.videosharingapi.model.entity.VideoRating;
+import com.example.videosharingapi.entity.VideoRating;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-
-import java.util.UUID;
 
 @Mapper(componentModel = "spring")
 public interface VideoRatingMapper {
@@ -15,7 +13,7 @@ public interface VideoRatingMapper {
     @Mapping(target = "rating", expression = "java(videoRating.getRating().name().toLowerCase())")
     VideoRatingDto toVideoRatingDto(VideoRating videoRating);
 
-    default VideoRatingDto fromNullVideoRating(UUID videoId, UUID userId) {
+    default VideoRatingDto fromNullVideoRating(String videoId, String userId) {
         var videoRatingDto = new VideoRatingDto();
         videoRatingDto.setVideoId(videoId);
         videoRatingDto.setUserId(userId);

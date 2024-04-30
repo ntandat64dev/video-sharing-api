@@ -1,6 +1,6 @@
 package com.example.videosharingapi.config.runner;
 
-import com.example.videosharingapi.model.entity.Privacy;
+import com.example.videosharingapi.entity.Privacy;
 import com.example.videosharingapi.repository.PrivacyRepository;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;

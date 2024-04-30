@@ -1,8 +1,8 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.mapper.ThumbnailMapper;
-import com.example.videosharingapi.exception.ApplicationException;
-import com.example.videosharingapi.model.entity.Thumbnail;
+import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.service.StorageService;
 import org.springframework.context.annotation.Profile;
@@ -54,7 +54,7 @@ public class StorageServiceImpl implements StorageService {
             videoDto.getSnippet().setDuration(Duration.ofSeconds(1000));
         } catch (ApiException | IOException e) {
             if (e instanceof ApiException ex)
-                throw new ApplicationException(HttpStatus.valueOf(ex.getCode()), ex.getMessage());
+                throw new AppException(HttpStatus.valueOf(ex.getCode()), ex.getMessage());
             throw new RuntimeException(e);
         }
     }

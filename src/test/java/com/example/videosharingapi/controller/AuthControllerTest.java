@@ -1,24 +1,20 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
-import com.example.videosharingapi.common.TestUtil;
-import com.example.videosharingapi.dto.UserDto;
-import com.example.videosharingapi.dto.response.ErrorResponse;
 import com.example.videosharingapi.repository.UserRepository;
+import com.jayway.jsonpath.JsonPath;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
-
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -28,81 +24,65 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthControllerTest {
 
     private @Autowired UserRepository userRepository;
-
-    private @Autowired TestUtil testUtil;
     private @Autowired MockMvc mockMvc;
 
     @Test
     public void givenEmailAndPassword_whenLogin_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<UserDto>();
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("email", "user@gmail.com")
-                        .param("password", "00000000")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, response, UserDto.class))
-                .andExpect(status().isOk());
-        assertThat(response.get().getId())
-                .isEqualTo(UUID.fromString("3f06af63-a93c-11e4-9797-00505690773f"));
+                        .param("password", "00000000"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id")
+                        .value("3f06af63"));
     }
 
     @Test
     public void givenInvalidEmailAndPassword_whenLogin_thenReturnErrorResponse() throws Exception {
-        var errorResponse = new AtomicReference<ErrorResponse>();
-
         // Given wrong email or password.
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("email", "user@gmail.com")
-                        .param("password", "11111111")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Email or password is incorrect.");
+                        .param("password", "11111111"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Email or password is incorrect."))
+                .andExpect(jsonPath("$.errors").doesNotExist());
 
         // Given invalid email format.
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("email", "user@")
-                        .param("password", "00000000")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'email' must be a well-formed email address");
+                        .param("password", "00000000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("email: must be a well-formed email address"));
 
         // Given invalid password length.
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("email", "user@gmail.com")
-                        .param("password", "0000")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .contains("'password' size must be between 8");
+                        .param("password", "0000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("password: size must be between 8 and 2147483647"));
     }
 
     @Test
     @Transactional
     public void givenEmailAndPassword_whenSignup_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<UserDto>();
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user1@gmail.com")
-                        .param("password", "11111111")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, response, UserDto.class))
-                .andExpect(status().isCreated());
-        assertThat(response.get()).isNotNull();
+                        .param("password", "11111111"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").isNotEmpty());
     }
 
     @Test
     @Transactional
     public void givenEmailAndPassword_whenSignup_thenUserIsCreated() throws Exception {
-        var response = new AtomicReference<UserDto>();
-        mockMvc.perform(post("/api/v1/auth/signup")
+        var result = mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user1@gmail.com")
-                        .param("password", "11111111")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, response, UserDto.class))
-                .andExpect(status().isCreated());
+                        .param("password", "11111111"))
+                .andExpect(status().isCreated())
+                .andReturn();
+
         var user = userRepository.findByEmail("user1@gmail.com");
         assertThat(user.getEmail()).isEqualTo("user1@gmail.com");
         assertThat(user.getPassword()).isEqualTo("11111111");
@@ -112,44 +92,38 @@ public class AuthControllerTest {
         assertThat(user.getCountry()).isNull();
         assertThat(user.getUsername()).isEqualTo("user1");
         assertThat(user.getBio()).isNull();
-        assertThat(user.getPublishedAt()).isEqualTo(response.get().getSnippet().getPublishedAt());
+        assertThat(user.getPublishedAt())
+                .isEqualTo(JsonPath.read(result.getResponse().getContentAsString(), "$.snippet.publishedAt"));
         assertThat(user.getThumbnails()).hasSize(2);
     }
 
     @Test
     @Transactional
     public void givenInvalidEmailAndPassword_whenSignup_thenReturnErrorResponse() throws Exception {
-        var errorResponse = new AtomicReference<ErrorResponse>();
-
         // Given email that already exists.
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user@gmail.com")
-                        .param("password", "00000000")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Email is already exists.");
+                        .param("password", "00000000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Email is already exists."));
 
         // Given invalid email format.
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user1@")
-                        .param("password", "00000000")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("'email' must be a well-formed email address");
+                        .param("password", "00000000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("email: must be a well-formed email address"));
 
         // Given invalid email format and invalid password length.
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("email", "user1")
-                        .param("password", "0000")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .contains("'email' must be a well-formed email address")
-                .contains("'password' size must be between 8");
+                        .param("password", "0000"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors",
+                        containsInAnyOrder(
+                                "email: must be a well-formed email address",
+                                "password: size must be between 8 and 2147483647")));
     }
 }

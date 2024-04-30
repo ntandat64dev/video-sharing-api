@@ -3,12 +3,12 @@ package com.example.videosharingapi.service.impl;
 import com.example.videosharingapi.config.validation.group.Save;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
-import com.example.videosharingapi.exception.ApplicationException;
+import com.example.videosharingapi.entity.Hashtag;
+import com.example.videosharingapi.entity.Video;
+import com.example.videosharingapi.entity.VideoRating;
+import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.mapper.VideoRatingMapper;
-import com.example.videosharingapi.model.entity.Hashtag;
-import com.example.videosharingapi.model.entity.Video;
-import com.example.videosharingapi.model.entity.VideoRating;
 import com.example.videosharingapi.repository.HashtagRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.repository.VideoRatingRepository;
@@ -26,7 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Objects;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -59,7 +58,7 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public VideoDto getVideoById(UUID id) {
+    public VideoDto getVideoById(String id) {
         return videoRepository
                 .findById(id)
                 .map(videoMapper::toVideoDto)
@@ -68,7 +67,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<VideoDto> getVideosByAllCategories(UUID userId) {
+    public List<VideoDto> getVideosByAllCategories(String userId) {
         // TODO: Get actual recommend videos
         return videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
@@ -78,7 +77,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<VideoDto> getRelatedVideos(UUID videoId, UUID userId) {
+    public List<VideoDto> getRelatedVideos(String videoId, String userId) {
         // TODO: Get actual related videos
         return videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
@@ -92,7 +91,7 @@ public class VideoServiceImpl implements VideoService {
 
         var constraintViolations = validator.validate(videoDto, Default.class, Save.class);
         if (!constraintViolations.isEmpty()) {
-            throw new ApplicationException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
+            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
         }
 
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
@@ -113,7 +112,7 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public VideoRatingDto rateVideo(UUID videoId, UUID userId, String rating) {
+    public VideoRatingDto rateVideo(String videoId, String userId, String rating) {
         var video = videoRepository.getReferenceById(videoId);
         var user = userRepository.getReferenceById(userId);
 
@@ -147,7 +146,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional(readOnly = true)
-    public VideoRatingDto getRating(UUID videoId, UUID userId) {
+    public VideoRatingDto getRating(String videoId, String userId) {
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         if (videoRating == null) return videoRatingMapper.fromNullVideoRating(videoId, userId);
         return videoRatingMapper.toVideoRatingDto(videoRating);

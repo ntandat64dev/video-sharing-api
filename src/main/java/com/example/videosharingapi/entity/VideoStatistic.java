@@ -1,10 +1,8 @@
-package com.example.videosharingapi.model.entity;
+package com.example.videosharingapi.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -12,7 +10,7 @@ import java.util.UUID;
 public class VideoStatistic extends AuditableEntity {
 
     @Id
-    private UUID id;
+    private String id;
 
     @Column(nullable = false)
     private Long viewCount = 0L;

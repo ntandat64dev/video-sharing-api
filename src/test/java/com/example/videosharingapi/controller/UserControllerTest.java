@@ -1,10 +1,7 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
-import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.FollowDto;
-import com.example.videosharingapi.dto.UserDto;
-import com.example.videosharingapi.dto.response.ErrorResponse;
 import com.example.videosharingapi.repository.FollowRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
@@ -17,10 +14,11 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.UUID;
-import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
@@ -29,56 +27,44 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @TestSql
 public class UserControllerTest {
 
-    private @Autowired TestUtil testUtil;
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
 
     private @Autowired FollowRepository followRepository;
 
-    private final String userId = "3f06af63-a93c-11e4-9797-00505690773f";
-    private final String userId2 = "a05990b1-9110-40b1-aa4c-03951b0705de";
+    private final String userId = "3f06af63";
+    private final String userId2 = "a05990b1";
 
     @Test
     public void givenUserId_whenGetUser_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<UserDto>();
         mockMvc.perform(get("/api/v1/users")
                         .param("userId", userId))
-                .andDo(result -> testUtil.toDto(result, response, UserDto.class))
-                .andExpect(status().isOk());
-
-        assertThat(response.get().getId())
-                .isEqualTo(UUID.fromString("3f06af63-a93c-11e4-9797-00505690773f"));
-        assertThat(response.get().getSnippet().getUsername()).isEqualTo("user");
-        assertThat(response.get().getStatistic().getViewCount()).isEqualTo(7);
-        assertThat(response.get().getStatistic().getFollowerCount()).isEqualTo(1);
-        assertThat(response.get().getStatistic().getFollowingCount()).isEqualTo(0);
-        assertThat(response.get().getStatistic().getVideoCount()).isEqualTo(2);
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value("3f06af63"))
+                .andExpect(jsonPath("$.snippet.username").value("user"))
+                .andExpect(jsonPath("$.statistic.viewCount").value(7))
+                .andExpect(jsonPath("$.statistic.followerCount").value(1))
+                .andExpect(jsonPath("$.statistic.followingCount").value(0))
+                .andExpect(jsonPath("$.statistic.videoCount").value(2));
     }
 
     @Test
     public void givenUserId_whenGetFollows_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<FollowDto[]>();
         mockMvc.perform(get("/api/v1/users/follows")
                         .param("userId", userId))
-                .andDo(result -> testUtil.toDto(result, response, FollowDto[].class))
-                .andExpect(status().isOk());
-        assertThat(response.get()).hasSize(1);
-        assertThat(response.get()[0].getId())
-                .isEqualTo(UUID.fromString("f2cf8a48-02d6-4e04-a816-045521ee7b83"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("f2cf8a48"));
     }
 
     @Test
     public void givenFollowerIdAndUserId_whenGetFollow_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<FollowDto[]>();
         mockMvc.perform(get("/api/v1/users/follows")
                         .param("userId", userId2)
                         .param("forUserId", userId))
-                .andDo(result -> testUtil.toDto(result, response, FollowDto[].class))
-                .andExpect(status().isOk());
-
-        assertThat(response.get()).hasSize(1);
-        assertThat(response.get()[0].getId())
-                .isEqualTo(UUID.fromString("f2cf8a48-02d6-4e04-a816-045521ee7b83"));
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].id").value("f2cf8a48"));
     }
 
     @Test
@@ -86,22 +72,19 @@ public class UserControllerTest {
     public void givenFollowDto_whenFollow_thenReturnSuccessful() throws Exception {
         var followDto = new FollowDto();
         followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId(UUID.fromString(userId2))
+                .userId(userId2)
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(UUID.fromString(userId))
+                .userId(userId)
                 .build());
 
-        var response = new AtomicReference<FollowDto>();
         mockMvc.perform(post("/api/v1/users/follows")
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, response, FollowDto.class))
-                .andExpect(status().isCreated());
-
-        assertThat(response.get().getSnippet().getUsername()).isEqualTo("user1");
-        assertThat(response.get().getSnippet().getThumbnails()).hasSize(1);
-        assertThat(response.get().getFollowerSnippet().getThumbnails()).hasSize(2);
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.snippet.username").value("user1"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
+                .andExpect(jsonPath("$.followerSnippet.thumbnails.length()").value(2));
     }
 
     @Test
@@ -109,21 +92,18 @@ public class UserControllerTest {
     public void givenFollowDtoThatAlreadyExists_whenFollow_thenReturnError() throws Exception {
         var followDto = new FollowDto();
         followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId(UUID.fromString("3f06af63-a93c-11e4-9797-00505690773f"))
+                .userId("3f06af63")
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(UUID.fromString("a05990b1-9110-40b1-aa4c-03951b0705de"))
+                .userId("a05990b1")
                 .build());
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(post("/api/v1/users/follows")
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("The follow that you are trying to create already exists.");
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("followDto: The follow that you are trying to create already exists."));
     }
 
     @Test
@@ -131,59 +111,56 @@ public class UserControllerTest {
     public void givenFollowDtoWithTheSameUserId_whenFollow_thenReturnError() throws Exception {
         var followDto = new FollowDto();
         followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId(UUID.fromString(userId))
+                .userId(userId)
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(UUID.fromString(userId))
+                .userId(userId)
                 .build());
 
-        var errorResponse = new AtomicReference<ErrorResponse>();
         mockMvc.perform(post("/api/v1/users/follows")
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("Subscribing to your own channel is not supported.");
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("followDto: Subscribing to your own channel is not supported."));
     }
 
     @Test
     @Transactional
     public void givenFollowId_whenDelete_thenReturnSuccessful() throws Exception {
         mockMvc.perform(delete("/api/v1/users/follows")
-                        .param("id", "f2cf8a48-02d6-4e04-a816-045521ee7b83"))
+                        .param("id", "f2cf8a48"))
                 .andExpect(status().isNoContent());
-        assertThat(followRepository.existsById(UUID.fromString("f2cf8a48-02d6-4e04-a816-045521ee7b83")))
+        assertThat(followRepository.existsById("f2cf8a48"))
                 .isFalse();
     }
 
     @Test
     @Transactional
     public void givenInvalidFollowId_whenDelete_thenReturnError() throws Exception {
-        var errorResponse = new AtomicReference<ErrorResponse>();
+        mockMvc.perform(delete("/api/v1/users/follows"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("id: must not be null"));
+
         mockMvc.perform(delete("/api/v1/users/follows")
                         .param("id", ""))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .isEqualTo("must not be null");
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("id: does not exist"));
 
         mockMvc.perform(delete("/api/v1/users/follows")
                         .param("id", UUID.randomUUID().toString()))
-                .andDo(result -> testUtil.toDto(result, errorResponse, ErrorResponse.class))
-                .andExpect(status().isBadRequest());
-        assertThat(errorResponse.get().getErrorMessage())
-                .contains("The follow that you are trying to delete cannot be found.");
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]",
+                        containsString("id: does not exist")));
     }
 
     @Test
     public void givenUserId_whenGetVideoCategories_thenReturnSuccessful() throws Exception {
-        var response = new AtomicReference<String[]>();
         mockMvc.perform(get("/api/v1/users/video-categories")
                         .param("userId", userId))
-                .andDo(result -> testUtil.toDto(result, response, String[].class))
-                .andExpect(status().isOk());
-        assertThat(response.get()).containsExactly("music");
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").value("music"));
     }
 }

@@ -1,15 +1,13 @@
 package com.example.videosharingapi.config.validation;
 
-import com.example.videosharingapi.model.entity.*;
+import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import java.util.UUID;
-
-public class IdExistsConstraintValidator implements ConstraintValidator<IdExistsConstraint, UUID> {
+public class IdExistsConstraintValidator implements ConstraintValidator<IdExistsConstraint, String> {
 
     private @Autowired UserRepository userRepository;
     private @Autowired VideoRepository videoRepository;
@@ -17,7 +15,7 @@ public class IdExistsConstraintValidator implements ConstraintValidator<IdExists
     private @Autowired FollowRepository followRepository;
     private @Autowired CategoryRepository categoryRepository;
 
-    private JpaRepository<?, UUID> repository;
+    private JpaRepository<?, String> repository;
 
     @Override
     public void initialize(IdExistsConstraint constraintAnnotation) {
@@ -35,7 +33,7 @@ public class IdExistsConstraintValidator implements ConstraintValidator<IdExists
     }
 
     @Override
-    public boolean isValid(UUID value, ConstraintValidatorContext context) {
+    public boolean isValid(String value, ConstraintValidatorContext context) {
         if (repository == null) return false;
         if (value == null) return true;
         return repository.existsById(value);

@@ -1,9 +1,9 @@
 package com.example.videosharingapi.config.aop;
 
-import com.example.videosharingapi.model.entity.Comment;
-import com.example.videosharingapi.model.entity.VideoRating;
-import com.example.videosharingapi.model.entity.VideoStatistic;
-import com.example.videosharingapi.model.entity.ViewHistory;
+import com.example.videosharingapi.entity.Comment;
+import com.example.videosharingapi.entity.VideoRating;
+import com.example.videosharingapi.entity.VideoStatistic;
+import com.example.videosharingapi.entity.ViewHistory;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.VideoRatingRepository;
 import com.example.videosharingapi.repository.VideoStatisticRepository;

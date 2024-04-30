@@ -1,6 +1,6 @@
 package com.example.videosharingapi.mapper;
 
-import com.example.videosharingapi.model.entity.Thumbnail;
+import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.dto.ThumbnailDto;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

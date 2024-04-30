@@ -1,10 +1,10 @@
 package com.example.videosharingapi.mapper;
 
 import com.example.videosharingapi.dto.CommentDto;
-import com.example.videosharingapi.model.entity.Comment;
-import com.example.videosharingapi.model.entity.CommentRating;
-import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.model.entity.Video;
+import com.example.videosharingapi.entity.Comment;
+import com.example.videosharingapi.entity.CommentRating;
+import com.example.videosharingapi.entity.User;
+import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.repository.CommentRatingRepository;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.UserRepository;

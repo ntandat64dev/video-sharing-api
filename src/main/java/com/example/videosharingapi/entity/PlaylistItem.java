@@ -1,4 +1,4 @@
-package com.example.videosharingapi.model.entity;
+package com.example.videosharingapi.entity;
 
 import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
@@ -6,7 +6,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.io.Serializable;
-import java.util.UUID;
 
 @Getter
 @Setter
@@ -18,8 +17,8 @@ public class PlaylistItem extends AuditableEntity {
     @EqualsAndHashCode
     @Embeddable
     public static class PlaylistItemId implements Serializable {
-        private UUID playlistId;
-        private UUID videoId;
+        private String playlistId;
+        private String videoId;
     }
 
     @EmbeddedId

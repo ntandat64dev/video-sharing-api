@@ -1,10 +1,10 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.UserDto;
-import com.example.videosharingapi.exception.ApplicationException;
+import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.mapper.UserMapper;
-import com.example.videosharingapi.model.entity.Thumbnail;
-import com.example.videosharingapi.model.entity.User;
+import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
 import org.springframework.context.MessageSource;
@@ -35,7 +35,7 @@ public class AuthServiceImpl implements AuthService {
     public UserDto login(String email, String password) {
         var user = userRepository.findByEmailAndPassword(email, password);
         if (user == null) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+            throw new AppException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.email-password.incorrect", null,
                             LocaleContextHolder.getLocale()));
         }
@@ -45,7 +45,7 @@ public class AuthServiceImpl implements AuthService {
     @Override
     public UserDto signup(String email, String password) {
         if (userRepository.existsByEmail(email)) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST,
+            throw new AppException(HttpStatus.BAD_REQUEST,
                     messageSource.getMessage("exception.email.exist", null,
                             LocaleContextHolder.getLocale()));
         }

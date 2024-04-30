@@ -1,9 +1,9 @@
 package com.example.videosharingapi.mapper;
 
 import com.example.videosharingapi.dto.VideoDto;
-import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.model.entity.Video;
-import com.example.videosharingapi.model.entity.VideoStatistic;
+import com.example.videosharingapi.entity.User;
+import com.example.videosharingapi.entity.Video;
+import com.example.videosharingapi.entity.VideoStatistic;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;

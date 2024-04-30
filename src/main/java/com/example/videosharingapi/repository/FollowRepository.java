@@ -1,22 +1,21 @@
 package com.example.videosharingapi.repository;
 
-import com.example.videosharingapi.model.entity.Follow;
+import com.example.videosharingapi.entity.Follow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.UUID;
 
 @Repository
-public interface FollowRepository extends JpaRepository<Follow, UUID> {
+public interface FollowRepository extends JpaRepository<Follow, String> {
 
-    List<Follow> findAllByUserId(UUID userId);
+    List<Follow> findAllByUserId(String userId);
 
-    Follow findByFollowerIdAndUserId(UUID followerId, UUID userId);
+    Follow findByFollowerIdAndUserId(String followerId, String userId);
 
-    boolean existsByUserIdAndFollowerId(UUID userId, UUID followId);
+    boolean existsByUserIdAndFollowerId(String userId, String followId);
 
-    long countByUserId(UUID userId);
+    long countByUserId(String userId);
 
-    long countByFollowerId(UUID followerId);
+    long countByFollowerId(String followerId);
 }
