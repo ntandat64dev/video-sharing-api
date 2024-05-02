@@ -12,8 +12,11 @@ import java.util.Optional;
 @EnableJpaAuditing
 public class AuditingConfig {
 
+    @Value("${spring.jpa.auditor}")
+    public String auditor;
+
     @Bean
-    public AuditorAware<String> auditorAware(@Value("${spring.jpa.auditor}") String auditor) {
+    public AuditorAware<String> auditorAware() {
         return () -> Optional.of(auditor);
     }
 }

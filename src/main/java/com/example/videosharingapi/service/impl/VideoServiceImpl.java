@@ -1,12 +1,12 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.config.validation.group.Save;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.entity.Hashtag;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.entity.VideoRating;
 import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.mapper.VideoRatingMapper;
 import com.example.videosharingapi.repository.HashtagRepository;
@@ -15,10 +15,10 @@ import com.example.videosharingapi.repository.VideoRatingRepository;
 import com.example.videosharingapi.repository.VideoRepository;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.VideoService;
-import jakarta.annotation.Nullable;
+import com.example.videosharingapi.validation.group.Save;
 import jakarta.validation.Validator;
 import jakarta.validation.groups.Default;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
     private final UserRepository userRepository;
@@ -41,21 +42,6 @@ public class VideoServiceImpl implements VideoService {
     private final VideoMapper videoMapper;
     private final VideoRatingMapper videoRatingMapper;
     private final Validator validator;
-
-    public VideoServiceImpl(
-            VideoRepository videoRepository, UserRepository userRepository, VideoMapper videoMapper,
-            VideoRatingRepository videoRatingRepository, StorageService storageService,
-            HashtagRepository hashtagRepository, VideoRatingMapper videoRatingMapper, Validator validator
-    ) {
-        this.videoRepository = videoRepository;
-        this.userRepository = userRepository;
-        this.videoRatingRepository = videoRatingRepository;
-        this.videoMapper = videoMapper;
-        this.storageService = storageService;
-        this.hashtagRepository = hashtagRepository;
-        this.videoRatingMapper = videoRatingMapper;
-        this.validator = validator;
-    }
 
     @Override
     public VideoDto getVideoById(String id) {
@@ -90,9 +76,7 @@ public class VideoServiceImpl implements VideoService {
         storageService.store(videoFile, videoDto);
 
         var constraintViolations = validator.validate(videoDto, Default.class, Save.class);
-        if (!constraintViolations.isEmpty()) {
-            throw new AppException(HttpStatus.INTERNAL_SERVER_ERROR, "Something went wrong");
-        }
+        if (!constraintViolations.isEmpty()) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
 
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
         saveHashtags(videoDto.getSnippet().getHashtags(), video);
@@ -102,7 +86,7 @@ public class VideoServiceImpl implements VideoService {
                 .orElseThrow();
     }
 
-    private void saveHashtags(@Nullable List<String> tags, Video video) {
+    private void saveHashtags(List<String> tags, Video video) {
         if (tags == null) return;
         var hashtags = tags.stream()
                 .map(Hashtag::new)

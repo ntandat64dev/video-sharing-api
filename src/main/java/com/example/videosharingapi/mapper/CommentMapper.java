@@ -9,18 +9,19 @@ import com.example.videosharingapi.repository.CommentRatingRepository;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.repository.VideoRepository;
+import lombok.Setter;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", uses = ThumbnailMapper.class)
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
+@Setter(onMethod_ = @Autowired)
 public abstract class CommentMapper {
 
-    private @Autowired CommentRatingRepository commentRatingRepository;
-    private @Autowired CommentRepository commentRepository;
-    private @Autowired UserRepository userRepository;
-    private @Autowired VideoRepository videoRepository;
+    private CommentRatingRepository commentRatingRepository;
+    private CommentRepository commentRepository;
+    private UserRepository userRepository;
+    private VideoRepository videoRepository;
 
     @Mapping(target = ".", source = "snippet")
     @Mapping(target = "publishedAt", expression = "java(LocalDateTime.now())")

@@ -1,6 +1,6 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.config.validation.IdExistsConstraint;
+import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.entity.Comment;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.entity.Video;
@@ -23,11 +23,11 @@ public final class CommentDto {
     public static final class Snippet {
 
         @NotNull
-        @IdExistsConstraint(entity = Video.class)
+        @IdExists(entity = Video.class)
         private String videoId;
 
         @NotNull
-        @IdExistsConstraint(entity = User.class)
+        @IdExists(entity = User.class)
         private String authorId;
 
         private String authorDisplayName;
@@ -38,7 +38,7 @@ public final class CommentDto {
         @NotBlank
         private String text;
 
-        @IdExistsConstraint(entity = Comment.class)
+        @IdExists(entity = Comment.class)
         private String parentId;
 
         private LocalDateTime publishedAt;
@@ -57,7 +57,7 @@ public final class CommentDto {
         private Long replyCount;
     }
 
-    @IdExistsConstraint(entity = Comment.class)
+    @IdExists(entity = Comment.class)
     private String id;
 
     @Valid

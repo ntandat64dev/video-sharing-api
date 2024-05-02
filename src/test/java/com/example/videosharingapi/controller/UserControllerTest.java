@@ -102,8 +102,8 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0]")
-                        .value("followDto: The follow that you are trying to create already exists."));
+                .andExpect(jsonPath("$.message")
+                        .value("The follow that you are trying to create already exists."));
     }
 
     @Test
@@ -121,8 +121,8 @@ public class UserControllerTest {
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0]")
-                        .value("followDto: Subscribing to your own channel is not supported."));
+                .andExpect(jsonPath("$.message")
+                        .value("Follow to yourself is not supported."));
     }
 
     @Test

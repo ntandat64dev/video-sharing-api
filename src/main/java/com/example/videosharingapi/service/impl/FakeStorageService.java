@@ -4,6 +4,7 @@ import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.service.StorageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,13 +16,10 @@ import java.util.List;
 @Service
 @Transactional
 @Profile({ "dev", "test" })
+@RequiredArgsConstructor
 public class FakeStorageService implements StorageService {
 
     private final ThumbnailMapper thumbnailMapper;
-
-    public FakeStorageService(ThumbnailMapper thumbnailMapper) {
-        this.thumbnailMapper = thumbnailMapper;
-    }
 
     @Override
     public void store(MultipartFile file, VideoDto videoDto) {

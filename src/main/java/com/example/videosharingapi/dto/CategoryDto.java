@@ -1,6 +1,6 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.config.validation.IdExistsConstraint;
+import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.entity.Category;
 import lombok.*;
 
@@ -10,7 +10,7 @@ import lombok.*;
 @Setter
 public final class CategoryDto {
 
-    @IdExistsConstraint(entity = Category.class)
+    @IdExists(entity = Category.class)
     @NonNull
     private String id;
 

@@ -1,12 +1,13 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.mapper.ThumbnailMapper;
-import com.example.videosharingapi.exception.AppException;
-import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.dto.VideoDto;
+import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.exception.ErrorCode;
+import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.service.StorageService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -24,13 +25,10 @@ import java.util.Objects;
 @Service
 @Transactional
 @Profile("prod")
+@RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
 
     private final ThumbnailMapper thumbnailMapper;
-
-    public StorageServiceImpl(ThumbnailMapper thumbnailMapper) {
-        this.thumbnailMapper = thumbnailMapper;
-    }
 
     @Override
     public void store(MultipartFile file, VideoDto videoDto) {
@@ -53,8 +51,7 @@ public class StorageServiceImpl implements StorageService {
             videoDto.getSnippet().setVideoUrl(Objects.requireNonNull(video.getAssets().getMp4()).toString());
             videoDto.getSnippet().setDuration(Duration.ofSeconds(1000));
         } catch (ApiException | IOException e) {
-            if (e instanceof ApiException ex)
-                throw new AppException(HttpStatus.valueOf(ex.getCode()), ex.getMessage());
+            if (e instanceof ApiException) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
             throw new RuntimeException(e);
         }
     }

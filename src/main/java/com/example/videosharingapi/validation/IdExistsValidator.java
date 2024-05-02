@@ -1,24 +1,25 @@
-package com.example.videosharingapi.config.validation;
+package com.example.videosharingapi.validation;
 
 import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-public class IdExistsConstraintValidator implements ConstraintValidator<IdExistsConstraint, String> {
+@RequiredArgsConstructor
+public class IdExistsValidator implements ConstraintValidator<IdExists, String> {
 
-    private @Autowired UserRepository userRepository;
-    private @Autowired VideoRepository videoRepository;
-    private @Autowired CommentRepository commentRepository;
-    private @Autowired FollowRepository followRepository;
-    private @Autowired CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
+    private final VideoRepository videoRepository;
+    private final CommentRepository commentRepository;
+    private final FollowRepository followRepository;
+    private final CategoryRepository categoryRepository;
 
     private JpaRepository<?, String> repository;
 
     @Override
-    public void initialize(IdExistsConstraint constraintAnnotation) {
+    public void initialize(IdExists constraintAnnotation) {
         if (constraintAnnotation.entity() == User.class) {
             repository = userRepository;
         } else if (constraintAnnotation.entity() == Video.class) {

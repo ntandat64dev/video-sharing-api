@@ -1,12 +1,13 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.config.validation.IdExistsConstraint;
+import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
 import com.example.videosharingapi.entity.Follow;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.service.UserService;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -18,12 +19,9 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/users")
 @Validated
+@RequiredArgsConstructor
 public class UserController {
     private final UserService userService;
-
-    public UserController(UserService userService) {
-        this.userService = userService;
-    }
 
     @GetMapping
     public ResponseEntity<UserDto> getUser(String userId) {
@@ -33,11 +31,8 @@ public class UserController {
 
     @GetMapping("/follows")
     public ResponseEntity<List<FollowDto>> getFollowsByUserId(
-            @IdExistsConstraint(entity = User.class)
-            String userId,
-            @RequestParam(required = false)
-            @IdExistsConstraint(entity = User.class)
-            String forUserId
+            @IdExists(entity = User.class) String userId,
+            @RequestParam(required = false) @IdExists(entity = User.class) String forUserId
     ) {
         List<FollowDto> response = new ArrayList<>();
         if (forUserId != null) {
@@ -52,26 +47,19 @@ public class UserController {
     }
 
     @PostMapping("/follows")
-    public ResponseEntity<FollowDto> followUser(
-            @RequestBody
-            @Validated
-            FollowDto followDto
-    ) {
+    public ResponseEntity<FollowDto> followUser(@RequestBody @Validated FollowDto followDto) {
         var response = userService.follow(followDto);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @DeleteMapping("/follows")
-    public ResponseEntity<?> unfollowUser(
-            @IdExistsConstraint(entity = Follow.class)
-            @NotNull
-            String id) {
+    public ResponseEntity<?> unfollowUser(@IdExists(entity = Follow.class) @NotNull String id) {
         userService.unfollow(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/video-categories")
-    public List<String> getBrowseKeywords(@IdExistsConstraint(entity = User.class) String userId) {
+    public List<String> getBrowseKeywords(@IdExists(entity = User.class) String userId) {
         return userService.getBrowseKeywords(userId);
     }
 }

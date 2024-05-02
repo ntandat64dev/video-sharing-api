@@ -1,12 +1,12 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.config.validation.IdExistsConstraint;
 import com.example.videosharingapi.dto.CommentDto;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.service.CommentService;
-import com.example.videosharingapi.service.impl.CommentServiceImpl;
+import com.example.videosharingapi.validation.IdExists;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -17,18 +17,14 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/v1/comments")
 @Validated
+@RequiredArgsConstructor
 public class CommentController {
-
     private final CommentService commentService;
-
-    public CommentController(CommentServiceImpl commentService) {
-        this.commentService = commentService;
-    }
 
     @GetMapping
     public ResponseEntity<List<CommentDto>> getCommentsByVideoID(
-            @NotNull(message = "Video ID {jakarta.validation.constraints.NotNull.message}")
-            @IdExistsConstraint(entity = Video.class)
+            @NotNull
+            @IdExists(entity = Video.class)
             String videoId
     ) {
         var response = commentService.getCommentsByVideoId(videoId);

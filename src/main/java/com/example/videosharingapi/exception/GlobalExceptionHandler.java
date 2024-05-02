@@ -2,6 +2,7 @@ package com.example.videosharingapi.exception;
 
 import com.example.videosharingapi.dto.response.ErrorResponse;
 import jakarta.validation.ConstraintViolationException;
+import lombok.RequiredArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -18,6 +19,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.util.ArrayList;
 
 @RestControllerAdvice
+@RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @Override
@@ -25,11 +27,14 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             Exception ex,
             Object body,
             @NotNull HttpHeaders headers,
-            HttpStatusCode statusCode,
+            @NotNull HttpStatusCode statusCode,
             @NotNull WebRequest request
     ) {
-        var errorResponse = new ErrorResponse(HttpStatus.valueOf(statusCode.value()), ex.getLocalizedMessage());
-        return new ResponseEntity<>(errorResponse, statusCode);
+        var errorResponse = ErrorResponse.builder()
+                .httpStatus(statusCode)
+                .message(ex.getLocalizedMessage())
+                .build();
+        return new ResponseEntity<>(errorResponse, errorResponse.getHttpStatus());
     }
 
     @Override
@@ -46,7 +51,11 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
         for (ObjectError error : ex.getBindingResult().getGlobalErrors()) {
             errors.add(String.format("%s: %s", error.getObjectName(), error.getDefaultMessage()));
         }
-        var errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), errors);
+        var errorResponse = ErrorResponse.builder()
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .message(ex.getLocalizedMessage())
+                .errors(errors)
+                .build();
         return new ResponseEntity<>(errorResponse, errorResponse.getHttpStatus());
     }
 
@@ -58,23 +67,31 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             var fieldName = propertyPath.substring(propertyPath.lastIndexOf(".") + 1);
             errors.add(String.format("%s: %s", fieldName, violation.getMessage()));
         }
-        var errorResponse = new ErrorResponse(HttpStatus.BAD_REQUEST, ex.getLocalizedMessage(), errors);
+        var errorResponse = ErrorResponse.builder()
+                .httpStatus(HttpStatus.BAD_REQUEST)
+                .message(ex.getLocalizedMessage())
+                .errors(errors)
+                .build();
         return new ResponseEntity<>(errorResponse, errorResponse.getHttpStatus());
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleGlobalException(Exception ex) {
-        var errorResponse = new ErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ex.getLocalizedMessage());
+        var errorResponse = ErrorResponse.builder()
+                .httpStatus(HttpStatus.INTERNAL_SERVER_ERROR)
+                .message(ex.getLocalizedMessage())
+                .build();
         return new ResponseEntity<>(errorResponse, errorResponse.getHttpStatus());
     }
 
     @ExceptionHandler(AppException.class)
     public ResponseEntity<ErrorResponse> handleAppException(AppException ex) {
-        var errorResponse = new ErrorResponse(
-                ex.getHttpStatus(),
-                ex.getMessage());
-        return new ResponseEntity<>(errorResponse, ex.getHttpStatus());
+        var errorCode = ex.getErrorCode();
+        return ResponseEntity
+                .status(errorCode.getStatusCode())
+                .body(ErrorResponse.builder()
+                        .httpStatus(errorCode.getStatusCode())
+                        .message(errorCode.getMessage())
+                        .build());
     }
 }

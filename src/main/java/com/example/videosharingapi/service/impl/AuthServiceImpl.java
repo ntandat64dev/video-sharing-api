@@ -1,15 +1,14 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.UserDto;
-import com.example.videosharingapi.exception.AppException;
-import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
+import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.exception.ErrorCode;
+import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
-import org.springframework.context.MessageSource;
-import org.springframework.context.i18n.LocaleContextHolder;
-import org.springframework.http.HttpStatus;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,37 +17,24 @@ import java.util.List;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
 
-    private final MessageSource messageSource;
     private final UserMapper userMapper;
-
-    public AuthServiceImpl(UserRepository userRepository, MessageSource messageSource, UserMapper userMapper) {
-        this.userRepository = userRepository;
-        this.messageSource = messageSource;
-        this.userMapper = userMapper;
-    }
 
     @Override
     @Transactional(readOnly = true)
     public UserDto login(String email, String password) {
         var user = userRepository.findByEmailAndPassword(email, password);
-        if (user == null) {
-            throw new AppException(HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage("exception.email-password.incorrect", null,
-                            LocaleContextHolder.getLocale()));
-        }
+        if (user == null) throw new AppException(ErrorCode.EMAIL_PASSWORD_INCORRECT);
+
         return userMapper.toUserDto(user);
     }
 
     @Override
     public UserDto signup(String email, String password) {
-        if (userRepository.existsByEmail(email)) {
-            throw new AppException(HttpStatus.BAD_REQUEST,
-                    messageSource.getMessage("exception.email.exist", null,
-                            LocaleContextHolder.getLocale()));
-        }
+        if (userRepository.existsByEmail(email)) throw new AppException(ErrorCode.EMAIL_EXISTS);
 
         var user = User.builder()
                 .email(email)

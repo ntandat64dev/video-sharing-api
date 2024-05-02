@@ -4,6 +4,7 @@ import com.example.videosharingapi.dto.CommentDto;
 import com.example.videosharingapi.mapper.CommentMapper;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.service.CommentService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,16 +12,12 @@ import java.util.List;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
 
     private final CommentMapper commentMapper;
-
-    public CommentServiceImpl(CommentMapper commentMapper, CommentRepository commentRepository) {
-        this.commentMapper = commentMapper;
-        this.commentRepository = commentRepository;
-    }
 
     @Override
     public List<CommentDto> getCommentsByVideoId(String videoId) {

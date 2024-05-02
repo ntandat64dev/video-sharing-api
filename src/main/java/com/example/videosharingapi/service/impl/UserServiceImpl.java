@@ -3,21 +3,26 @@ package com.example.videosharingapi.service.impl;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
 import com.example.videosharingapi.entity.Hashtag;
+import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.FollowMapper;
 import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.repository.FollowRepository;
 import com.example.videosharingapi.repository.HashtagRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
     private final HashtagRepository hashtagRepository;
     private final FollowRepository followRepository;
@@ -25,18 +30,6 @@ public class UserServiceImpl implements UserService {
 
     private final FollowMapper followMapper;
     private final UserMapper userMapper;
-
-    public UserServiceImpl(
-            HashtagRepository hashtagRepository, FollowRepository followRepository,
-            UserRepository userRepository, FollowMapper followMapper,
-            UserMapper userMapper
-    ) {
-        this.hashtagRepository = hashtagRepository;
-        this.followRepository = followRepository;
-        this.userRepository = userRepository;
-        this.followMapper = followMapper;
-        this.userMapper = userMapper;
-    }
 
     @Override
     public UserDto getUserById(String userId) {
@@ -60,6 +53,16 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public FollowDto follow(FollowDto followDto) {
+        if (followRepository.existsByUserIdAndFollowerId(
+                followDto.getSnippet().getUserId(),
+                followDto.getFollowerSnippet().getUserId()
+        )) throw new AppException(ErrorCode.FOLLOW_EXISTS);
+
+        if (Objects.equals(
+                followDto.getSnippet().getUserId(),
+                followDto.getFollowerSnippet().getUserId())
+        ) throw new AppException(ErrorCode.SELF_FOLLOW);
+
         var follow = followMapper.toFollow(followDto);
         follow.setPublishedAt(LocalDateTime.now());
         followRepository.save(follow);

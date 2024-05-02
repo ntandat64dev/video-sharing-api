@@ -10,5 +10,5 @@ import java.util.List;
 public interface VideoRepository extends JpaRepository<Video, String> {
     List<Video> findAllByUserId(String userId);
 
-    long countByUserId(String userId);
+    Long countByUserId(String userId);
 }

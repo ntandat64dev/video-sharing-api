@@ -1,10 +1,8 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.config.validation.FollowNotExistsConstraint;
-import com.example.videosharingapi.config.validation.IdExistsConstraint;
-import com.example.videosharingapi.config.validation.SelfFollowConstraint;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
+import com.example.videosharingapi.validation.IdExists;
 import jakarta.validation.Valid;
 import lombok.Builder;
 import lombok.Getter;
@@ -15,8 +13,6 @@ import java.util.Map;
 
 @Getter
 @Setter
-@SelfFollowConstraint
-@FollowNotExistsConstraint
 public class FollowDto {
 
     @Getter
@@ -26,7 +22,7 @@ public class FollowDto {
 
         private LocalDateTime publishedAt;
 
-        @IdExistsConstraint(entity = User.class)
+        @IdExists(entity = User.class)
         private String userId;
 
         private String username;
@@ -39,7 +35,7 @@ public class FollowDto {
     @Builder
     public static final class FollowerSnippet {
 
-        @IdExistsConstraint(entity = User.class)
+        @IdExists(entity = User.class)
         private String userId;
 
         private Map<Thumbnail.Type, ThumbnailDto> thumbnails;

@@ -2,7 +2,7 @@ package com.example.videosharingapi.config.runner;
 
 import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
@@ -18,21 +18,21 @@ import java.util.stream.Stream;
  */
 @Profile("init")
 @Component
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
+@RequiredArgsConstructor
 public class InsertTestDataRunner implements ApplicationRunner {
 
-    private @Autowired CommentRatingRepository commentRatingRepository;
-    private @Autowired CommentRepository commentRepository;
-    private @Autowired PlaylistRepository playlistRepository;
-    private @Autowired PlaylistItemRepository playlistItemRepository;
-    private @Autowired FollowRepository followRepository;
-    private @Autowired UserRepository userRepository;
-    private @Autowired VideoRatingRepository videoRatingRepository;
-    private @Autowired VideoRepository videoRepository;
-    private @Autowired HashtagRepository hashtagRepository;
-    private @Autowired ViewHistoryRepository viewHistoryRepository;
-    private @Autowired PrivacyRepository privacyRepository;
-    private @Autowired CategoryRepository categoryRepository;
+    private final CommentRatingRepository commentRatingRepository;
+    private final CommentRepository commentRepository;
+    private final PlaylistRepository playlistRepository;
+    private final PlaylistItemRepository playlistItemRepository;
+    private final FollowRepository followRepository;
+    private final UserRepository userRepository;
+    private final VideoRatingRepository videoRatingRepository;
+    private final VideoRepository videoRepository;
+    private final HashtagRepository hashtagRepository;
+    private final ViewHistoryRepository viewHistoryRepository;
+    private final PrivacyRepository privacyRepository;
+    private final CategoryRepository categoryRepository;
 
     @Override
     @Transactional

@@ -6,19 +6,20 @@ import com.example.videosharingapi.repository.FollowRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.repository.VideoRepository;
 import com.example.videosharingapi.repository.VideoStatisticRepository;
+import lombok.Setter;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
 @Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true), uses = ThumbnailMapper.class)
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
+@Setter(onMethod_ = @Autowired)
 public abstract class UserMapper {
 
-    private @Autowired UserRepository userRepository;
-    private @Autowired VideoStatisticRepository videoStatisticRepository;
-    private @Autowired VideoRepository videoRepository;
-    private @Autowired FollowRepository followRepository;
+    private UserRepository userRepository;
+    private VideoStatisticRepository videoStatisticRepository;
+    private VideoRepository videoRepository;
+    private FollowRepository followRepository;
 
     @Mapping(target = "snippet", expression = "java(mapSnippet(user))")
     @Mapping(target = "statistic", expression = "java(mapStatistic(user))")

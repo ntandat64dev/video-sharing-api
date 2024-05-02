@@ -1,7 +1,7 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.config.validation.IdExistsConstraint;
-import com.example.videosharingapi.config.validation.group.Save;
+import com.example.videosharingapi.validation.IdExists;
+import com.example.videosharingapi.validation.group.Save;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
 import jakarta.validation.Valid;
@@ -27,7 +27,7 @@ public final class VideoDto {
         private LocalDateTime publishedAt;
 
         @NotNull
-        @IdExistsConstraint(entity = User.class)
+        @IdExists(entity = User.class)
         private String userId;
 
         private String username;
