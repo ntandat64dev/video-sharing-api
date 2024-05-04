@@ -23,7 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @TestSql
 public class UserControllerTest {
 
@@ -32,16 +32,16 @@ public class UserControllerTest {
 
     private @Autowired FollowRepository followRepository;
 
-    private final String userId = "3f06af63";
+    private final String userId1 = "3f06af63";
     private final String userId2 = "a05990b1";
 
     @Test
     public void givenUserId_whenGetUser_thenReturnSuccessful() throws Exception {
         mockMvc.perform(get("/api/v1/users")
-                        .param("userId", userId))
+                        .param("userId", userId1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("3f06af63"))
-                .andExpect(jsonPath("$.snippet.username").value("user"))
+                .andExpect(jsonPath("$.snippet.username").value("user1"))
                 .andExpect(jsonPath("$.statistic.viewCount").value(7))
                 .andExpect(jsonPath("$.statistic.followerCount").value(1))
                 .andExpect(jsonPath("$.statistic.followingCount").value(0))
@@ -51,7 +51,7 @@ public class UserControllerTest {
     @Test
     public void givenUserId_whenGetFollows_thenReturnSuccessful() throws Exception {
         mockMvc.perform(get("/api/v1/users/follows")
-                        .param("userId", userId))
+                        .param("userId", userId1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("f2cf8a48"));
@@ -61,7 +61,7 @@ public class UserControllerTest {
     public void givenFollowerIdAndUserId_whenGetFollow_thenReturnSuccessful() throws Exception {
         mockMvc.perform(get("/api/v1/users/follows")
                         .param("userId", userId2)
-                        .param("forUserId", userId))
+                        .param("forUserId", userId1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("f2cf8a48"));
@@ -75,14 +75,14 @@ public class UserControllerTest {
                 .userId(userId2)
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(userId)
+                .userId(userId1)
                 .build());
 
         mockMvc.perform(post("/api/v1/users/follows")
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.snippet.username").value("user1"))
+                .andExpect(jsonPath("$.snippet.username").value("user2"))
                 .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
                 .andExpect(jsonPath("$.followerSnippet.thumbnails.length()").value(2));
     }
@@ -111,10 +111,10 @@ public class UserControllerTest {
     public void givenFollowDtoWithTheSameUserId_whenFollow_thenReturnError() throws Exception {
         var followDto = new FollowDto();
         followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId(userId)
+                .userId(userId1)
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(userId)
+                .userId(userId1)
                 .build());
 
         mockMvc.perform(post("/api/v1/users/follows")
@@ -147,19 +147,19 @@ public class UserControllerTest {
                         .param("id", ""))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
-                        .value("id: does not exist"));
+                        .value("id: ID does not exist"));
 
         mockMvc.perform(delete("/api/v1/users/follows")
                         .param("id", UUID.randomUUID().toString()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]",
-                        containsString("id: does not exist")));
+                        containsString("id: ID does not exist")));
     }
 
     @Test
     public void givenUserId_whenGetVideoCategories_thenReturnSuccessful() throws Exception {
         mockMvc.perform(get("/api/v1/users/video-categories")
-                        .param("userId", userId))
+                        .param("userId", userId1))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$").value("music"));
     }

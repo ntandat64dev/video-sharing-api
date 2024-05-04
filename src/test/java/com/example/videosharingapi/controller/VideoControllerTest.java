@@ -32,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc
+@AutoConfigureMockMvc(addFilters = false)
 @TestSql
 public class VideoControllerTest {
 
@@ -159,7 +159,7 @@ public class VideoControllerTest {
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
-                        .value("snippet.userId: does not exist"));
+                        .value("snippet.userId: ID does not exist"));
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
@@ -257,7 +257,7 @@ public class VideoControllerTest {
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
-                        .value("snippet.category.id: does not exist"));
+                        .value("snippet.category.id: ID does not exist"));
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);

@@ -2,8 +2,7 @@ package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.dto.UserDto;
 import com.example.videosharingapi.service.AuthService;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -22,19 +21,19 @@ public class AuthController {
 
     @PostMapping("/login")
     public ResponseEntity<UserDto> login(
-            @Email @NotBlank String email,
-            @Size(min = 8) String password
+            @NotNull String username,
+            @Size(min = 8) @NotNull String password
     ) {
-        var response = authService.login(email, password);
+        var response = authService.login(username, password);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
     @PostMapping("/signup")
     public ResponseEntity<UserDto> signup(
-            @Email @NotBlank String email,
-            @Size(min = 8) String password
+            @NotNull String username,
+            @Size(min = 8) @NotNull String password
     ) {
-        var response = authService.signup(email, password);
+        var response = authService.signup(username, password);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 }

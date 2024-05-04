@@ -1,11 +1,11 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.dto.UserDto;
 import com.example.videosharingapi.entity.Follow;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.service.UserService;
+import com.example.videosharingapi.validation.IdExists;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -37,9 +37,7 @@ public class UserController {
         List<FollowDto> response = new ArrayList<>();
         if (forUserId != null) {
             var follow = userService.getFollowsByFollowerIdAndUserId(userId, forUserId);
-            if (follow != null) {
-                response.add(follow);
-            }
+            response.add(follow);
         } else {
             response.addAll(userService.getFollowsByUserId(userId));
         }

@@ -15,9 +15,11 @@ VALUES  ('7e90877f', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 1 default 
         ('78a1b2d4', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 3 default thumbnail', 720, 450);
 
 # User
+# user1(username: user1, password: 11111111)
+# user2(username: user2, password: 22222222)
 INSERT INTO `user`(id, created_by, created_date, modified_by, modified_date, country, date_of_birth, email, gender, password, phone_number, username, bio, published_at)
-VALUES  ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, 'user@gmail.com', null, '00000000', null, 'user', null, NOW()),
-        ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, 'user2@gmail.com', null, '00000000', null,  'user1', null, NOW());
+VALUES  ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$713vmsvgjJiRxMhpnB3FWegmlSnY.BzKZEpWsOVs1YPQvxVp0Ef76', null, 'user1', null, NOW()),
+        ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$9tcWLsdaxk50cgQiqoZNBOF/AhhSUu/imxeH8YwZRxg2i3KpVIPLG', null,  'user2', null, NOW());
 
 # UserThumbnail
 INSERT INTO `user_thumbnail`(user_id, thumbnail_id)

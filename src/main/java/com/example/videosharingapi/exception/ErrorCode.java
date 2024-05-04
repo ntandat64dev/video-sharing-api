@@ -9,8 +9,8 @@ import org.springframework.http.HttpStatusCode;
 public enum ErrorCode {
     SOMETHING_WENT_WRONG(HttpStatus.INTERNAL_SERVER_ERROR, "error.some-thing-went-wrong"),
     SELF_FOLLOW(HttpStatus.BAD_REQUEST, "error.follow.self-follow"),
-    EMAIL_PASSWORD_INCORRECT(HttpStatus.BAD_REQUEST, "error.email-password.incorrect"),
-    EMAIL_EXISTS(HttpStatus.BAD_REQUEST, "error.email.exist"),
+    USERNAME_PASSWORD_INCORRECT(HttpStatus.BAD_REQUEST, "error.username-password.incorrect"),
+    USERNAME_EXISTS(HttpStatus.BAD_REQUEST, "error.username.exist"),
     FOLLOW_EXISTS(HttpStatus.BAD_REQUEST, "error.follow.already-exist"),
     ;
 

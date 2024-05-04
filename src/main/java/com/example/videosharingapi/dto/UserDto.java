@@ -1,7 +1,7 @@
 package com.example.videosharingapi.dto;
 
 import com.example.videosharingapi.entity.Thumbnail;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -50,7 +50,7 @@ public final class UserDto {
         private Long videoCount;
     }
 
-    @NotBlank
+    @NotNull
     private String id;
 
     private Snippet snippet;

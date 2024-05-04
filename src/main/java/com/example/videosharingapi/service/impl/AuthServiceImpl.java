@@ -9,6 +9,10 @@ import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,24 +26,28 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
 
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
+    private final AuthenticationManager authenticationManager;
 
     @Override
     @Transactional(readOnly = true)
-    public UserDto login(String email, String password) {
-        var user = userRepository.findByEmailAndPassword(email, password);
-        if (user == null) throw new AppException(ErrorCode.EMAIL_PASSWORD_INCORRECT);
-
-        return userMapper.toUserDto(user);
+    public UserDto login(String username, String password) {
+        try {
+            var authenticationRequest = new UsernamePasswordAuthenticationToken(username, password);
+            authenticationManager.authenticate(authenticationRequest);
+            return userMapper.toUserDto(userRepository.findByUsername(username));
+        } catch (AuthenticationException e) {
+            throw new AppException(ErrorCode.USERNAME_PASSWORD_INCORRECT);
+        }
     }
 
     @Override
-    public UserDto signup(String email, String password) {
-        if (userRepository.existsByEmail(email)) throw new AppException(ErrorCode.EMAIL_EXISTS);
+    public UserDto signup(String username, String password) {
+        if (userRepository.existsByUsername(username)) throw new AppException(ErrorCode.USERNAME_EXISTS);
 
         var user = User.builder()
-                .email(email)
-                .username(email.substring(0, email.indexOf('@')))
-                .password(password)
+                .username(username)
+                .password(passwordEncoder.encode(password))
                 .publishedAt(LocalDateTime.now())
                 .build();
 

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,6 +35,8 @@ public class InsertTestDataRunner implements ApplicationRunner {
     private final PrivacyRepository privacyRepository;
     private final CategoryRepository categoryRepository;
 
+    private final PasswordEncoder passwordEncoder;
+
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
@@ -42,13 +45,12 @@ public class InsertTestDataRunner implements ApplicationRunner {
 
         var users = new User[9];
         for (int i = 1; i < 10; i++) {
-            var user = new User(
-                    "user%s@gmail.com".formatted(i),
-                    new String(new char[8]).replace("\0", String.valueOf(i % 9))
-            );
-
-            user.setUsername("user%s".formatted(i));
-            user.setPublishedAt(LocalDateTime.now());
+            var user = User.builder()
+                    .username("user%s".formatted(i))
+                    .password(passwordEncoder.encode(new String(new char[8])
+                            .replace("\0", String.valueOf(i % 9))))
+                    .publishedAt(LocalDateTime.now())
+                    .build();
 
             var defaultThumbnail = new Thumbnail();
             defaultThumbnail.setType(Thumbnail.Type.DEFAULT);
