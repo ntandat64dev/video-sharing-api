@@ -17,5 +17,7 @@ TRUNCATE TABLE `user_thumbnail`;
 TRUNCATE TABLE `video_thumbnail`;
 TRUNCATE TABLE `thumbnail`;
 TRUNCATE TABLE `privacy`;
+TRUNCATE TABLE `role`;
+TRUNCATE TABLE `user_role`;
 
 SET FOREIGN_KEY_CHECKS = 1;

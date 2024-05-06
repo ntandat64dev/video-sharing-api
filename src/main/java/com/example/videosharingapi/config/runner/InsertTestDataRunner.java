@@ -34,6 +34,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
     private final ViewHistoryRepository viewHistoryRepository;
     private final PrivacyRepository privacyRepository;
     private final CategoryRepository categoryRepository;
+    private final RoleRepository roleRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -43,12 +44,20 @@ public class InsertTestDataRunner implements ApplicationRunner {
         var publicPrivacy = privacyRepository.saveAndFlush(new Privacy(Privacy.Status.PUBLIC));
         var privatePrivacy = privacyRepository.saveAndFlush(new Privacy(Privacy.Status.PRIVATE));
 
+        var roleAdmin = new Role("ADMIN");
+        var roleUser = new Role("USER");
+        roleRepository.save(roleAdmin);
+        roleRepository.save(roleUser);
+
         var users = new User[9];
         for (int i = 1; i < 10; i++) {
             var user = User.builder()
                     .username("user%s".formatted(i))
                     .password(passwordEncoder.encode(new String(new char[8])
                             .replace("\0", String.valueOf(i % 9))))
+                    .roles(i == 1
+                            ? List.of(roleAdmin, roleUser)
+                            : List.of(roleUser))
                     .publishedAt(LocalDateTime.now())
                     .build();
 

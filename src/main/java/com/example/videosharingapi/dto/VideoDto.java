@@ -1,9 +1,9 @@
 package com.example.videosharingapi.dto;
 
-import com.example.videosharingapi.validation.IdExists;
-import com.example.videosharingapi.validation.group.Save;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
+import com.example.videosharingapi.validation.IdExists;
+import com.example.videosharingapi.validation.group.Save;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

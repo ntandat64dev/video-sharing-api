@@ -12,11 +12,13 @@ import com.example.videosharingapi.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,8 +34,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @TestSql
+@WithUserDetails("user2")
 public class VideoControllerTest {
 
     private @Autowired VideoRepository videoRepository;
@@ -81,9 +84,23 @@ public class VideoControllerTest {
     }
 
     @Test
+    @WithUserDetails("user1")
+    public void whenGetAllVideosWithRoleAdmin_thenSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/videos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(3));
+    }
+
+    @Test
+    @WithUserDetails("user2")
+    public void whenGetAllVideosWithRoleUser_thenForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/videos"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void givenVideoId_whenGetVideo_thenReturnExpectedVideo() throws Exception {
-        mockMvc.perform(get("/api/v1/videos")
-                        .param("videoId", videoId))
+        mockMvc.perform(get("/api/v1/videos/{videoId}", videoId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.snippet.title").value("Video 3"))
                 .andExpect(jsonPath("$.snippet.userId")
@@ -95,7 +112,8 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenReturnSuccessful() throws Exception {
+    @WithUserDetails("user1")
+    public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenSuccess() throws Exception {
         var videoDto = obtainVideoDto();
         var metadata = new MockMultipartFile(
                 "metadata", null,
@@ -111,6 +129,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
+    @WithUserDetails("user1")
     public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenAssertDatabaseIsUpdated() throws Exception {
         var videoDto = obtainVideoDto();
         var metadata = new MockMultipartFile(
@@ -159,7 +178,7 @@ public class VideoControllerTest {
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
-                        .value("snippet.userId: ID does not exist"));
+                        .value("snippet.userId: ID does not exist."));
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
@@ -257,7 +276,7 @@ public class VideoControllerTest {
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
-                        .value("snippet.category.id: ID does not exist"));
+                        .value("snippet.category.id: ID does not exist."));
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
@@ -304,12 +323,12 @@ public class VideoControllerTest {
     }
 
     @Test
-    public void givenUserId_whenGetVideosByAllCategories_thenReturnSuccessful() throws Exception {
-        mockMvc.perform(get("/api/v1/videos/category/all")
-                        .param("userId", userId))
+    public void givenUserId_whenGetVideosByAllCategories_thenSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/videos/category/all/mine"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value("e65707b4"));
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].id")
+                        .value(Matchers.containsInAnyOrder("f7d9b74b", "37b32dc2")));
     }
 
     @Test
@@ -341,6 +360,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
+    @WithUserDetails("user1")
     public void givenVideoIdAndUserId_whenRateVideo_thenVideoRatingUpdatedAsExpected() throws Exception {
         // Rate NONE while there is no VideoRating then ignore.
         mockMvc.perform(post("/api/v1/videos/rate")
@@ -440,11 +460,10 @@ public class VideoControllerTest {
     }
 
     @Test
-    public void givenUserIdAndVideoId_whenGetRelatedVideos_thenReturnSuccessful() throws Exception {
+    public void givenUserIdAndVideoId_whenGetRelatedVideos_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/related")
-                        .param("videoId", videoId)
-                        .param("userId", userId))
+                        .param("videoId", videoId))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1));
+                .andExpect(jsonPath("$.length()").value(2));
     }
 }

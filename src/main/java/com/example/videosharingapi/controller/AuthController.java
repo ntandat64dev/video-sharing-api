@@ -1,6 +1,6 @@
 package com.example.videosharingapi.controller;
 
-import com.example.videosharingapi.dto.UserDto;
+import com.example.videosharingapi.dto.response.AuthResponse;
 import com.example.videosharingapi.service.AuthService;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
@@ -20,20 +20,20 @@ public class AuthController {
     private final AuthService authService;
 
     @PostMapping("/login")
-    public ResponseEntity<UserDto> login(
+    public ResponseEntity<AuthResponse> login(
             @NotNull String username,
             @Size(min = 8) @NotNull String password
     ) {
         var response = authService.login(username, password);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/signup")
-    public ResponseEntity<UserDto> signup(
+    public ResponseEntity<Void> signup(
             @NotNull String username,
             @Size(min = 8) @NotNull String password
     ) {
-        var response = authService.signup(username, password);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+        authService.signup(username, password);
+        return new ResponseEntity<>(HttpStatus.CREATED);
     }
 }

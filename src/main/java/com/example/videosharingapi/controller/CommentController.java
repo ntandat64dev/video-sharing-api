@@ -28,7 +28,7 @@ public class CommentController {
             String videoId
     ) {
         var response = commentService.getCommentsByVideoId(videoId);
-        return new ResponseEntity<>(response, HttpStatus.OK);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping

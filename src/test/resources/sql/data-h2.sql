@@ -14,12 +14,22 @@ VALUES  ('7e90877f', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 1 default 
         ('1243853b', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 2 default thumbnail', 720, 450),
         ('78a1b2d4', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 3 default thumbnail', 720, 450);
 
+# Role
+INSERT INTO `role`(id, created_by, created_date, modified_by, modified_date, name)
+VALUES ('319a7b41', 'admin', NOW(), 'admin', NOW(), 'ADMIN'),
+       ('72ca9394', 'admin', NOW(), 'admin', NOW(), 'USER');
+
 # User
 # user1(username: user1, password: 11111111)
 # user2(username: user2, password: 22222222)
 INSERT INTO `user`(id, created_by, created_date, modified_by, modified_date, country, date_of_birth, email, gender, password, phone_number, username, bio, published_at)
 VALUES  ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$713vmsvgjJiRxMhpnB3FWegmlSnY.BzKZEpWsOVs1YPQvxVp0Ef76', null, 'user1', null, NOW()),
         ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$9tcWLsdaxk50cgQiqoZNBOF/AhhSUu/imxeH8YwZRxg2i3KpVIPLG', null,  'user2', null, NOW());
+
+# UserRole
+INSERT INTO `user_role`(user_id, role_id)
+VALUES ('3f06af63', '319a7b41'),
+       ('a05990b1', '72ca9394');
 
 # UserThumbnail
 INSERT INTO `user_thumbnail`(user_id, thumbnail_id)

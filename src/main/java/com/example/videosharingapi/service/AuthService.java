@@ -1,9 +1,10 @@
 package com.example.videosharingapi.service;
 
-import com.example.videosharingapi.dto.UserDto;
+import com.example.videosharingapi.dto.response.AuthResponse;
 
 public interface AuthService {
-    UserDto login(String username, String password);
 
-    UserDto signup(String username, String password);
+    AuthResponse login(String username, String password);
+
+    void signup(String username, String password);
 }

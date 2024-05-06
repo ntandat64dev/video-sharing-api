@@ -14,6 +14,7 @@ import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.repository.VideoRatingRepository;
 import com.example.videosharingapi.repository.VideoRepository;
 import com.example.videosharingapi.service.StorageService;
+import com.example.videosharingapi.service.UserService;
 import com.example.videosharingapi.service.VideoService;
 import com.example.videosharingapi.validation.group.Save;
 import jakarta.validation.Validator;
@@ -37,11 +38,19 @@ public class VideoServiceImpl implements VideoService {
     private final VideoRatingRepository videoRatingRepository;
     private final HashtagRepository hashtagRepository;
 
+    private final UserService userService;
     private final StorageService storageService;
 
     private final VideoMapper videoMapper;
     private final VideoRatingMapper videoRatingMapper;
     private final Validator validator;
+
+    @Override
+    public List<VideoDto> getAllVideos() {
+        return videoRepository.findAll().stream()
+                .map(videoMapper::toVideoDto)
+                .toList();
+    }
 
     @Override
     public VideoDto getVideoById(String id) {
@@ -73,6 +82,11 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto) {
+        if (!userService.getAuthenticatedUser().getUserId().equals(videoDto.getSnippet().getUserId())) {
+            // If uploader is not authenticated user ID.
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
+
         storageService.store(videoFile, videoDto);
 
         var constraintViolations = validator.validate(videoDto, Default.class, Save.class);

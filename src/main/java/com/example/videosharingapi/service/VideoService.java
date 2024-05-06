@@ -8,6 +8,8 @@ import java.util.List;
 
 public interface VideoService {
 
+    List<VideoDto> getAllVideos();
+
     VideoDto getVideoById(String id);
 
     List<VideoDto> getVideosByAllCategories(String userId);

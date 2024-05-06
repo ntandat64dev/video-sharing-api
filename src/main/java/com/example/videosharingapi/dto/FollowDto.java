@@ -4,6 +4,7 @@ import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.validation.IdExists;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -22,6 +23,7 @@ public class FollowDto {
 
         private LocalDateTime publishedAt;
 
+        @NotNull
         @IdExists(entity = User.class)
         private String userId;
 
@@ -35,6 +37,7 @@ public class FollowDto {
     @Builder
     public static final class FollowerSnippet {
 
+        @NotNull
         @IdExists(entity = User.class)
         private String userId;
 

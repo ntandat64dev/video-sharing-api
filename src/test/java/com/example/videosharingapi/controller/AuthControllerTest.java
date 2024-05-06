@@ -2,7 +2,6 @@ package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.repository.UserRepository;
-import com.jayway.jsonpath.JsonPath;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,16 +10,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import java.util.regex.Pattern;
-
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("test")
-@AutoConfigureMockMvc(addFilters = false)
+@AutoConfigureMockMvc
 @TestSql
 public class AuthControllerTest {
 
@@ -33,8 +30,7 @@ public class AuthControllerTest {
                         .param("username", "user1")
                         .param("password", "11111111"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id")
-                        .value("3f06af63"));
+                .andExpect(jsonPath("$.token").isNotEmpty());
     }
 
     @Test
@@ -73,32 +69,27 @@ public class AuthControllerTest {
                         .param("username", "user3")
                         .param("password", "33333333"))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").isNotEmpty());
+                .andExpect(jsonPath("$").doesNotExist());
     }
 
     @Test
     @Transactional
     public void givenUsernameAndPassword_whenSignup_thenUserIsCreated() throws Exception {
-        var result = mockMvc.perform(post("/api/v1/auth/signup")
+        mockMvc.perform(post("/api/v1/auth/signup")
                         .param("username", "user3")
                         .param("password", "33333333"))
-                .andExpect(status().isCreated())
-                .andReturn();
+                .andExpect(status().isCreated());
 
-        final Pattern bcryptPattern = Pattern.compile("\\A\\$2a?\\$\\d\\d\\$[./0-9A-Za-z]{53}");
         var user = userRepository.findByUsername("user3");
-        assertThat(user.getId())
-                .isEqualTo(JsonPath.read(result.getResponse().getContentAsString(), "$.id"));
         assertThat(user.getUsername()).isEqualTo("user3");
-        assertThat(user.getPassword()).matches(bcryptPattern);
+        assertThat(user.getPassword()).matches("\\A\\$2a?\\$\\d\\d\\$[./0-9A-Za-z]{53}");
         assertThat(user.getEmail()).isNull();
         assertThat(user.getDateOfBirth()).isNull();
         assertThat(user.getPhoneNumber()).isNull();
         assertThat(user.getGender()).isNull();
         assertThat(user.getCountry()).isNull();
         assertThat(user.getBio()).isNull();
-        assertThat(user.getPublishedAt())
-                .isEqualTo(JsonPath.read(result.getResponse().getContentAsString(), "$.snippet.publishedAt"));
+        assertThat(user.getPublishedAt()).isNotNull();
         assertThat(user.getThumbnails()).hasSize(2);
     }
 
