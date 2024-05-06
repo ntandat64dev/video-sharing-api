@@ -115,7 +115,7 @@ public class FollowControllerTest {
 
     @Test
     @Transactional
-    public void givenFollowId_whenDelete_thenReturnSuccessful() throws Exception {
+    public void givenFollowId_whenDelete_thenSuccess() throws Exception {
         mockMvc.perform(delete("/api/v1/follows")
                         .param("id", "f2cf8a48"))
                 .andExpect(status().isNoContent());
@@ -125,7 +125,7 @@ public class FollowControllerTest {
 
     @Test
     @Transactional
-    public void givenInvalidFollowId_whenDelete_thenReturnError() throws Exception {
+    public void givenInvalidFollowId_whenDelete_thenError() throws Exception {
         mockMvc.perform(delete("/api/v1/follows"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")

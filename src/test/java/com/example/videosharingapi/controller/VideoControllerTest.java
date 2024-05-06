@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -165,7 +166,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenInvalidUserId_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenInvalidUserId_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setUserId(UUID.randomUUID().toString());
         var metadata = new MockMultipartFile(
@@ -186,7 +187,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenMissingUserId_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenMissingUserId_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setUserId(null);
         var metadata = new MockMultipartFile(
@@ -206,7 +207,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenMissingVideoFile_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenMissingVideoFile_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         var metadata = new MockMultipartFile(
                 "metadata", null,
@@ -224,7 +225,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenMissingVideoTitle_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenMissingVideoTitle_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setTitle(null);
         var metadata = new MockMultipartFile(
@@ -244,7 +245,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenMissingVideoCategory_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenMissingVideoCategory_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setCategory(null);
         var metadata = new MockMultipartFile(
@@ -264,7 +265,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenInvalidVideoCategory_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenInvalidVideoCategory_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().getCategory().setId(UUID.randomUUID().toString());
         var metadata = new MockMultipartFile(
@@ -284,7 +285,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenMissingPrivacy_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenMissingPrivacy_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getStatus().setPrivacy(null);
         var metadata = new MockMultipartFile(
@@ -304,7 +305,7 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    public void givenInvalidPrivacyStatus_whenPostVideo_thenReturnErrorResponse() throws Exception {
+    public void givenInvalidPrivacyStatus_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getStatus().setPrivacy("privates");
         var metadata = new MockMultipartFile(
@@ -334,7 +335,7 @@ public class VideoControllerTest {
     @Test
     public void givenVideoIdAndUserId_whenGetRating_thenReturnExpectedRatingResponse() throws Exception {
         // When there is no VideoRating.
-        mockMvc.perform(get("/api/v1/videos/rate")
+        mockMvc.perform(get("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId))
                 .andExpect(status().isOk())
@@ -342,7 +343,7 @@ public class VideoControllerTest {
                 .andExpect(jsonPath("$.publishedAt").doesNotExist());
 
         // When there is VideoRating with LIKE type.
-        mockMvc.perform(get("/api/v1/videos/rate")
+        mockMvc.perform(get("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", "37b32dc2"))
                 .andExpect(status().isOk())
@@ -350,7 +351,7 @@ public class VideoControllerTest {
                 .andExpect(jsonPath("$.publishedAt").isNotEmpty());
 
         // When there is VideoRating with DISLIKE type.
-        mockMvc.perform(get("/api/v1/videos/rate")
+        mockMvc.perform(get("/api/v1/videos/rate/mine")
                         .param("userId", "a05990b1")
                         .param("videoId", "f7d9b74b"))
                 .andExpect(status().isOk())
@@ -363,7 +364,7 @@ public class VideoControllerTest {
     @WithUserDetails("user1")
     public void givenVideoIdAndUserId_whenRateVideo_thenVideoRatingUpdatedAsExpected() throws Exception {
         // Rate NONE while there is no VideoRating then ignore.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
@@ -376,7 +377,7 @@ public class VideoControllerTest {
         assertThat(videoRating).isNull();
 
         // Rate LIKE then VideoRating is created with LIKE type.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
@@ -389,7 +390,7 @@ public class VideoControllerTest {
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.LIKE);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
@@ -402,7 +403,7 @@ public class VideoControllerTest {
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.DISLIKE);
 
         // Rate NONE while there is a VideoRating then delete it.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
@@ -419,7 +420,7 @@ public class VideoControllerTest {
     @Transactional
     public void givenVideoIdAndUserId_whenRateVideo_thenVideoStatisticUpdatedAsExpected() throws Exception {
         // Rate NONE while there is no VideoRating then ignore.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
@@ -429,7 +430,7 @@ public class VideoControllerTest {
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
         // Rate LIKE then VideoRating is created with LIKE type.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
@@ -439,7 +440,7 @@ public class VideoControllerTest {
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(0);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
@@ -449,7 +450,7 @@ public class VideoControllerTest {
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
 
         // Rate NONE while there is a VideoRating then delete it.
-        mockMvc.perform(post("/api/v1/videos/rate")
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
@@ -461,9 +462,18 @@ public class VideoControllerTest {
 
     @Test
     public void givenUserIdAndVideoId_whenGetRelatedVideos_thenSuccess() throws Exception {
-        mockMvc.perform(get("/api/v1/videos/related")
+        mockMvc.perform(get("/api/v1/videos/related/mine")
                         .param("videoId", videoId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
+    }
+
+    @Test
+    @WithUserDetails("user2")
+    public void givenUserId_whenGetVideoCategories_thenSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/videos/video-categories/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$")
+                        .value(contains("music", "sport")));
     }
 }

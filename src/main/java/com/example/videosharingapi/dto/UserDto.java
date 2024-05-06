@@ -6,6 +6,7 @@ import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 
 @Data
@@ -18,6 +19,10 @@ public final class UserDto {
     @Setter
     public static final class Snippet {
 
+        private String username;
+
+        private LocalDateTime publishedAt;
+
         private String email;
 
         private LocalDate dateOfBirth;
@@ -28,13 +33,11 @@ public final class UserDto {
 
         private String country;
 
-        private String username;
-
         private String bio;
 
-        private LocalDateTime publishedAt;
-
         private Map<Thumbnail.Type, ThumbnailDto> thumbnails;
+
+        private List<String> roles;
     }
 
     @Getter

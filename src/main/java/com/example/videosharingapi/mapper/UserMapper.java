@@ -12,7 +12,8 @@ import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.springframework.beans.factory.annotation.Autowired;
 
-@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true), uses = ThumbnailMapper.class)
+@Mapper(componentModel = "spring", builder = @Builder(disableBuilder = true),
+        uses = { ThumbnailMapper.class, RoleMapper.class })
 @Setter(onMethod_ = @Autowired)
 public abstract class UserMapper {
 

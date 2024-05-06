@@ -39,13 +39,18 @@ public class VideoController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/video-categories/mine")
+    public List<String> getVideoCategoriesForUserId(@AuthenticationPrincipal AuthenticatedUser user) {
+        return videoService.getCategoriesForUserId(user.getUserId());
+    }
+
     @GetMapping("/category/all/mine")
     public ResponseEntity<List<VideoDto>> getRecommendVideos(@AuthenticationPrincipal AuthenticatedUser user) {
         var response = videoService.getVideosByAllCategories(user.getUserId());
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/related")
+    @GetMapping("/related/mine")
     public ResponseEntity<List<VideoDto>> getRelatedVideos(
             @IdExists(entity = Video.class) String videoId,
             @AuthenticationPrincipal AuthenticatedUser user
@@ -63,7 +68,7 @@ public class VideoController {
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
-    @GetMapping("/rate")
+    @GetMapping("/rate/mine")
     public ResponseEntity<VideoRatingDto> getRating(
             @IdExists(entity = Video.class) String videoId,
             @AuthenticationPrincipal AuthenticatedUser user
@@ -71,7 +76,7 @@ public class VideoController {
         return ResponseEntity.ok(videoService.getRating(videoId, user.getUserId()));
     }
 
-    @PostMapping("/rate")
+    @PostMapping("/rate/mine")
     public ResponseEntity<VideoRatingDto> rateVideo(
             @IdExists(entity = Video.class) String videoId,
             @AuthenticationPrincipal AuthenticatedUser user,

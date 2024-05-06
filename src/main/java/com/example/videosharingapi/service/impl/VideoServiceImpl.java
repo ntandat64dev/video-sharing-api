@@ -62,6 +62,15 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     @Transactional(readOnly = true)
+    public List<String> getCategoriesForUserId(String userId) {
+        // TODO
+        return hashtagRepository.findAllByUserId(userId).stream()
+                .map(Hashtag::getTag)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
     public List<VideoDto> getVideosByAllCategories(String userId) {
         // TODO: Get actual recommend videos
         return videoRepository.findAll().stream()

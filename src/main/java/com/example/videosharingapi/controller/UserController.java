@@ -8,10 +8,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/users")
@@ -26,8 +25,10 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    @GetMapping("/video-categories/mine")
-    public List<String> getBrowseKeywords(@AuthenticationPrincipal AuthenticatedUser user) {
-        return userService.getBrowseKeywords(user.getUserId());
+    // TODO: TEST
+    @GetMapping("/{userId}")
+    public ResponseEntity<UserDto> getUserByUserId(@PathVariable String userId) {
+        var response = userService.getUserById(userId);
+        return ResponseEntity.ok(response);
     }
 }

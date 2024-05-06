@@ -12,6 +12,8 @@ public interface VideoService {
 
     VideoDto getVideoById(String id);
 
+    List<String> getCategoriesForUserId(String userId);
+
     List<VideoDto> getVideosByAllCategories(String userId);
 
     List<VideoDto> getRelatedVideos(String videoId, String userId);

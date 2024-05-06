@@ -11,7 +11,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
-import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
@@ -48,7 +47,7 @@ public class CommentControllerTest {
     }
 
     @Test
-    public void givenVideoId_whenGetComments_thenReturnSuccessful() throws Exception {
+    public void givenVideoId_whenGetComments_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/comments")
                         .param("videoId", videoId)
                         .contentType(MediaType.APPLICATION_JSON))
@@ -59,7 +58,7 @@ public class CommentControllerTest {
 
     @Test
     @Transactional
-    public void givenCommentDto_whenPostComment_thenReturnSuccessful() throws Exception {
+    public void givenCommentDto_whenPostComment_thenSuccess() throws Exception {
         var commentDto = obtainCommentDto();
 
         var result = mockMvc.perform(post("/api/v1/comments")

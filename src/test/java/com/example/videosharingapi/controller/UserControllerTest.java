@@ -9,7 +9,6 @@ import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.hamcrest.Matchers.contains;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -24,7 +23,7 @@ public class UserControllerTest {
 
     @Test
     @WithUserDetails("user1")
-    public void givenUserId_whenGetUser_thenReturnSuccessful() throws Exception {
+    public void givenUserId_whenGetUser_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/users/mine"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("3f06af63"))
@@ -33,14 +32,5 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.statistic.followerCount").value(1))
                 .andExpect(jsonPath("$.statistic.followingCount").value(0))
                 .andExpect(jsonPath("$.statistic.videoCount").value(2));
-    }
-
-    @Test
-    @WithUserDetails("user2")
-    public void givenUserId_whenGetVideoCategories_thenReturnSuccessful() throws Exception {
-        mockMvc.perform(get("/api/v1/users/video-categories/mine"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$")
-                        .value(contains("music", "sport")));
     }
 }
