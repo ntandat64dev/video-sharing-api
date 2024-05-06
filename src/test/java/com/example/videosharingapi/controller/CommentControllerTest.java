@@ -49,8 +49,7 @@ public class CommentControllerTest {
     @Test
     public void givenVideoId_whenGetComments_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/comments")
-                        .param("videoId", videoId)
-                        .contentType(MediaType.APPLICATION_JSON))
+                        .param("videoId", videoId))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("6c3239d6"));
@@ -82,10 +81,8 @@ public class CommentControllerTest {
     @Test
     @Transactional
     public void givenCommentDto_whenPostComment_thenVideoStatisticIsUpdated() throws Exception {
-        var commentDto = obtainCommentDto();
-
         mockMvc.perform(post("/api/v1/comments")
-                        .content(objectMapper.writeValueAsBytes(commentDto))
+                        .content(objectMapper.writeValueAsBytes(obtainCommentDto()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 

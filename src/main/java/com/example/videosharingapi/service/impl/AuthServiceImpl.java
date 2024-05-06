@@ -6,6 +6,7 @@ import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.exception.ErrorCode;
+import com.example.videosharingapi.repository.RoleRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import com.example.videosharingapi.service.AuthService;
 import com.example.videosharingapi.util.JwtUtil;
@@ -21,16 +22,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final AuthenticationManager authenticationManager;
     private final JwtUtil jwtUtil;
 
     @Override
-    @Transactional(readOnly = true)
     public AuthResponse login(String username, String password) {
         try {
             // Authenticate using AuthenticationManager.
@@ -45,13 +46,17 @@ public class AuthServiceImpl implements AuthService {
     }
 
     @Override
+    @Transactional
     public void signup(String username, String password) {
         if (userRepository.existsByUsername(username)) throw new AppException(ErrorCode.USERNAME_EXISTS);
+
+        var roleUser = roleRepository.findByName("USER");
 
         var user = User.builder()
                 .username(username)
                 .password(passwordEncoder.encode(password))
                 .publishedAt(LocalDateTime.now())
+                .roles(List.of(roleUser))
                 .build();
 
         var url = "https://ui-avatars.com/api/?name=%s&size=%s&background=0D8ABC&color=fff&rouded=true&bold=true";

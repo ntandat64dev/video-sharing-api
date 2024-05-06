@@ -14,7 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class CommentServiceImpl implements CommentService {
 
@@ -30,6 +30,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
+    @Transactional
     public CommentDto postComment(CommentDto commentDto) {
         if (!userService.getAuthenticatedUser().getUserId().equals(commentDto.getSnippet().getAuthorId())) {
             // If authenticated user ID is not the author of the comment.

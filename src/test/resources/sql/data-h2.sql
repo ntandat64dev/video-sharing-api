@@ -24,7 +24,7 @@ VALUES ('319a7b41', 'admin', NOW(), 'admin', NOW(), 'ADMIN'),
 # user2(username: user2, password: 22222222)
 INSERT INTO `user`(id, created_by, created_date, modified_by, modified_date, country, date_of_birth, email, gender, password, phone_number, username, bio, published_at)
 VALUES  ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$713vmsvgjJiRxMhpnB3FWegmlSnY.BzKZEpWsOVs1YPQvxVp0Ef76', null, 'user1', null, NOW()),
-        ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$9tcWLsdaxk50cgQiqoZNBOF/AhhSUu/imxeH8YwZRxg2i3KpVIPLG', null,  'user2', null, NOW());
+        ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, null, null, '$2a$10$9tcWLsdaxk50cgQiqoZNBOF/AhhSUu/imxeH8YwZRxg2i3KpVIPLG', null, 'user2', null, NOW());
 
 # UserRole
 INSERT INTO `user_role`(user_id, role_id)
@@ -71,8 +71,8 @@ VALUES  ('37b32dc2', 'admin', NOW(), 'admin', NOW(), 'Video 1 description', 1000
         ('e65707b4', 'admin', NOW(), 'admin', NOW(), 'Video 3 description', 3000, false, false, true, 'd073f837' ,'Tokyo, Japan', 'Video 3', '20240403T09:00', 'Video 3 video URL', 'a05990b1', 'f01121d2');
 
 # VideoStatistic
-INSERT INTO `video_statistic`(created_by, created_date, modified_by, modified_date, comment_count, dislike_count, download_count, like_count, view_count, video_id)
-VALUES  ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 2, 4, '37b32dc2'),
+INSERT INTO `video_statistic`(created_by, created_date, modified_by, modified_date, comment_count, like_count, dislike_count, download_count, view_count, video_id)
+VALUES  ('admin', NOW(), 'admin', NOW(), 2, 2, 0, 0, 4, '37b32dc2'),
         ('admin', NOW(), 'admin', NOW(), 2, 1, 0, 1, 3, 'f7d9b74b'),
         ('admin', NOW(), 'admin', NOW(), 2, 0, 0, 0, 2, 'e65707b4');
 

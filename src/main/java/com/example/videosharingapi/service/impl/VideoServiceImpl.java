@@ -30,7 +30,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class VideoServiceImpl implements VideoService {
     private final VideoRepository videoRepository;
@@ -61,18 +61,16 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<String> getCategoriesForUserId(String userId) {
-        // TODO
+        // TODO: Apply AI, instead of just get hashtags of videos that user created.
         return hashtagRepository.findAllByUserId(userId).stream()
                 .map(Hashtag::getTag)
                 .collect(Collectors.toList());
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public List<VideoDto> getVideosByAllCategories(String userId) {
-        // TODO: Get actual recommend videos
+    public List<VideoDto> getVideosByCategoryAll(String userId) {
+        // TODO: Apply AI, instead of just get videos that user did not create.
         return videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
@@ -80,9 +78,8 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public List<VideoDto> getRelatedVideos(String videoId, String userId) {
-        // TODO: Get actual related videos
+        // TODO: Apply AI, instead of just get videos that user did not create.
         return videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
@@ -90,6 +87,7 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
+    @Transactional
     public VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto) {
         if (!userService.getAuthenticatedUser().getUserId().equals(videoDto.getSnippet().getUserId())) {
             // If uploader is not authenticated user ID.
@@ -119,6 +117,7 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
+    @Transactional
     public VideoRatingDto rateVideo(String videoId, String userId, String rating) {
         var video = videoRepository.getReferenceById(videoId);
         var user = userRepository.getReferenceById(userId);
@@ -152,7 +151,6 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     public VideoRatingDto getRating(String videoId, String userId) {
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         if (videoRating == null) return videoRatingMapper.fromNullVideoRating(videoId, userId);

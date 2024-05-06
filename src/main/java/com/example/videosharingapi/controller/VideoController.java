@@ -46,7 +46,7 @@ public class VideoController {
 
     @GetMapping("/category/all/mine")
     public ResponseEntity<List<VideoDto>> getRecommendVideos(@AuthenticationPrincipal AuthenticatedUser user) {
-        var response = videoService.getVideosByAllCategories(user.getUserId());
+        var response = videoService.getVideosByCategoryAll(user.getUserId());
         return ResponseEntity.ok(response);
     }
 

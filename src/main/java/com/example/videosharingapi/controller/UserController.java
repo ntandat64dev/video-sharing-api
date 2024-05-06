@@ -25,7 +25,6 @@ public class UserController {
         return ResponseEntity.ok(response);
     }
 
-    // TODO: TEST
     @GetMapping("/{userId}")
     public ResponseEntity<UserDto> getUserByUserId(@PathVariable String userId) {
         var response = userService.getUserById(userId);

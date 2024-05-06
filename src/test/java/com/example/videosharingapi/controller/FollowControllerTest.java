@@ -19,7 +19,6 @@ import java.util.UUID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -38,8 +37,7 @@ public class FollowControllerTest {
     private final String userId2 = "a05990b1";
 
     @Test
-    @WithUserDetails("user1")
-    public void whenGetFollowsOfMe_thenSuccess() throws Exception {
+    public void whenGetMyFollows_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/follows/mine"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
@@ -72,6 +70,7 @@ public class FollowControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.snippet.username").value("user2"))
                 .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
+                .andExpect(jsonPath("$.followerSnippet.userId").value("3f06af63"))
                 .andExpect(jsonPath("$.followerSnippet.thumbnails.length()").value(2));
     }
 
@@ -124,7 +123,14 @@ public class FollowControllerTest {
     }
 
     @Test
-    @Transactional
+    @WithUserDetails("user1")
+    public void givenFollowId_whenDeleteWithInvalidUser_thenError() throws Exception {
+        mockMvc.perform(delete("/api/v1/follows")
+                        .param("id", "f2cf8a48"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
     public void givenInvalidFollowId_whenDelete_thenError() throws Exception {
         mockMvc.perform(delete("/api/v1/follows"))
                 .andExpect(status().isBadRequest())

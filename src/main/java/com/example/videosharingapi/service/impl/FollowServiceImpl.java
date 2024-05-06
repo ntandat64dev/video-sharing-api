@@ -17,7 +17,7 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class FollowServiceImpl implements FollowService {
 
@@ -26,8 +26,8 @@ public class FollowServiceImpl implements FollowService {
     private final FollowMapper followMapper;
 
     @Override
-    public List<FollowDto> getFollowsOfUserId(String userId) {
-        return followRepository.findAllByUserId(userId).stream()
+    public List<FollowDto> getFollowsByFollowerId(String followerId) {
+        return followRepository.findAllByFollowerId(followerId).stream()
                 .map(followMapper::toFollowDto)
                 .collect(Collectors.toList());
     }
@@ -39,6 +39,7 @@ public class FollowServiceImpl implements FollowService {
     }
 
     @Override
+    @Transactional
     public FollowDto follow(FollowDto followDto) {
         if (!userService.getAuthenticatedUser().getUserId().equals(followDto.getFollowerSnippet().getUserId())) {
             // If follower is not authenticated user ID.
@@ -61,8 +62,8 @@ public class FollowServiceImpl implements FollowService {
         return followMapper.toFollowDto(follow);
     }
 
-    // TODO: TEST
     @Override
+    @Transactional
     public void unfollow(String followId) {
         var follow = followRepository.findById(followId).orElseThrow();
         if (!userService.getAuthenticatedUser().getUserId().equals(follow.getFollower().getId())) {

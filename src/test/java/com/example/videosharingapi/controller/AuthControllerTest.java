@@ -1,6 +1,8 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
+import com.example.videosharingapi.entity.Role;
+import com.example.videosharingapi.repository.ThumbnailRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
@@ -22,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class AuthControllerTest {
 
     private @Autowired UserRepository userRepository;
+    private @Autowired ThumbnailRepository thumbnailRepository;
     private @Autowired MockMvc mockMvc;
 
     @Test
@@ -91,6 +94,10 @@ public class AuthControllerTest {
         assertThat(user.getBio()).isNull();
         assertThat(user.getPublishedAt()).isNotNull();
         assertThat(user.getThumbnails()).hasSize(2);
+        assertThat(user.getRoles().stream().map(Role::getName)).containsExactly("USER");
+
+        // Assert Thumbnail is created.
+        assertThat(thumbnailRepository.count()).isEqualTo(9);
     }
 
     @Test

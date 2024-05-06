@@ -12,7 +12,6 @@ import com.example.videosharingapi.repository.*;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.hamcrest.Matchers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -29,6 +28,7 @@ import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -48,9 +48,6 @@ public class VideoControllerTest {
 
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
-
-    private final String userId = "3f06af63";
-    private final String videoId = "e65707b4";
 
     private final MockMultipartFile mockVideoFile = new MockMultipartFile(
             "videoFile",
@@ -72,7 +69,7 @@ public class VideoControllerTest {
                 .description("Video description")
                 .thumbnails(thumbnails)
                 .hashtags(List.of("music", "pop"))
-                .userId(userId)
+                .userId("a05990b1")
                 .category(new CategoryDto("8c1f4a20"))
                 .build());
         videoDto.setStatus(VideoDto.Status.builder()
@@ -101,7 +98,7 @@ public class VideoControllerTest {
 
     @Test
     public void givenVideoId_whenGetVideo_thenReturnExpectedVideo() throws Exception {
-        mockMvc.perform(get("/api/v1/videos/{videoId}", videoId))
+        mockMvc.perform(get("/api/v1/videos/{videoId}", "e65707b4"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.snippet.title").value("Video 3"))
                 .andExpect(jsonPath("$.snippet.userId")
@@ -113,7 +110,6 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    @WithUserDetails("user1")
     public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenSuccess() throws Exception {
         var videoDto = obtainVideoDto();
         var metadata = new MockMultipartFile(
@@ -125,12 +121,12 @@ public class VideoControllerTest {
                         .file(metadata))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.snippet.title").value("Video title"))
-                .andExpect(jsonPath("$.snippet.duration").value("PT16M40S"));
+                .andExpect(jsonPath("$.snippet.duration").value("PT16M40S"))
+                .andExpect(jsonPath("$.snippet.userId").value("a05990b1"));
     }
 
     @Test
     @Transactional
-    @WithUserDetails("user1")
     public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenAssertDatabaseIsUpdated() throws Exception {
         var videoDto = obtainVideoDto();
         var metadata = new MockMultipartFile(
@@ -165,7 +161,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenInvalidUserId_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setUserId(UUID.randomUUID().toString());
@@ -186,7 +181,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenMissingUserId_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setUserId(null);
@@ -206,7 +200,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenMissingVideoFile_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         var metadata = new MockMultipartFile(
@@ -224,7 +217,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenMissingVideoTitle_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setTitle(null);
@@ -244,7 +236,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenMissingVideoCategory_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().setCategory(null);
@@ -264,7 +255,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenInvalidVideoCategory_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getSnippet().getCategory().setId(UUID.randomUUID().toString());
@@ -284,7 +274,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenMissingPrivacy_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getStatus().setPrivacy(null);
@@ -304,7 +293,6 @@ public class VideoControllerTest {
     }
 
     @Test
-    @Transactional
     public void givenInvalidPrivacyStatus_whenPostVideo_thenError() throws Exception {
         var videoDto = obtainVideoDto();
         videoDto.getStatus().setPrivacy("privates");
@@ -324,27 +312,25 @@ public class VideoControllerTest {
     }
 
     @Test
-    public void givenUserId_whenGetVideosByAllCategories_thenSuccess() throws Exception {
+    public void whenGetVideosByCategoryAll_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/category/all/mine"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2))
                 .andExpect(jsonPath("$[*].id")
-                        .value(Matchers.containsInAnyOrder("f7d9b74b", "37b32dc2")));
+                        .value(containsInAnyOrder("f7d9b74b", "37b32dc2")));
     }
 
     @Test
-    public void givenVideoIdAndUserId_whenGetRating_thenReturnExpectedRatingResponse() throws Exception {
+    public void givenVideoId_whenGetRating_thenReturnExpectedRating() throws Exception {
         // When there is no VideoRating.
         mockMvc.perform(get("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
-                        .param("videoId", videoId))
+                        .param("videoId", "e65707b4"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE))
                 .andExpect(jsonPath("$.publishedAt").doesNotExist());
 
         // When there is VideoRating with LIKE type.
         mockMvc.perform(get("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", "37b32dc2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.LIKE))
@@ -352,7 +338,6 @@ public class VideoControllerTest {
 
         // When there is VideoRating with DISLIKE type.
         mockMvc.perform(get("/api/v1/videos/rate/mine")
-                        .param("userId", "a05990b1")
                         .param("videoId", "f7d9b74b"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.DISLIKE))
@@ -361,67 +346,58 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
-    @WithUserDetails("user1")
-    public void givenVideoIdAndUserId_whenRateVideo_thenVideoRatingUpdatedAsExpected() throws Exception {
+    public void givenVideoId_whenRateVideo_thenVideoRatingUpdatedAsExpected() throws Exception {
+        final var userId = "a05990b1";
+        final var videoId = "e65707b4";
+
         // Rate NONE while there is no VideoRating then ignore.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE));
 
-        var videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                userId,
-                videoId);
+        var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         assertThat(videoRating).isNull();
 
         // Rate LIKE then VideoRating is created with LIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.LIKE));
 
-        videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                userId,
-                videoId);
+        videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.LIKE);
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.DISLIKE));
 
-        videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                userId,
-                videoId);
+        videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         assertThat(videoRating.getRating()).isEqualTo(VideoRating.Rating.DISLIKE);
 
         // Rate NONE while there is a VideoRating then delete it.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE));
 
-        videoRating = videoRatingRepository.findByUserIdAndVideoId(
-                userId,
-                videoId);
+        videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         assertThat(videoRating).isNull();
     }
 
     @Test
     @Transactional
-    public void givenVideoIdAndUserId_whenRateVideo_thenVideoStatisticUpdatedAsExpected() throws Exception {
+    public void givenVideoId_whenRateVideo_thenVideoStatisticUpdatedAsExpected() throws Exception {
+        final var videoId = "e65707b4";
+
         // Rate NONE while there is no VideoRating then ignore.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
                 .andExpect(status().isOk());
@@ -431,7 +407,6 @@ public class VideoControllerTest {
 
         // Rate LIKE then VideoRating is created with LIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "like"))
                 .andExpect(status().isOk());
@@ -441,7 +416,6 @@ public class VideoControllerTest {
 
         // Rate DISLIKE then VideoRating is updated with DISLIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "dislike"))
                 .andExpect(status().isOk());
@@ -451,7 +425,6 @@ public class VideoControllerTest {
 
         // Rate NONE while there is a VideoRating then delete it.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
-                        .param("userId", userId)
                         .param("videoId", videoId)
                         .param("rating", "none"))
                 .andExpect(status().isOk());
@@ -461,16 +434,15 @@ public class VideoControllerTest {
     }
 
     @Test
-    public void givenUserIdAndVideoId_whenGetRelatedVideos_thenSuccess() throws Exception {
+    public void givenVideoId_whenGetRelatedVideos_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/related/mine")
-                        .param("videoId", videoId))
+                        .param("videoId", "e65707b4"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
     @Test
-    @WithUserDetails("user2")
-    public void givenUserId_whenGetVideoCategories_thenSuccess() throws Exception {
+    public void whenGetVideoCategories_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/video-categories/mine"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$")

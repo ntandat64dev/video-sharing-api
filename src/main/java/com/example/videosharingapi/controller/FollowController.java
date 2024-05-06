@@ -26,7 +26,7 @@ public class FollowController {
 
     @GetMapping("/mine")
     public ResponseEntity<List<FollowDto>> getFollows(@AuthenticationPrincipal AuthenticatedUser user) {
-        var response = followService.getFollowsOfUserId(user.getUserId());
+        var response = followService.getFollowsByFollowerId(user.getUserId());
         return ResponseEntity.ok(response);
     }
 

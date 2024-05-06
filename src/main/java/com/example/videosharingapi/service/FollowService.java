@@ -6,7 +6,7 @@ import java.util.List;
 
 public interface FollowService {
 
-    List<FollowDto> getFollowsOfUserId(String userId);
+    List<FollowDto> getFollowsByFollowerId(String followerId);
 
     FollowDto getFollowsByUserIdAndFollowerId(String userId, String followerId);
 

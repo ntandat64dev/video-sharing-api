@@ -93,4 +93,12 @@ public class UpdateVideoStatisticAspect {
         videoStatisticRepository.findById(comment.getVideo().getId())
                 .ifPresent(stat -> stat.setCommentCount(stat.getCommentCount() + 1));
     }
+
+    @AfterReturning("""
+            execution(* com.example.videosharingapi.repository.CommentRepository.delete(*)) &&
+            args(comment)""")
+    public void updateCommentCountWhenDelete(Comment comment) {
+        videoStatisticRepository.findById(comment.getVideo().getId())
+                .ifPresent(stat -> stat.setCommentCount(stat.getCommentCount() - 1));
+    }
 }
