@@ -10,7 +10,13 @@ public interface VideoService {
 
     List<VideoDto> getAllVideos();
 
+    List<VideoDto> getVideosByUserId(String userId);
+
     VideoDto getVideoById(String id);
+
+    VideoDto updateVideo(VideoDto videoDto);
+
+    void deleteVideoById(String id);
 
     List<String> getCategoriesForUserId(String userId);
 

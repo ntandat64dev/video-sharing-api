@@ -53,11 +53,55 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
+    public List<VideoDto> getVideosByUserId(String userId) {
+        return videoRepository.findAllByUserId(userId)
+                .stream().map(videoMapper::toVideoDto)
+                .toList();
+    }
+
+    @Override
     public VideoDto getVideoById(String id) {
         return videoRepository
                 .findById(id)
                 .map(videoMapper::toVideoDto)
                 .orElseThrow();
+    }
+
+    @Override
+    @Transactional
+    public VideoDto updateVideo(VideoDto videoDto) {
+        var videoOwner = userRepository.findByVideoId(videoDto.getId());
+        var user = userService.getAuthenticatedUser();
+
+        // If the video owner is not the authorized user then throw forbidden error.
+        if (!Objects.equals(videoOwner.getId(), user.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
+
+        // Set null to values that user does not permission to update.
+        // The mapper will skip these values.
+        videoDto.setStatistic(null);
+        videoDto.getSnippet().setDuration(null);
+        videoDto.getSnippet().setVideoUrl(null);
+        videoDto.getSnippet().setPublishedAt(null);
+        videoDto.getSnippet().setThumbnails(null);
+
+        // Update video.
+        var video = videoRepository.findById(videoDto.getId()).orElseThrow();
+        videoMapper.updateVideo(video, videoDto);
+
+        // Update hashtags.
+        saveHashtags(videoDto.getSnippet().getHashtags(), video);
+
+        videoRepository.save(video);
+        return videoMapper.toVideoDto(video);
+    }
+
+    @Override
+    @Transactional
+    public void deleteVideoById(String id) {
+        var user = userService.getAuthenticatedUser();
+        var video = videoRepository.findById(id).orElseThrow();
+        if (!video.getUser().getId().equals(user.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
+        videoRepository.deleteById(id);
     }
 
     @Override
@@ -112,7 +156,7 @@ public class VideoServiceImpl implements VideoService {
         var hashtags = tags.stream()
                 .map(Hashtag::new)
                 .map(hashtagRepository::saveIfAbsent)
-                .toList();
+                .collect(Collectors.toList());
         video.setHashtags(hashtags);
     }
 

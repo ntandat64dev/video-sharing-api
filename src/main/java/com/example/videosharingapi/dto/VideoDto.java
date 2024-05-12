@@ -2,8 +2,11 @@ package com.example.videosharingapi.dto;
 
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.User;
+import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.validation.IdExists;
+import com.example.videosharingapi.validation.group.Create;
 import com.example.videosharingapi.validation.group.Save;
+import com.example.videosharingapi.validation.group.Update;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,6 +27,7 @@ public final class VideoDto {
     @AllArgsConstructor
     @Builder
     public static final class Snippet {
+
         private LocalDateTime publishedAt;
 
         @NotNull
@@ -91,6 +95,7 @@ public final class VideoDto {
         private Long downloadCount;
     }
 
+    @IdExists(entity = Video.class, groups = Update.class)
     private String id;
 
     @Valid
@@ -98,7 +103,7 @@ public final class VideoDto {
     private Snippet snippet;
 
     @Valid
-    @NotNull
+    @NotNull(groups = Create.class)
     private Status status;
 
     private Statistic statistic;

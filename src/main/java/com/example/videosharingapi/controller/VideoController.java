@@ -7,7 +7,10 @@ import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.service.VideoService;
 import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.validation.ValidVideoFile;
+import com.example.videosharingapi.validation.group.Create;
+import com.example.videosharingapi.validation.group.Update;
 import jakarta.validation.Valid;
+import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +33,12 @@ public class VideoController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<List<VideoDto>> getAllVideos() {
         var response = videoService.getAllVideos();
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/mine")
+    public ResponseEntity<List<VideoDto>> getMyVideos(@AuthenticationPrincipal AuthenticatedUser user) {
+        var response = videoService.getVideosByUserId(user.getUserId());
         return ResponseEntity.ok(response);
     }
 
@@ -62,10 +71,25 @@ public class VideoController {
     @PostMapping
     public ResponseEntity<VideoDto> uploadVideo(
             @RequestParam @ValidVideoFile MultipartFile videoFile,
-            @RequestPart @Valid VideoDto metadata
+            @RequestPart @Validated({ Default.class, Create.class }) VideoDto metadata
     ) {
         var response = videoService.saveVideo(videoFile, metadata);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
+    }
+
+    @PutMapping
+    public ResponseEntity<VideoDto> updateVideo(
+            @RequestBody @Validated({ Default.class, Update.class })
+            VideoDto videoDtox
+    ) {
+        var response = videoService.updateVideo(videoDto);
+        return new ResponseEntity<>(response, HttpStatus.OK);
+    }
+
+    @DeleteMapping
+    public ResponseEntity<?> deleteVideo(@IdExists(entity = Video.class) String id) {
+        videoService.deleteVideoById(id);
+        return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/rate/mine")

@@ -16,12 +16,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
@@ -81,6 +84,29 @@ public class VideoControllerTest {
         return videoDto;
     }
 
+    private VideoDto obtainVideoDtoForUpdate() {
+        var videoDto = new VideoDto();
+        videoDto.setId("e65707b4");
+        videoDto.setSnippet(VideoDto.Snippet.builder()
+                .title("Video 3 updated")
+                .description("Video 3 description updated")
+                .publishedAt(LocalDateTime.parse("2030-01-01T09:00:00"))
+                .videoUrl("Video 3 video URL updated")
+                .userId("a05990b1")
+                .duration(Duration.ofSeconds(9000))
+                .category(new CategoryDto("d073f837"))
+                .location("US")
+                .hashtags(List.of("art"))
+                .build());
+        videoDto.setStatus(VideoDto.Status.builder()
+                .privacy("private")
+                .ageRestricted(false)
+                .commentAllowed(false)
+                .madeForKids(true)
+                .build());
+        return videoDto;
+    }
+
     @Test
     @WithUserDetails("user1")
     public void whenGetAllVideosWithRoleAdmin_thenSuccess() throws Exception {
@@ -94,6 +120,13 @@ public class VideoControllerTest {
     public void whenGetAllVideosWithRoleUser_thenForbidden() throws Exception {
         mockMvc.perform(get("/api/v1/videos"))
                 .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void whenGetMyVideos_thenSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/videos/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1));
     }
 
     @Test
@@ -155,9 +188,7 @@ public class VideoControllerTest {
         assertThat(thumbnails.get(0).getType()).isEqualTo(Thumbnail.Type.DEFAULT);
 
         // Assert Hashtags is created.
-        var hashtags = hashtagRepository.findAll();
-        assertThat(hashtags.stream().map(Hashtag::getTag))
-                .containsExactlyInAnyOrder("music", "pop", "sport");
+        assertThat(hashtagRepository.findAllTag()).containsExactlyInAnyOrder("music", "pop", "sport");
     }
 
     @Test
@@ -309,6 +340,164 @@ public class VideoControllerTest {
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoDto_whenUpdate_thenSuccess() throws Exception {
+        var videoDto = obtainVideoDtoForUpdate();
+        mockMvc.perform(put("/api/v1/videos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(videoDto)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.snippet.title").value("Video 3 updated"))
+                .andExpect(jsonPath("$.snippet.description")
+                        .value("Video 3 description updated"))
+                .andExpect(jsonPath("$.snippet.publishedAt").value("2024-04-03T09:00:00"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
+                .andExpect(jsonPath("$.snippet.thumbnails.DEFAULT.url")
+                        .value("Video 3 default thumbnail"))
+                .andExpect(jsonPath("@.snippet.category.id").value("d073f837"))
+                .andExpect(jsonPath("@.snippet.category.category").value("Education"))
+                .andExpect(jsonPath("$.snippet.userId").value("a05990b1"))
+                .andExpect(jsonPath("$.snippet.username").value("user2"))
+                .andExpect(jsonPath("$.snippet.userImageUrl")
+                        .value("User 2 default thumbnail"))
+                .andExpect(jsonPath("$.snippet.videoUrl").value("Video 3 video URL"))
+                .andExpect(jsonPath("$.snippet.hashtags").value(contains("art")))
+                .andExpect(jsonPath("$.snippet.duration").value("PT50M"))
+                .andExpect(jsonPath("$.snippet.location").value("US"))
+                .andExpect(jsonPath("$.status.privacy").value("PRIVATE"))
+                .andExpect(jsonPath("$.status.ageRestricted").value(false))
+                .andExpect(jsonPath("$.status.commentAllowed").value(false))
+                .andExpect(jsonPath("$.status.madeForKids").value(true))
+                .andExpect(jsonPath("$.statistic.viewCount").value(2))
+                .andExpect(jsonPath("$.statistic.likeCount").value(0))
+                .andExpect(jsonPath("$.statistic.dislikeCount").value(0))
+                .andExpect(jsonPath("$.statistic.commentCount").value(2))
+                .andExpect(jsonPath("$.statistic.downloadCount").value(0));
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoDto_whenUpdate_thenAssertUpdatedVideo() throws Exception {
+        var videoDto = obtainVideoDtoForUpdate();
+        mockMvc.perform(put("/api/v1/videos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(videoDto)))
+                .andExpect(status().isOk());
+
+        // Assert Video is updated.
+        var video = videoRepository.findById("e65707b4").orElseThrow();
+        assertThat(video.getTitle()).isEqualTo("Video 3 updated");
+        assertThat(video.getDescription()).isEqualTo("Video 3 description updated");
+        // publishedAt not updated as expect.
+        assertThat(video.getPublishedAt()).isEqualTo(LocalDateTime.parse("2024-04-03T09:00:00"));
+        // videoUrl not updated as expect.
+        assertThat(video.getVideoUrl()).isEqualTo("Video 3 video URL");
+        assertThat(video.getCategory().getId()).isEqualTo("d073f837");
+        assertThat(video.getLocation()).isEqualTo("US");
+        // thumbnails not updated as expect.
+        assertThat(video.getThumbnails()).hasSize(1);
+        assertThat(video.getThumbnails().getFirst().getUrl()).isEqualTo("Video 3 default thumbnail");
+        assertThat(video.getHashtags().stream().map(Hashtag::getTag)).containsExactlyInAnyOrder("art");
+        // duration not updated as expect.
+        assertThat(video.getDurationSec()).isEqualTo(3000);
+        assertThat(video.getPrivacy().getId()).isEqualTo("ec386a4b");
+        assertThat(video.getAgeRestricted()).isEqualTo(false);
+        assertThat(video.getCommentAllowed()).isEqualTo(false);
+        assertThat(video.getMadeForKids()).isEqualTo(true);
+        assertThat(video.getUser().getId()).isEqualTo("a05990b1");
+
+        // Assert Thumbnail is not updated.
+        assertThat(thumbnailRepository.findById("78a1b2d4")).isPresent();
+
+        // Assert VideoStatistic is not updated.
+        var videoStatistic = videoStatisticRepository.findById("e65707b4").orElseThrow();
+        assertThat(videoStatistic.getViewCount()).isEqualTo(2);
+        assertThat(videoStatistic.getLikeCount()).isEqualTo(0);
+        assertThat(videoStatistic.getDislikeCount()).isEqualTo(0);
+        assertThat(videoStatistic.getCommentCount()).isEqualTo(2);
+        assertThat(videoStatistic.getDownloadCount()).isEqualTo(0);
+
+        // Assert old hashtags is retained and new hashtags is added.
+        assertThat(hashtagRepository.findAllTag()).containsExactlyInAnyOrder("music", "sport", "art");
+    }
+
+    @Test
+    @Transactional
+    public void givenInvalidVideoDto_whenUpdate_thenError() throws Exception {
+        var videoDto = obtainVideoDtoForUpdate();
+        videoDto.getSnippet().setTitle("");
+        videoDto.getSnippet().setUserId("12345678");
+        videoDto.getSnippet().setCategory(new CategoryDto("12345678"));
+
+        mockMvc.perform(put("/api/v1/videos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(videoDto)))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors")
+                        .value(containsInAnyOrder(
+                                "snippet.title: must not be blank",
+                                "snippet.userId: ID does not exist.",
+                                "snippet.category.id: ID does not exist.")));
+    }
+
+    @Test
+    @Transactional
+    @WithUserDetails("user1")
+    public void givenVideoDtoAndInvalidUser_whenUpdateWith_thenError() throws Exception {
+        var videoDto = obtainVideoDtoForUpdate();
+
+        mockMvc.perform(put("/api/v1/videos")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(videoDto)))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoId_whenDeleteVideo_thenSuccess() throws Exception {
+        mockMvc.perform(delete("/api/v1/videos")
+                        .param("id", "e65707b4"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoId_whenDeleteVideo_thenAssertVideoIsDeleted() throws Exception {
+        mockMvc.perform(delete("/api/v1/videos")
+                        .param("id", "e65707b4"))
+                .andExpect(status().isNoContent());
+
+        // Assert Video is deleted.
+        assertThat(videoRepository.findById("e65707b4")).isNotPresent();
+
+        // Assert Thumbnails is deleted.
+        assertThat(thumbnailRepository.findById("78a1b2d4")).isNotPresent();
+
+        // Assert VideoStatistic is deleted.
+        assertThat(videoStatisticRepository.findById("e65707b4")).isNotPresent();
+
+        // Assert Hashtags is retained.
+        assertThat(hashtagRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    public void givenVideoIdThatNotExists_whenDeleteVideo_thenError() throws Exception {
+        mockMvc.perform(delete("/api/v1/videos")
+                        .param("id", "12345678"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("id: ID does not exist."));
+    }
+
+    @Test
+    @WithUserDetails("user1")
+    public void givenVideoIdAndInvalidUser_whenDeleteVideo_thenError() throws Exception {
+        mockMvc.perform(delete("/api/v1/videos")
+                        .param("id", "e65707b4"))
+                .andExpect(status().isForbidden());
     }
 
     @Test

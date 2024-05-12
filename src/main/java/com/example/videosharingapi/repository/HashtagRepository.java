@@ -22,4 +22,7 @@ public interface HashtagRepository extends JpaRepository<Hashtag, String> {
 
     @Query("SELECT hashtag FROM Video v JOIN v.hashtags hashtag WHERE v.user.id = :userId")
     List<Hashtag> findAllByUserId(String userId);
+
+    @Query("SELECT h.tag FROM Hashtag h")
+    List<String> findAllTag();
 }

@@ -4,9 +4,12 @@ import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.entity.VideoStatistic;
+import lombok.Setter;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.mapstruct.MappingTarget;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 @Mapper(componentModel = "spring",
@@ -15,7 +18,10 @@ import org.springframework.context.i18n.LocaleContextHolder;
         uses = {
                 HashtagMapper.class, PrivacyMapper.class, ThumbnailMapper.class, UserMapper.class,
                 CategoryMapper.class })
+@Setter(onMethod_ = @Autowired)
 public abstract class VideoMapper {
+    private PrivacyMapper privacyMapper;
+    private CategoryMapper categoryMapper;
 
     @Mapping(target = ".", source = "snippet")
     @Mapping(target = ".", source = "status")
@@ -44,4 +50,15 @@ public abstract class VideoMapper {
 
     @Mapping(target = ".", source = "videoStatistic")
     protected abstract VideoDto.Statistic mapStatistic(Video video);
+
+    public void updateVideo(@MappingTarget Video video, VideoDto videoDto) {
+        video.setTitle(videoDto.getSnippet().getTitle());
+        video.setDescription(videoDto.getSnippet().getDescription());
+        video.setCategory(categoryMapper.toCategory(videoDto.getSnippet().getCategory()));
+        video.setPrivacy(privacyMapper.fromStatus(videoDto.getStatus().getPrivacy()));
+        video.setAgeRestricted(videoDto.getStatus().getAgeRestricted());
+        video.setCommentAllowed(videoDto.getStatus().getCommentAllowed());
+        video.setMadeForKids(videoDto.getStatus().getMadeForKids());
+        video.setLocation(videoDto.getSnippet().getLocation());
+    }
 }
