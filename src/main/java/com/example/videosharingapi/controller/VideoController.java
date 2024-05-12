@@ -9,7 +9,6 @@ import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.validation.ValidVideoFile;
 import com.example.videosharingapi.validation.group.Create;
 import com.example.videosharingapi.validation.group.Update;
-import jakarta.validation.Valid;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -80,7 +79,7 @@ public class VideoController {
     @PutMapping
     public ResponseEntity<VideoDto> updateVideo(
             @RequestBody @Validated({ Default.class, Update.class })
-            VideoDto videoDtox
+            VideoDto videoDto
     ) {
         var response = videoService.updateVideo(videoDto);
         return new ResponseEntity<>(response, HttpStatus.OK);
