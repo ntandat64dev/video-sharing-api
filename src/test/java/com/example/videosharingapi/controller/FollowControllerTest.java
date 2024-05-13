@@ -26,15 +26,24 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @TestSql
-@WithUserDetails("user2")
+@WithUserDetails("user1")
 public class FollowControllerTest {
 
     private @Autowired ObjectMapper objectMapper;
     private @Autowired FollowRepository followRepository;
     private @Autowired MockMvc mockMvc;
 
-    private final String userId1 = "3f06af63";
-    private final String userId2 = "a05990b1";
+    // user2 follow user1
+    private FollowDto obtainFollowDto() {
+        var followDto = new FollowDto();
+        followDto.setSnippet(FollowDto.Snippet.builder()
+                .userId("a05990b1")
+                .build());
+        followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
+                .userId("9b79f4ba")
+                .build());
+        return followDto;
+    }
 
     @Test
     public void whenGetMyFollows_thenSuccess() throws Exception {
@@ -47,31 +56,28 @@ public class FollowControllerTest {
     @Test
     public void givenUserId_whenGetFollowOfUserIdThatFollowedByMe_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/follows/for-user")
-                        .param("userId", userId1))
+                        .param("userId", "9b79f4ba"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value("f2cf8a48"));
     }
 
     @Test
     @Transactional
-    @WithUserDetails("user1")
+    @WithUserDetails("user2")
     public void givenFollowDto_whenFollow_thenSuccess() throws Exception {
-        var followDto = new FollowDto();
-        followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId(userId2)
-                .build());
-        followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(userId1)
-                .build());
+        var followDto = obtainFollowDto();
 
         mockMvc.perform(post("/api/v1/follows")
                         .content(objectMapper.writeValueAsBytes(followDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.snippet.username").value("user2"))
-                .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
-                .andExpect(jsonPath("$.followerSnippet.userId").value("3f06af63"))
-                .andExpect(jsonPath("$.followerSnippet.thumbnails.length()").value(2));
+                .andExpect(jsonPath("$.snippet.username").value("user1"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()").value(2))
+                .andExpect(jsonPath("$.followerSnippet.userId").value("9b79f4ba"))
+                .andExpect(jsonPath("$.followerSnippet.thumbnails.length()").value(1));
+
+        assertThat(followRepository.findByUserIdAndFollowerId("a05990b1", "9b79f4ba"))
+                .isNotNull();
     }
 
     @Test
@@ -79,7 +85,7 @@ public class FollowControllerTest {
     public void givenFollowDtoThatAlreadyExists_whenFollow_thenError() throws Exception {
         var followDto = new FollowDto();
         followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId("3f06af63")
+                .userId("9b79f4ba")
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
                 .userId("a05990b1")
@@ -98,10 +104,10 @@ public class FollowControllerTest {
     public void givenFollowDtoWithTheSameUserId_whenFollow_thenError() throws Exception {
         var followDto = new FollowDto();
         followDto.setSnippet(FollowDto.Snippet.builder()
-                .userId(userId2)
+                .userId("a05990b1")
                 .build());
         followDto.setFollowerSnippet(FollowDto.FollowerSnippet.builder()
-                .userId(userId2)
+                .userId("a05990b1")
                 .build());
 
         mockMvc.perform(post("/api/v1/follows")
@@ -118,12 +124,11 @@ public class FollowControllerTest {
         mockMvc.perform(delete("/api/v1/follows")
                         .param("id", "f2cf8a48"))
                 .andExpect(status().isNoContent());
-        assertThat(followRepository.existsById("f2cf8a48"))
-                .isFalse();
+        assertThat(followRepository.existsById("f2cf8a48")).isFalse();
     }
 
     @Test
-    @WithUserDetails("user1")
+    @WithUserDetails("user2")
     public void givenFollowId_whenDeleteWithInvalidUser_thenError() throws Exception {
         mockMvc.perform(delete("/api/v1/follows")
                         .param("id", "f2cf8a48"))
@@ -149,5 +154,4 @@ public class FollowControllerTest {
                 .andExpect(jsonPath("$.errors[0]",
                         containsString("id: ID does not exist.")));
     }
-
 }

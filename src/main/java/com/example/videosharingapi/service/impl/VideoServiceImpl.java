@@ -9,10 +9,7 @@ import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.mapper.VideoRatingMapper;
-import com.example.videosharingapi.repository.HashtagRepository;
-import com.example.videosharingapi.repository.UserRepository;
-import com.example.videosharingapi.repository.VideoRatingRepository;
-import com.example.videosharingapi.repository.VideoRepository;
+import com.example.videosharingapi.repository.*;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.UserService;
 import com.example.videosharingapi.service.VideoService;
@@ -37,6 +34,10 @@ public class VideoServiceImpl implements VideoService {
     private final UserRepository userRepository;
     private final VideoRatingRepository videoRatingRepository;
     private final HashtagRepository hashtagRepository;
+    private final ViewHistoryRepository viewHistoryRepository;
+    private final CommentRepository commentRepository;
+    private final CommentRatingRepository commentRatingRepository;
+    private final PlaylistItemRepository playlistItemRepository;
 
     private final UserService userService;
     private final StorageService storageService;
@@ -101,6 +102,21 @@ public class VideoServiceImpl implements VideoService {
         var user = userService.getAuthenticatedUser();
         var video = videoRepository.findById(id).orElseThrow();
         if (!video.getUser().getId().equals(user.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
+
+        // Delete ViewHistory.
+        viewHistoryRepository.deleteByVideoId(id);
+
+        // Delete Comment.
+        commentRatingRepository.deleteByCommentVideoId(id);
+        commentRepository.deleteByVideoId(id);
+
+        // Delete PlaylistItem.
+        playlistItemRepository.deleteByVideoId(id);
+
+        // Delete VideoRating.
+        videoRatingRepository.deleteByVideoId(id);
+
+        // Delete Video.
         videoRepository.deleteById(id);
     }
 

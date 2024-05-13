@@ -2,6 +2,7 @@ package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.entity.Role;
+import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.repository.ThumbnailRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -77,12 +78,13 @@ public class AuthControllerTest {
 
     @Test
     @Transactional
-    public void givenUsernameAndPassword_whenSignup_thenUserIsCreated() throws Exception {
+    public void givenUsernameAndPassword_whenSignup_thenDatabaseIsUpdated() throws Exception {
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("username", "user3")
                         .param("password", "33333333"))
                 .andExpect(status().isCreated());
 
+        // Assert User is created.
         var user = userRepository.findByUsername("user3");
         assertThat(user.getUsername()).isEqualTo("user3");
         assertThat(user.getPassword()).matches("\\A\\$2a?\\$\\d\\d\\$[./0-9A-Za-z]{53}");
@@ -97,7 +99,9 @@ public class AuthControllerTest {
         assertThat(user.getRoles().stream().map(Role::getName)).containsExactly("USER");
 
         // Assert Thumbnail is created.
-        assertThat(thumbnailRepository.count()).isEqualTo(9);
+        assertThat(thumbnailRepository.count()).isEqualTo(10);
+        assertThat(thumbnailRepository.findAllByUserId(user.getId()).stream().map(Thumbnail::getType))
+                .containsExactlyInAnyOrder(Thumbnail.Type.DEFAULT, Thumbnail.Type.MEDIUM);
     }
 
     @Test

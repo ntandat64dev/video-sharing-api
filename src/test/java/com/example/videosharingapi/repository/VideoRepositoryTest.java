@@ -45,7 +45,7 @@ public class VideoRepositoryTest {
         var privacy = privacyRepository.findByStatus(Privacy.Status.PUBLIC);
         video.setPrivacy(privacy);
 
-        var user = userRepository.getReferenceById("9eb456d7");
+        var user = userRepository.getReferenceById("a05990b1");
         video.setUser(user);
         video.setDurationSec(1200);
 

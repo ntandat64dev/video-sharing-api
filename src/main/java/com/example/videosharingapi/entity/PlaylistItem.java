@@ -1,9 +1,7 @@
 package com.example.videosharingapi.entity;
 
 import jakarta.persistence.*;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 
@@ -14,6 +12,8 @@ import java.io.Serializable;
 public class PlaylistItem extends AuditableEntity {
 
     @Getter
+    @AllArgsConstructor
+    @NoArgsConstructor
     @EqualsAndHashCode
     @Embeddable
     public static class PlaylistItemId implements Serializable {

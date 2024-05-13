@@ -18,35 +18,34 @@ import static org.hamcrest.Matchers.contains;
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @TestSql
+@WithUserDetails("user1")
 public class UserControllerTest {
 
     private @Autowired MockMvc mockMvc;
 
     @Test
-    @WithUserDetails("user1")
     public void whenGetMyUserInfo_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/users/mine"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("3f06af63"))
+                .andExpect(jsonPath("$.id").value("a05990b1"))
                 .andExpect(jsonPath("$.snippet.username").value("user1"))
-                .andExpect(jsonPath("$.snippet.roles").value(contains("ADMIN")))
+                .andExpect(jsonPath("$.snippet.roles").value(contains("USER")))
                 .andExpect(jsonPath("$.statistic.viewCount").value(7))
-                .andExpect(jsonPath("$.statistic.followerCount").value(1))
-                .andExpect(jsonPath("$.statistic.followingCount").value(0))
+                .andExpect(jsonPath("$.statistic.followerCount").value(0))
+                .andExpect(jsonPath("$.statistic.followingCount").value(1))
                 .andExpect(jsonPath("$.statistic.videoCount").value(2));
     }
 
     @Test
-    @WithUserDetails("user1")
     public void givenUserId_whenGetUserById_thenSuccess() throws Exception {
-        mockMvc.perform(get("/api/v1/users/{userId}", "a05990b1"))
+        mockMvc.perform(get("/api/v1/users/{userId}", "9b79f4ba"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id").value("a05990b1"))
+                .andExpect(jsonPath("$.id").value("9b79f4ba"))
                 .andExpect(jsonPath("$.snippet.username").value("user2"))
                 .andExpect(jsonPath("$.snippet.roles").value(contains("USER")))
                 .andExpect(jsonPath("$.statistic.viewCount").value(2))
-                .andExpect(jsonPath("$.statistic.followerCount").value(0))
-                .andExpect(jsonPath("$.statistic.followingCount").value(1))
+                .andExpect(jsonPath("$.statistic.followerCount").value(1))
+                .andExpect(jsonPath("$.statistic.followingCount").value(0))
                 .andExpect(jsonPath("$.statistic.videoCount").value(1));
     }
 }

@@ -12,4 +12,7 @@ public interface ThumbnailRepository extends JpaRepository<Thumbnail, String> {
 
     @Query("SELECT t FROM Video v JOIN v.thumbnails t WHERE v.id = :videoId")
     List<Thumbnail> findAllByVideoId(String videoId);
+
+    @Query("SELECT t FROM User u JOIN u.thumbnails t WHERE u.id = :userId")
+    List<Thumbnail> findAllByUserId(String userId);
 }

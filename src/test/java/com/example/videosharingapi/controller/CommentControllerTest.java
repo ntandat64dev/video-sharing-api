@@ -5,7 +5,6 @@ import com.example.videosharingapi.dto.CommentDto;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.VideoStatisticRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -31,16 +30,14 @@ public class CommentControllerTest {
     private @Autowired VideoStatisticRepository videoStatisticRepository;
     private @Autowired CommentRepository commentRepository;
 
-    private final String videoId = "37b32dc2";
-
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
 
     private CommentDto obtainCommentDto() {
         var commentDto = new CommentDto();
         commentDto.setSnippet(CommentDto.Snippet.builder()
-                .videoId(videoId)
-                .authorId("3f06af63")
+                .videoId("e65707b4")
+                .authorId("a05990b1")
                 .text("Great video!")
                 .build());
         return commentDto;
@@ -49,7 +46,7 @@ public class CommentControllerTest {
     @Test
     public void givenVideoId_whenGetComments_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/comments")
-                        .param("videoId", videoId))
+                        .param("videoId", "37b32dc2"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1))
                 .andExpect(jsonPath("$[0].id").value("6c3239d6"));
@@ -60,33 +57,32 @@ public class CommentControllerTest {
     public void givenCommentDto_whenPostComment_thenSuccess() throws Exception {
         var commentDto = obtainCommentDto();
 
-        var result = mockMvc.perform(post("/api/v1/comments")
+        mockMvc.perform(post("/api/v1/comments")
                         .content(objectMapper.writeValueAsBytes(commentDto))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.snippet.videoId")
-                        .value("37b32dc2"))
+                        .value("e65707b4"))
                 .andExpect(jsonPath("$.snippet.authorId")
-                        .value("3f06af63"))
+                        .value("a05990b1"))
                 .andExpect(jsonPath("$.snippet.text")
                         .value("Great video!"))
                 .andReturn();
-
-        // Assert Comment is created.
-        var comment = commentRepository
-                .findById(JsonPath.read(result.getResponse().getContentAsString(), "$.id"));
-        assertThat(comment).isNotNull();
     }
 
     @Test
     @Transactional
-    public void givenCommentDto_whenPostComment_thenVideoStatisticIsUpdated() throws Exception {
+    public void givenCommentDto_whenPostComment_thenDatabaseIsUpdated() throws Exception {
         mockMvc.perform(post("/api/v1/comments")
                         .content(objectMapper.writeValueAsBytes(obtainCommentDto()))
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isCreated());
 
-        var videoStat = videoStatisticRepository.findById(videoId).orElseThrow();
+        // Assert Comment is created.
+        assertThat(commentRepository.count()).isEqualTo(4);
+
+        // Assert VideoStatistic is updated.
+        var videoStat = videoStatisticRepository.findById("e65707b4").orElseThrow();
         assertThat(videoStat.getCommentCount()).isEqualTo(3);
     }
 }

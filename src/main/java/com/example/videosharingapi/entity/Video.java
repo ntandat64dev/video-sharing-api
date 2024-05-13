@@ -67,7 +67,7 @@ public class Video extends AuditableEntity {
     )
     private List<Hashtag> hashtags;
 
-    @OneToOne(mappedBy = "video", cascade = CascadeType.ALL)
+    @OneToOne(mappedBy = "video", cascade = CascadeType.ALL, orphanRemoval = true)
     private VideoStatistic videoStatistic;
 
     @ManyToOne
