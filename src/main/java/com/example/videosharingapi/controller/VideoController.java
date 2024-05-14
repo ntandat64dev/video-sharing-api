@@ -6,7 +6,7 @@ import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.service.VideoService;
 import com.example.videosharingapi.validation.IdExists;
-import com.example.videosharingapi.validation.ValidVideoFile;
+import com.example.videosharingapi.validation.ValidFile;
 import com.example.videosharingapi.validation.group.Create;
 import com.example.videosharingapi.validation.group.Update;
 import jakarta.validation.groups.Default;
@@ -69,19 +69,20 @@ public class VideoController {
 
     @PostMapping
     public ResponseEntity<VideoDto> uploadVideo(
-            @RequestParam @ValidVideoFile MultipartFile videoFile,
+            @RequestParam @ValidFile(type = "video") MultipartFile videoFile,
+            @RequestPart @ValidFile(type = "image") MultipartFile thumbnailFile,
             @RequestPart @Validated({ Default.class, Create.class }) VideoDto metadata
     ) {
-        var response = videoService.saveVideo(videoFile, metadata);
+        var response = videoService.saveVideo(videoFile, thumbnailFile, metadata);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping
     public ResponseEntity<VideoDto> updateVideo(
-            @RequestBody @Validated({ Default.class, Update.class })
-            VideoDto videoDto
+            @RequestPart(required = false) @ValidFile(type = "image") MultipartFile thumbnailFile,
+            @RequestPart @Validated({ Default.class, Update.class }) VideoDto metadata
     ) {
-        var response = videoService.updateVideo(videoDto);
+        var response = videoService.updateVideo(thumbnailFile, metadata);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 

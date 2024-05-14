@@ -1,8 +1,8 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.VideoDto;
-import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.service.StorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -22,7 +22,7 @@ public class FakeStorageService implements StorageService {
     private final ThumbnailMapper thumbnailMapper;
 
     @Override
-    public void store(MultipartFile file, VideoDto videoDto) {
+    public void store(MultipartFile file, MultipartFile thumbnailFile, VideoDto videoDto) {
         videoDto.getSnippet().setDuration(Duration.ofSeconds(1000));
         videoDto.getSnippet()
                 .setVideoUrl("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4");

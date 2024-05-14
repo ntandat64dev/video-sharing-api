@@ -31,7 +31,7 @@ public class StorageServiceImpl implements StorageService {
     private final ThumbnailMapper thumbnailMapper;
 
     @Override
-    public void store(MultipartFile file, VideoDto videoDto) {
+    public void store(MultipartFile file, MultipartFile thumbnailFile, VideoDto videoDto) {
         final var client = new ApiVideoClient("TR8of6JJu0OlDbTS6Rwp9PT3M8hTXPl4PQH6GdoPysI");
         try {
             var videoFile = new File("/home/dell/IdeaProjects/video-sharing-api/new_video.mp4");

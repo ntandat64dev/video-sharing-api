@@ -8,14 +8,15 @@ import com.example.videosharingapi.entity.Hashtag;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.entity.VideoRating;
 import com.example.videosharingapi.repository.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jayway.jsonpath.JsonPath;
+import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
@@ -54,10 +55,32 @@ public class VideoControllerTest {
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
 
+    @PostConstruct
+    public void afterPropertiesSet() {
+        objectMapper.findAndRegisterModules();
+    }
+
     private final MockMultipartFile createMockVideoFile = new MockMultipartFile(
             "videoFile",
             "test.mp4",
             "video/mp4", RandomStringUtils.random(10).getBytes());
+
+    private final MockMultipartFile createMockThumbnailFile = new MockMultipartFile(
+            "thumbnailFile",
+            "thumbnail.png",
+            "image/png", RandomStringUtils.random(2).getBytes());
+
+    private MockMultipartFile createMockMetadata() throws JsonProcessingException {
+        return new MockMultipartFile(
+                "metadata", null,
+                "application/json", objectMapper.writeValueAsBytes(obtainVideoDto()));
+    }
+
+    private MockMultipartFile createMockMetadataForUpdate() throws JsonProcessingException {
+        return new MockMultipartFile(
+                "metadata", null,
+                "application/json", objectMapper.writeValueAsBytes(obtainVideoDtoForUpdate()));
+    }
 
     private VideoDto obtainVideoDto() {
         var videoDto = new VideoDto();
@@ -136,14 +159,10 @@ public class VideoControllerTest {
     @Test
     @Transactional
     public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenSuccess() throws Exception {
-        var videoDto = obtainVideoDto();
-        var metadata = new MockMultipartFile(
-                "metadata", null,
-                "application/json", objectMapper.writeValueAsBytes(videoDto));
-
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(createMockVideoFile)
-                        .file(metadata))
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadata()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.snippet.title").value("Video title"))
                 .andExpect(jsonPath("$.snippet.duration").value("PT16M40S"))
@@ -154,14 +173,10 @@ public class VideoControllerTest {
     @Test
     @Transactional
     public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenAssertDatabaseIsUpdated() throws Exception {
-        var videoDto = obtainVideoDto();
-        var metadata = new MockMultipartFile(
-                "metadata", null,
-                "application/json", objectMapper.writeValueAsBytes(videoDto));
-
         var result = mockMvc.perform(multipart("/api/v1/videos")
                         .file(createMockVideoFile)
-                        .file(metadata))
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadata()))
                 .andExpect(status().isCreated())
                 .andReturn();
 
@@ -186,16 +201,24 @@ public class VideoControllerTest {
 
     @Test
     public void givenMissingVideoFile_whenPostVideo_thenError() throws Exception {
-        var videoDto = obtainVideoDto();
-        var metadata = new MockMultipartFile(
-                "metadata", null,
-                "application/json", objectMapper.writeValueAsBytes(videoDto));
-
         mockMvc.perform(multipart("/api/v1/videos")
-                        .file(metadata))
+                        .file(createMockMetadata()))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Required part 'videoFile' is not present."));
+
+        // Assert video is not saved.
+        assertThat(videoRepository.count()).isEqualTo(3);
+    }
+
+    @Test
+    public void givenMissingThumbnailFile_whenPostVideo_thenError() throws Exception {
+        mockMvc.perform(multipart("/api/v1/videos")
+                        .file(createMockVideoFile)
+                        .file(createMockMetadata()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Required part 'thumbnailFile' is not present."));
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
@@ -215,6 +238,7 @@ public class VideoControllerTest {
 
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(createMockVideoFile)
+                        .file(createMockThumbnailFile)
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors")
@@ -241,6 +265,7 @@ public class VideoControllerTest {
 
         mockMvc.perform(multipart("/api/v1/videos")
                         .file(createMockVideoFile)
+                        .file(createMockThumbnailFile)
                         .file(metadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors")
@@ -256,10 +281,15 @@ public class VideoControllerTest {
     @Test
     @Transactional
     public void givenVideoDto_whenUpdate_thenSuccess() throws Exception {
-        var videoDto = obtainVideoDtoForUpdate();
-        mockMvc.perform(put("/api/v1/videos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+        var builder = multipart("/api/v1/videos");
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
+        });
+
+        mockMvc.perform(builder
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadataForUpdate()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.snippet.title").value("Video 1 updated"))
                 .andExpect(jsonPath("$.snippet.description")
@@ -292,10 +322,15 @@ public class VideoControllerTest {
     @Test
     @Transactional
     public void givenVideoDto_whenUpdate_thenDatabaseIsUpdated() throws Exception {
-        var videoDto = obtainVideoDtoForUpdate();
-        mockMvc.perform(put("/api/v1/videos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+        var builder = multipart("/api/v1/videos");
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
+        });
+
+        mockMvc.perform(builder
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadataForUpdate()))
                 .andExpect(status().isOk());
 
         // Assert Video is updated.
@@ -347,9 +382,19 @@ public class VideoControllerTest {
         videoDto.getSnippet().setUserId("12345678");
         videoDto.getSnippet().setCategory(new CategoryDto("12345678"));
 
-        mockMvc.perform(put("/api/v1/videos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+        var mockMetadata = new MockMultipartFile(
+                "metadata", null,
+                "application/json", objectMapper.writeValueAsBytes(videoDto));
+
+        var builder = multipart("/api/v1/videos");
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
+        });
+
+        mockMvc.perform(builder
+                        .file(createMockThumbnailFile)
+                        .file(mockMetadata))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors")
                         .value(containsInAnyOrder(
@@ -362,11 +407,15 @@ public class VideoControllerTest {
     @Transactional
     @WithUserDetails("user2")
     public void givenVideoDtoAndInvalidUser_whenUpdateWith_thenError() throws Exception {
-        var videoDto = obtainVideoDtoForUpdate();
+        var builder = multipart("/api/v1/videos");
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
+        });
 
-        mockMvc.perform(put("/api/v1/videos")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(videoDto)))
+        mockMvc.perform(builder
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadataForUpdate()))
                 .andExpect(status().isForbidden());
     }
 

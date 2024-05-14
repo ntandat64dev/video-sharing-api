@@ -47,30 +47,38 @@ public class VideoServiceImpl implements VideoService {
     private final Validator validator;
 
     @Override
-    public List<VideoDto> getAllVideos() {
-        return videoRepository.findAll().stream()
-                .map(videoMapper::toVideoDto)
-                .toList();
-    }
+    @Transactional
+    public VideoDto saveVideo(MultipartFile videoFile, MultipartFile thumbnailFile, VideoDto videoDto) {
+        if (!userService.getAuthenticatedUser().getUserId().equals(videoDto.getSnippet().getUserId())) {
+            // If uploader is not authenticated user ID.
+            throw new AppException(ErrorCode.FORBIDDEN);
+        }
 
-    @Override
-    public List<VideoDto> getVideosByUserId(String userId) {
-        return videoRepository.findAllByUserId(userId)
-                .stream().map(videoMapper::toVideoDto)
-                .toList();
-    }
+        storageService.store(videoFile, thumbnailFile, videoDto);
 
-    @Override
-    public VideoDto getVideoById(String id) {
-        return videoRepository
-                .findById(id)
+        var constraintViolations = validator.validate(videoDto, Default.class, Save.class);
+        if (!constraintViolations.isEmpty()) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
+
+        var video = videoRepository.save(videoMapper.toVideo(videoDto));
+        saveHashtags(videoDto.getSnippet().getHashtags(), video);
+
+        return videoRepository.findById(video.getId())
                 .map(videoMapper::toVideoDto)
                 .orElseThrow();
     }
 
+    private void saveHashtags(List<String> tags, Video video) {
+        if (tags == null) return;
+        var hashtags = tags.stream()
+                .map(Hashtag::new)
+                .map(hashtagRepository::saveIfAbsent)
+                .collect(Collectors.toList());
+        video.setHashtags(hashtags);
+    }
+
     @Override
     @Transactional
-    public VideoDto updateVideo(VideoDto videoDto) {
+    public VideoDto updateVideo(MultipartFile thumbnailFile, VideoDto videoDto) {
         var videoOwner = userRepository.findByVideoId(videoDto.getId());
         var user = userService.getAuthenticatedUser();
 
@@ -121,6 +129,28 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
+    public List<VideoDto> getAllVideos() {
+        return videoRepository.findAll().stream()
+                .map(videoMapper::toVideoDto)
+                .toList();
+    }
+
+    @Override
+    public List<VideoDto> getVideosByUserId(String userId) {
+        return videoRepository.findAllByUserId(userId)
+                .stream().map(videoMapper::toVideoDto)
+                .toList();
+    }
+
+    @Override
+    public VideoDto getVideoById(String id) {
+        return videoRepository
+                .findById(id)
+                .map(videoMapper::toVideoDto)
+                .orElseThrow();
+    }
+
+    @Override
     public List<String> getCategoriesForUserId(String userId) {
         // TODO: Apply AI, instead of just get hashtags of videos that user created.
         return hashtagRepository.findAllByUserId(userId).stream()
@@ -144,36 +174,6 @@ public class VideoServiceImpl implements VideoService {
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
                 .collect(Collectors.toList());
-    }
-
-    @Override
-    @Transactional
-    public VideoDto saveVideo(MultipartFile videoFile, VideoDto videoDto) {
-        if (!userService.getAuthenticatedUser().getUserId().equals(videoDto.getSnippet().getUserId())) {
-            // If uploader is not authenticated user ID.
-            throw new AppException(ErrorCode.FORBIDDEN);
-        }
-
-        storageService.store(videoFile, videoDto);
-
-        var constraintViolations = validator.validate(videoDto, Default.class, Save.class);
-        if (!constraintViolations.isEmpty()) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
-
-        var video = videoRepository.save(videoMapper.toVideo(videoDto));
-        saveHashtags(videoDto.getSnippet().getHashtags(), video);
-
-        return videoRepository.findById(video.getId())
-                .map(videoMapper::toVideoDto)
-                .orElseThrow();
-    }
-
-    private void saveHashtags(List<String> tags, Video video) {
-        if (tags == null) return;
-        var hashtags = tags.stream()
-                .map(Hashtag::new)
-                .map(hashtagRepository::saveIfAbsent)
-                .collect(Collectors.toList());
-        video.setHashtags(hashtags);
     }
 
     @Override

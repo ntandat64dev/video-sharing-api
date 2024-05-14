@@ -4,5 +4,5 @@ import com.example.videosharingapi.dto.VideoDto;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface StorageService {
-    void store(MultipartFile file, VideoDto videoDto);
+    void store(MultipartFile file, MultipartFile thumbnailFile, VideoDto videoDto);
 }
