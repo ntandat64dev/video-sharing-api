@@ -2,6 +2,7 @@ package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
+import com.example.videosharingapi.dto.response.PageResponse;
 import com.example.videosharingapi.entity.Hashtag;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.entity.VideoRating;
@@ -17,6 +18,8 @@ import com.example.videosharingapi.validation.group.Save;
 import jakarta.validation.Validator;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
@@ -129,17 +132,15 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public List<VideoDto> getAllVideos() {
-        return videoRepository.findAll().stream()
-                .map(videoMapper::toVideoDto)
-                .toList();
+    public PageResponse<VideoDto> getAllVideos(Pageable pageable) {
+        var videoDtoPage = videoRepository.findAll(pageable).map(videoMapper::toVideoDto);
+        return new PageResponse<>(videoDtoPage);
     }
 
     @Override
-    public List<VideoDto> getVideosByUserId(String userId) {
-        return videoRepository.findAllByUserId(userId)
-                .stream().map(videoMapper::toVideoDto)
-                .toList();
+    public PageResponse<VideoDto> getVideosByUserId(String userId, Pageable pageable) {
+        var videoDtoPage = videoRepository.findAllByUserId(userId, pageable).map(videoMapper::toVideoDto);
+        return new PageResponse<>(videoDtoPage);
     }
 
     @Override
@@ -159,21 +160,41 @@ public class VideoServiceImpl implements VideoService {
     }
 
     @Override
-    public List<VideoDto> getVideosByCategoryAll(String userId) {
+    public PageResponse<VideoDto> getVideosByCategoryAll(String userId, Pageable pageable) {
         // TODO: Apply AI, instead of just get videos that user did not create.
-        return videoRepository.findAll().stream()
+        var videoDtoList = videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
-                .collect(Collectors.toList());
+                .toList();
+
+        final int start = pageable.isPaged()
+                ? (int) Math.min(pageable.getOffset(), videoDtoList.size())
+                : 0;
+        final int end = pageable.isPaged()
+                ? Math.min((start + pageable.getPageSize()), videoDtoList.size())
+                : videoDtoList.size();
+        final var page = new PageImpl<>(videoDtoList.subList(start, end), pageable, videoDtoList.size());
+
+        return new PageResponse<>(page);
     }
 
     @Override
-    public List<VideoDto> getRelatedVideos(String videoId, String userId) {
+    public PageResponse<VideoDto> getRelatedVideos(String videoId, String userId, Pageable pageable) {
         // TODO: Apply AI, instead of just get videos that user did not create.
-        return videoRepository.findAll().stream()
+        var videoDtoList = videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
-                .collect(Collectors.toList());
+                .toList();
+
+        final int start = pageable.isPaged()
+                ? (int) Math.min(pageable.getOffset(), videoDtoList.size())
+                : 0;
+        final int end = pageable.isPaged()
+                ? Math.min((start + pageable.getPageSize()), videoDtoList.size())
+                : videoDtoList.size();
+        final var page = new PageImpl<>(videoDtoList.subList(start, end), pageable, videoDtoList.size());
+
+        return new PageResponse<>(page);
     }
 
     @Override
@@ -215,5 +236,11 @@ public class VideoServiceImpl implements VideoService {
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
         if (videoRating == null) return videoRatingMapper.fromNullVideoRating(videoId, userId);
         return videoRatingMapper.toVideoRatingDto(videoRating);
+    }
+
+    @Override
+    public PageResponse<VideoDto> getFollowingVideos(String userId, Pageable pageable) {
+        var videoDtoPage = videoRepository.findFollowingVideos(userId, pageable).map(videoMapper::toVideoDto);
+        return new PageResponse<>(videoDtoPage);
     }
 }

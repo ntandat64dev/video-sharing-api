@@ -2,6 +2,7 @@ package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.config.security.AuthenticatedUser;
 import com.example.videosharingapi.dto.FollowDto;
+import com.example.videosharingapi.dto.response.PageResponse;
 import com.example.videosharingapi.entity.Follow;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.service.FollowService;
@@ -9,13 +10,12 @@ import com.example.videosharingapi.validation.IdExists;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/follows")
@@ -25,8 +25,11 @@ public class FollowController {
     private final FollowService followService;
 
     @GetMapping("/mine")
-    public ResponseEntity<List<FollowDto>> getFollows(@AuthenticationPrincipal AuthenticatedUser user) {
-        var response = followService.getFollowsByFollowerId(user.getUserId());
+    public ResponseEntity<PageResponse<FollowDto>> getFollows(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            Pageable pageable
+    ) {
+        var response = followService.getFollowsByFollowerId(user.getUserId(), pageable);
         return ResponseEntity.ok(response);
     }
 

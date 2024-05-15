@@ -17,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
@@ -128,7 +129,8 @@ public class VideoControllerTest {
     public void whenGetAllVideosWithRoleAdmin_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(3));
+                .andExpect(jsonPath("$.totalElements").value(3))
+                .andExpect(jsonPath("$.items.length()").value(3));
     }
 
     @Test
@@ -142,7 +144,8 @@ public class VideoControllerTest {
     public void whenGetMyVideos_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/mine"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(2));
+                .andExpect(jsonPath("$.totalElements").value(2))
+                .andExpect(jsonPath("$.items.length()").value(2));
     }
 
     @Test
@@ -457,7 +460,7 @@ public class VideoControllerTest {
 
         // Assert Comment is deleted.
         assertThat(commentRepository.count()).isEqualTo(2);
-        assertThat(commentRepository.findAllByVideoId("37b32dc2")).isEmpty();
+        assertThat(commentRepository.findAllByVideoId("37b32dc2", Pageable.unpaged())).isEmpty();
         assertThat(commentRatingRepository.count()).isEqualTo(2);
         assertThat(commentRatingRepository.findAllByCommentVideoId("37b32dc2")).isEmpty();
 
@@ -486,8 +489,18 @@ public class VideoControllerTest {
     public void whenGetVideosByCategoryAll_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/category/all/mine"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[*].id").value(contains("e65707b4")));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("e65707b4"));
+    }
+
+    @Test
+    public void whenFollowingVideos_thenSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/videos/following/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("e65707b4"));
     }
 
     @Test
@@ -578,8 +591,9 @@ public class VideoControllerTest {
         mockMvc.perform(get("/api/v1/videos/related/mine")
                         .param("videoId", "e65707b4"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[*].id").value(contains("e65707b4")));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("e65707b4"));
     }
 
     @Test

@@ -1,12 +1,12 @@
 package com.example.videosharingapi.service;
 
 import com.example.videosharingapi.dto.FollowDto;
-
-import java.util.List;
+import com.example.videosharingapi.dto.response.PageResponse;
+import org.springframework.data.domain.Pageable;
 
 public interface FollowService {
 
-    List<FollowDto> getFollowsByFollowerId(String followerId);
+    PageResponse<FollowDto> getFollowsByFollowerId(String followerId, Pageable pageable);
 
     FollowDto getFollowsByUserIdAndFollowerId(String userId, String followerId);
 

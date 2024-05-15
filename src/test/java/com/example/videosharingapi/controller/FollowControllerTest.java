@@ -49,8 +49,9 @@ public class FollowControllerTest {
     public void whenGetMyFollows_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/follows/mine"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value("f2cf8a48"));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("f2cf8a48"));
     }
 
     @Test

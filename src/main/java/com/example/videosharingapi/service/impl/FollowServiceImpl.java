@@ -1,6 +1,7 @@
 package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.FollowDto;
+import com.example.videosharingapi.dto.response.PageResponse;
 import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.FollowMapper;
@@ -8,13 +9,12 @@ import com.example.videosharingapi.repository.FollowRepository;
 import com.example.videosharingapi.service.FollowService;
 import com.example.videosharingapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional(readOnly = true)
@@ -26,10 +26,10 @@ public class FollowServiceImpl implements FollowService {
     private final FollowMapper followMapper;
 
     @Override
-    public List<FollowDto> getFollowsByFollowerId(String followerId) {
-        return followRepository.findAllByFollowerId(followerId).stream()
-                .map(followMapper::toFollowDto)
-                .collect(Collectors.toList());
+    public PageResponse<FollowDto> getFollowsByFollowerId(String followerId, Pageable pageable) {
+        var followDtoPage = followRepository.findAllByFollowerId(followerId, pageable)
+                .map(followMapper::toFollowDto);
+        return new PageResponse<>(followDtoPage);
     }
 
     @Override

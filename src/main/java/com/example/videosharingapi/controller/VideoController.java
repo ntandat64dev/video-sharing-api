@@ -3,6 +3,7 @@ package com.example.videosharingapi.controller;
 import com.example.videosharingapi.config.security.AuthenticatedUser;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
+import com.example.videosharingapi.dto.response.PageResponse;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.service.VideoService;
 import com.example.videosharingapi.validation.IdExists;
@@ -11,6 +12,7 @@ import com.example.videosharingapi.validation.group.Create;
 import com.example.videosharingapi.validation.group.Update;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -30,14 +32,17 @@ public class VideoController {
 
     @GetMapping
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
-    public ResponseEntity<List<VideoDto>> getAllVideos() {
-        var response = videoService.getAllVideos();
+    public ResponseEntity<PageResponse<VideoDto>> getAllVideos(Pageable pageable) {
+        var response = videoService.getAllVideos(pageable);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/mine")
-    public ResponseEntity<List<VideoDto>> getMyVideos(@AuthenticationPrincipal AuthenticatedUser user) {
-        var response = videoService.getVideosByUserId(user.getUserId());
+    public ResponseEntity<PageResponse<VideoDto>> getMyVideos(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            Pageable pageable
+    ) {
+        var response = videoService.getVideosByUserId(user.getUserId(), pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -53,17 +58,30 @@ public class VideoController {
     }
 
     @GetMapping("/category/all/mine")
-    public ResponseEntity<List<VideoDto>> getRecommendVideos(@AuthenticationPrincipal AuthenticatedUser user) {
-        var response = videoService.getVideosByCategoryAll(user.getUserId());
+    public ResponseEntity<PageResponse<VideoDto>> getRecommendVideos(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            Pageable pageable
+    ) {
+        var response = videoService.getVideosByCategoryAll(user.getUserId(), pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/following/mine")
+    public ResponseEntity<PageResponse<VideoDto>> getFollowingVideos(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            Pageable pageable
+    ) {
+        var response = videoService.getFollowingVideos(user.getUserId(), pageable);
         return ResponseEntity.ok(response);
     }
 
     @GetMapping("/related/mine")
-    public ResponseEntity<List<VideoDto>> getRelatedVideos(
+    public ResponseEntity<PageResponse<VideoDto>> getRelatedVideos(
             @IdExists(entity = Video.class) String videoId,
-            @AuthenticationPrincipal AuthenticatedUser user
+            @AuthenticationPrincipal AuthenticatedUser user,
+            Pageable pageable
     ) {
-        var response = videoService.getRelatedVideos(videoId, user.getUserId());
+        var response = videoService.getRelatedVideos(videoId, user.getUserId(), pageable);
         return ResponseEntity.ok(response);
     }
 

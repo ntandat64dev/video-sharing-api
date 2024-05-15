@@ -48,8 +48,9 @@ public class CommentControllerTest {
         mockMvc.perform(get("/api/v1/comments")
                         .param("videoId", "37b32dc2"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].id").value("6c3239d6"));
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.items.length()").value(1))
+                .andExpect(jsonPath("$.items[0].id").value("6c3239d6"));
     }
 
     @Test

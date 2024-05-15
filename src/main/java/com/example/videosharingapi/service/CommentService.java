@@ -1,12 +1,12 @@
 package com.example.videosharingapi.service;
 
 import com.example.videosharingapi.dto.CommentDto;
-
-import java.util.List;
+import com.example.videosharingapi.dto.response.PageResponse;
+import org.springframework.data.domain.Pageable;
 
 public interface CommentService {
 
-    List<CommentDto> getCommentsByVideoId(String videoId);
+    PageResponse<CommentDto> getCommentsByVideoId(String videoId, Pageable pageable);
 
     CommentDto postComment(CommentDto commentDto);
 }
