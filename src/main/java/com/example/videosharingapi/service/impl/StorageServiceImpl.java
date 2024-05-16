@@ -1,8 +1,15 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.payload.VideoDto;
+import com.example.videosharingapi.dto.VideoDto;
+import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.exception.ErrorCode;
+import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.service.StorageService;
+import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import video.api.client.ApiVideoClient;
 import video.api.client.api.ApiException;
@@ -11,13 +18,20 @@ import video.api.client.api.models.VideoCreationPayload;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.Duration;
+import java.util.List;
 import java.util.Objects;
 
 @Service
+@Transactional
+@Profile("prod")
+@RequiredArgsConstructor
 public class StorageServiceImpl implements StorageService {
 
+    private final ThumbnailMapper thumbnailMapper;
+
     @Override
-    public VideoDto store(MultipartFile file) {
+    public void store(MultipartFile file, MultipartFile thumbnailFile, VideoDto videoDto) {
         final var client = new ApiVideoClient("TR8of6JJu0OlDbTS6Rwp9PT3M8hTXPl4PQH6GdoPysI");
         try {
             var videoFile = new File("/home/dell/IdeaProjects/video-sharing-api/new_video.mp4");
@@ -25,11 +39,19 @@ public class StorageServiceImpl implements StorageService {
             var video = client.videos().create(new VideoCreationPayload().title(videoFile.getName()));
             video = client.videos().upload(video.getVideoId(), videoFile);
             Files.delete(videoFile.toPath());
-            return VideoDto.builder()
-                    .thumbnailUrl(Objects.requireNonNull(Objects.requireNonNull(video.getAssets()).getThumbnail()).toURL().toString())
-                    .videoUrl(Objects.requireNonNull(video.getAssets().getMp4()).toString())
-                    .build();
+
+            var thumbnail = new Thumbnail();
+            thumbnail.setType(Thumbnail.Type.DEFAULT);
+            thumbnail.setUrl(Objects.requireNonNull(Objects.requireNonNull(video.getAssets())
+                    .getThumbnail()).toString());
+            thumbnail.setWidth(100);
+            thumbnail.setHeight(100);
+
+            videoDto.getSnippet().setThumbnails(thumbnailMapper.toMap(List.of(thumbnail)));
+            videoDto.getSnippet().setVideoUrl(Objects.requireNonNull(video.getAssets().getMp4()).toString());
+            videoDto.getSnippet().setDuration(Duration.ofSeconds(1000));
         } catch (ApiException | IOException e) {
+            if (e instanceof ApiException) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
             throw new RuntimeException(e);
         }
     }

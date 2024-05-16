@@ -1,49 +1,44 @@
 package com.example.videosharingapi.service.impl;
 
-import com.example.videosharingapi.exception.ApplicationException;
-import com.example.videosharingapi.model.entity.User;
-import com.example.videosharingapi.payload.UserDto;
-import com.example.videosharingapi.payload.request.AuthRequest;
-import com.example.videosharingapi.payload.response.AuthResponse;
-import com.example.videosharingapi.repository.UserRepository;
+import com.example.videosharingapi.config.security.AuthenticatedUser;
+import com.example.videosharingapi.dto.response.AuthResponse;
+import com.example.videosharingapi.exception.AppException;
+import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.service.AuthService;
-import org.springframework.http.HttpStatus;
+import com.example.videosharingapi.service.UserService;
+import com.example.videosharingapi.util.JwtUtil;
+import lombok.RequiredArgsConstructor;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
+@Transactional(readOnly = true)
+@RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
-    private final UserRepository userRepository;
+    private final UserService userService;
+    private final AuthenticationManager authenticationManager;
+    private final JwtUtil jwtUtil;
 
-    public AuthServiceImpl(UserRepository userRepository) {
-        this.userRepository = userRepository;
+    @Override
+    public AuthResponse login(String username, String password) {
+        try {
+            // Authenticate using AuthenticationManager.
+            var authenticationRequest = UsernamePasswordAuthenticationToken.unauthenticated(username, password);
+            var authenticationResponse = authenticationManager.authenticate(authenticationRequest);
+            // If no error, therefore authentication is successful then generate JWT token and return to client.
+            var token = jwtUtil.generateToken((AuthenticatedUser) authenticationResponse.getPrincipal());
+            return new AuthResponse(token, jwtUtil.extractExpiration(token));
+        } catch (AuthenticationException e) {
+            throw new AppException(ErrorCode.USERNAME_PASSWORD_INCORRECT);
+        }
     }
 
     @Override
-    @Transactional(readOnly = true)
-    public AuthResponse signIn(AuthRequest request) {
-        var user = userRepository.findByEmailAndPassword(request.email(), request.password());
-        if (user == null) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email or password is incorrect!");
-        }
-        return new AuthResponse(
-                "Sign in successfully.",
-                new UserDto(user.getId(), user.getEmail(), user.getPhotoUrl(), user.getChannelName()));
-    }
-
-    @Override
-    public AuthResponse signUp(AuthRequest request) {
-        if (userRepository.existsByEmail(request.email())) {
-            throw new ApplicationException(HttpStatus.BAD_REQUEST, "Email is already exists!");
-        }
-        var user = User.builder()
-                .email(request.email())
-                .password(request.password())
-                .channelName(request.email())
-                .build();
-        var newUser = userRepository.save(user);
-        return new AuthResponse(
-                "Sign up successfully.",
-                new UserDto(newUser.getId(), newUser.getEmail(), newUser.getPhotoUrl(), newUser.getChannelName()));
+    @Transactional
+    public void signup(String username, String password) {
+        userService.createUser(username, password);
     }
 }
