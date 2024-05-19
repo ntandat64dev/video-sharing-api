@@ -4,9 +4,7 @@ import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.dto.CategoryDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
-import com.example.videosharingapi.entity.Hashtag;
-import com.example.videosharingapi.entity.Thumbnail;
-import com.example.videosharingapi.entity.VideoRating;
+import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,6 +50,8 @@ public class VideoControllerTest {
     private @Autowired CommentRepository commentRepository;
     private @Autowired CommentRatingRepository commentRatingRepository;
     private @Autowired PlaylistItemRepository playlistItemRepository;
+    private @Autowired NotificationRepository notificationRepository;
+    private @Autowired NotificationObjectRepository notificationObjectRepository;
 
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
@@ -200,6 +200,50 @@ public class VideoControllerTest {
 
         // Assert Hashtags is created.
         assertThat(hashtagRepository.findAllTag()).containsExactlyInAnyOrder("music", "pop", "sport");
+
+        // Assert Notification and NotificationObject is not created (because there are no followers).
+        assertThat(notificationRepository.findAll().stream()
+                .map(Notification::getId)).containsExactlyInAnyOrder("856c89bc", "652ef2c2");
+        assertThat(notificationObjectRepository.findAll().stream()
+                .map(NotificationObject::getId)).containsExactlyInAnyOrder("77a70703", "c63edb2c");
+    }
+
+    @Test
+    @Transactional
+    @WithUserDetails("user2")
+    public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenAssertNotificationIsCreated() throws Exception {
+        var videoDto = obtainVideoDto();
+        videoDto.getSnippet().setUserId("9b79f4ba");
+
+        var mockMetadata = new MockMultipartFile(
+                "metadata", null,
+                "application/json", objectMapper.writeValueAsBytes(videoDto));
+
+        var result = mockMvc.perform(multipart("/api/v1/videos")
+                        .file(createMockVideoFile)
+                        .file(createMockThumbnailFile)
+                        .file(mockMetadata))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        assertThat(notificationObjectRepository.count()).isEqualTo(3);
+        assertThat(notificationRepository.count()).isEqualTo(3);
+
+        var notificationObject = notificationObjectRepository
+                .findByObjectId(JsonPath.read(result.getResponse().getContentAsString(), "$.id"))
+                .orElseThrow();
+        assertThat(notificationObject.getActionType()).isEqualTo(1);
+        assertThat(notificationObject.getObjectType()).isEqualTo(NotificationObject.ObjectType.VIDEO);
+        assertThat(notificationObject.getMessage()).isEqualTo("user2 uploaded: Video title");
+
+        var notifications = notificationRepository
+                .findByNotificationObjectId(notificationObject.getId(), Pageable.unpaged())
+                .getContent();
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications.getFirst().getActor().getId()).isEqualTo("9b79f4ba");
+        assertThat(notifications.getFirst().getRecipient().getId()).isEqualTo("a05990b1");
+        assertThat(notifications.getFirst().getIsSeen()).isEqualTo(false);
+        assertThat(notifications.getFirst().getIsRead()).isEqualTo(false);
     }
 
     @Test
@@ -467,6 +511,25 @@ public class VideoControllerTest {
         // Assert PlaylistItem is deleted.
         assertThat(playlistItemRepository.count()).isEqualTo(2);
         assertThat(playlistItemRepository.findAllByPlaylistId("236e2aa6")).isEmpty();
+
+        // Assert NotificationObject and Notifications is not deleted
+        // (because there are no notifications related to this video).
+        assertThat(notificationObjectRepository.count()).isEqualTo(2);
+        assertThat(notificationRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    @Transactional
+    @WithUserDetails("user2")
+    public void givenVideoId_whenDeleteVideo_thenRelatedNotificationsAreDeleted() throws Exception {
+        mockMvc.perform(delete("/api/v1/videos")
+                        .param("id", "e65707b4"))
+                .andExpect(status().isNoContent());
+
+        assertThat(notificationObjectRepository.count()).isEqualTo(1);
+        assertThat(notificationObjectRepository.findById("77a70703")).isNotPresent();
+        assertThat(notificationRepository.count()).isEqualTo(1);
+        assertThat(notificationRepository.findById("856c89bc")).isNotPresent();
     }
 
     @Test

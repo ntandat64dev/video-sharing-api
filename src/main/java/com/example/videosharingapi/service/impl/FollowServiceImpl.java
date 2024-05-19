@@ -7,6 +7,7 @@ import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.FollowMapper;
 import com.example.videosharingapi.repository.FollowRepository;
 import com.example.videosharingapi.service.FollowService;
+import com.example.videosharingapi.service.NotificationService;
 import com.example.videosharingapi.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +25,7 @@ public class FollowServiceImpl implements FollowService {
     private final UserService userService;
     private final FollowRepository followRepository;
     private final FollowMapper followMapper;
+    private final NotificationService notificationService;
 
     @Override
     public PageResponse<FollowDto> getFollowsByFollowerId(String followerId, Pageable pageable) {
@@ -71,6 +73,9 @@ public class FollowServiceImpl implements FollowService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
         followRepository.deleteById(followId);
+
+        // Delete related notifications.
+        notificationService.deleteRelatedNotifications(followId);
     }
 
 }

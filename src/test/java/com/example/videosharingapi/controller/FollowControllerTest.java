@@ -3,6 +3,8 @@ package com.example.videosharingapi.controller;
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.dto.FollowDto;
 import com.example.videosharingapi.repository.FollowRepository;
+import com.example.videosharingapi.repository.NotificationObjectRepository;
+import com.example.videosharingapi.repository.NotificationRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -31,6 +33,8 @@ public class FollowControllerTest {
 
     private @Autowired ObjectMapper objectMapper;
     private @Autowired FollowRepository followRepository;
+    private @Autowired NotificationObjectRepository notificationObjectRepository;
+    private @Autowired NotificationRepository notificationRepository;
     private @Autowired MockMvc mockMvc;
 
     // user2 follow user1
@@ -126,6 +130,19 @@ public class FollowControllerTest {
                         .param("id", "f2cf8a48"))
                 .andExpect(status().isNoContent());
         assertThat(followRepository.existsById("f2cf8a48")).isFalse();
+    }
+
+    @Test
+    @Transactional
+    public void givenFollowId_whenDelete_thenRelatedNotificationsAreDeleted() throws Exception {
+        mockMvc.perform(delete("/api/v1/follows")
+                        .param("id", "f2cf8a48"))
+                .andExpect(status().isNoContent());
+
+        assertThat(notificationObjectRepository.count()).isEqualTo(1);
+        assertThat(notificationObjectRepository.findById("c63edb2c")).isNotPresent();
+        assertThat(notificationRepository.count()).isEqualTo(1);
+        assertThat(notificationRepository.findById("652ef2c2")).isNotPresent();
     }
 
     @Test

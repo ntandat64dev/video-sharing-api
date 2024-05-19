@@ -33,6 +33,10 @@ VALUES ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
        ('9b79f4ba', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
         '$2a$10$EfQYDzvm3xOpKXlKIyrE4uIY1NIevCE8Id5jro5K05quqeKaFhBpG', null, 'user2', null, NOW());
 
+# FcmMessageToken
+INSERT INTO `fcm_message_token`(id, timestamp, token, user_id)
+VALUES ('01a14281', NOW(), '838fdc717a5480e3', 'a05990b1');
+
 # UserRole
 INSERT INTO `user_role`(user_id, role_id)
 VALUES ('3f06af63', '319a7b41'),
@@ -143,3 +147,13 @@ INSERT INTO `playlist_item`(created_by, created_date, modified_by, modified_date
 VALUES ('admin', NOW(), 'admin', NOW(), 0, 'f7d9b74b', 'd8659362'),
        ('admin', NOW(), 'admin', NOW(), 1, 'e65707b4', 'd8659362'),
        ('admin', NOW(), 'admin', NOW(), 0, '37b32dc2', '236e2aa6');
+
+# NotificationObject
+INSERT INTO `notification_object`(id, action_type, message, object_id, object_type, published_at)
+VALUES ('77a70703', 1, 'user2 uploaded: Video 3', 'e65707b4', 'VIDEO', NOW()),
+       ('c63edb2c', 2, 'user1 has followed you', 'f2cf8a48', 'FOLLOW', NOW());
+
+# Notification
+INSERT INTO `notification`(id, is_read, is_seen, actor_id, notification_object_id, recipient_id)
+VALUES ('856c89bc', false, false, '9b79f4ba', '77a70703', 'a05990b1'),
+       ('652ef2c2', false, false, 'a05990b1', 'c63edb2c', '9b79f4ba');
