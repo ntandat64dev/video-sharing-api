@@ -1,6 +1,5 @@
 action_id,description
 1,A user has uploaded a video
 2,A user has followed you
-3,A user has unfollowed you
-4,A user has commented on your video
-5,A user has replied on your comment
+3,A user has commented on your video
+4,A user has replied to your comment

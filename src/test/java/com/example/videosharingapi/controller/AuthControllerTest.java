@@ -39,7 +39,7 @@ public class AuthControllerTest {
 
     @Test
     public void givenInvalidCredentials_whenLogin_thenError() throws Exception {
-        // Given wrong username.
+        // Given a wrong username.
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("username", "user")
                         .param("password", "11111111"))
@@ -48,7 +48,7 @@ public class AuthControllerTest {
                         .value("Username or password is incorrect."))
                 .andExpect(jsonPath("$.errors").doesNotExist());
 
-        // Given wrong password.
+        // Given a wrong password.
         mockMvc.perform(post("/api/v1/auth/login")
                         .param("username", "user")
                         .param("password", "12345678"))
@@ -70,8 +70,8 @@ public class AuthControllerTest {
     @Transactional
     public void givenUsernameAndPassword_whenSignup_thenSuccess() throws Exception {
         mockMvc.perform(post("/api/v1/auth/signup")
-                        .param("username", "user3")
-                        .param("password", "33333333"))
+                        .param("username", "user4")
+                        .param("password", "44444444"))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$").doesNotExist());
     }
@@ -80,13 +80,13 @@ public class AuthControllerTest {
     @Transactional
     public void givenUsernameAndPassword_whenSignup_thenDatabaseIsUpdated() throws Exception {
         mockMvc.perform(post("/api/v1/auth/signup")
-                        .param("username", "user3")
-                        .param("password", "33333333"))
+                        .param("username", "user4")
+                        .param("password", "44444444"))
                 .andExpect(status().isCreated());
 
         // Assert User is created.
-        var user = userRepository.findByUsername("user3");
-        assertThat(user.getUsername()).isEqualTo("user3");
+        var user = userRepository.findByUsername("user4");
+        assertThat(user.getUsername()).isEqualTo("user4");
         assertThat(user.getPassword()).matches("\\A\\$2a?\\$\\d\\d\\$[./0-9A-Za-z]{53}");
         assertThat(user.getEmail()).isNull();
         assertThat(user.getDateOfBirth()).isNull();
@@ -99,7 +99,7 @@ public class AuthControllerTest {
         assertThat(user.getRoles().stream().map(Role::getName)).containsExactly("USER");
 
         // Assert Thumbnail is created.
-        assertThat(thumbnailRepository.count()).isEqualTo(10);
+        assertThat(thumbnailRepository.count()).isEqualTo(11);
         assertThat(thumbnailRepository.findAllByUserId(user.getId()).stream().map(Thumbnail::getType))
                 .containsExactlyInAnyOrder(Thumbnail.Type.DEFAULT, Thumbnail.Type.MEDIUM);
     }
@@ -113,12 +113,12 @@ public class AuthControllerTest {
                         .param("password", "00000000"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
-                        .value("Username is already exists."));
+                        .value("Username already exists."));
 
         // Given invalid password length.
         mockMvc.perform(post("/api/v1/auth/signup")
-                        .param("username", "user3")
-                        .param("password", "3333"))
+                        .param("username", "user4")
+                        .param("password", "4444"))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
                         .value("password: size must be between 8 and 2147483647"));

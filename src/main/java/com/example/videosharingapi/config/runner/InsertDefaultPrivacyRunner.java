@@ -8,9 +8,10 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
 /**
- * An {@link ApplicationRunner} used to initialize {@link Privacy} level in database. Used in {@code prod} profile.
+ * An {@link ApplicationRunner} used to initialize {@link Privacy} level in the database.
+ * Used in {@code prod} profile.
  *
- * <p> In {@code dev}, database can be initialized by {@link InsertTestDataRunner}.
+ * <p> In {@code dev}, the database can be initialized by {@link InsertTestDataRunner}.
  *
  * @see Privacy
  */

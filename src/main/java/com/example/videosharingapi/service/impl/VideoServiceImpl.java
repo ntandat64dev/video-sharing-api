@@ -97,7 +97,7 @@ public class VideoServiceImpl implements VideoService {
         var videoOwner = userRepository.findByVideoId(videoDto.getId());
         var user = userService.getAuthenticatedUser();
 
-        // If the video owner is not the authorized user then throw forbidden error.
+        // If the video owner is not the authorized user, then throw forbidden error.
         if (!Objects.equals(videoOwner.getId(), user.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
 
         // Set null to values that user does not permission to update.

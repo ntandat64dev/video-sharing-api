@@ -9,7 +9,7 @@ import lombok.*;
 @NoArgsConstructor
 @Builder
 @Entity
-public class Notification {
+public class Notification extends AuditableEntity{
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

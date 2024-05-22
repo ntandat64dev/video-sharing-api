@@ -4,6 +4,7 @@ import com.example.videosharingapi.dto.NotificationDto;
 import com.example.videosharingapi.dto.ThumbnailDto;
 import com.example.videosharingapi.entity.Notification;
 import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.VideoRepository;
 import lombok.Setter;
 import org.mapstruct.Mapper;
@@ -16,6 +17,7 @@ import java.util.Map;
 @Mapper(componentModel = "spring", uses = ThumbnailMapper.class)
 @Setter(onMethod_ = @Autowired)
 public abstract class NotificationMapper {
+    private CommentRepository commentRepository;
     private VideoRepository videoRepository;
     private ThumbnailMapper thumbnailMapper;
 
@@ -33,9 +35,13 @@ public abstract class NotificationMapper {
         var objectType = notification.getNotificationObject().getObjectType();
         var objectId = notification.getNotificationObject().getObjectId();
         return switch (objectType) {
-            case VIDEO, COMMENT -> {
+            case VIDEO -> {
                 var video = videoRepository.findById(objectId).orElseThrow();
                 yield thumbnailMapper.toMap(video.getThumbnails());
+            }
+            case COMMENT -> {
+                var comment = commentRepository.findById(objectId).orElseThrow();
+                yield thumbnailMapper.toMap(comment.getVideo().getThumbnails());
             }
             default -> new HashMap<>();
         };

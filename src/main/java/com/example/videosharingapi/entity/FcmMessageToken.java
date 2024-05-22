@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 @Entity
-public class FcmMessageToken {
+public class FcmMessageToken extends AuditableEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)

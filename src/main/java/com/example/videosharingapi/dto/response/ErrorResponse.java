@@ -11,7 +11,6 @@ import java.util.List;
 @Builder
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
 public final class ErrorResponse {
-
     private HttpStatusCode httpStatus;
     private String message;
     private List<String> errors;

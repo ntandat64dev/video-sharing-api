@@ -12,6 +12,7 @@ public enum ErrorCode {
     USERNAME_PASSWORD_INCORRECT(HttpStatus.BAD_REQUEST, "error.username-password.incorrect"),
     USERNAME_EXISTS(HttpStatus.BAD_REQUEST, "error.username.exist"),
     FOLLOW_EXISTS(HttpStatus.BAD_REQUEST, "error.follow.already-exist"),
+    NESTED_REPLY(HttpStatus.BAD_REQUEST, "error.comment.nested-reply"),
     AUTHENTICATION_ERROR(HttpStatus.UNAUTHORIZED, "error.security.authentication-error"),
     FORBIDDEN(HttpStatus.FORBIDDEN, "error.security.forbidden"),
     ;

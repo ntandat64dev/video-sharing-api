@@ -16,7 +16,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * An {@link ApplicationRunner} used to initialize database for testing purpose.
+ * An {@link ApplicationRunner} used to initialize the database for testing purpose.
  */
 @Profile("init")
 @Component

@@ -9,6 +9,7 @@ VALUES ('7e90877f', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Admin default th
        ('f3e78681', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 1 default thumbnail URL', 100, 100),
        ('a8cfd1fb', 'admin', NOW(), 'admin', NOW(), 'MEDIUM', 'User 1 medium thumbnail URL', 200, 200),
        ('a31aba86', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 2 default thumbnail URL', 100, 100),
+       ('15de2ef4', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'User 3 default thumbnail URL', 100, 100),
 
        ('b2825704', 'admin', NOW(), 'admin', NOW(), 'DEFAULT', 'Video 1 default thumbnail URL', 720, 450),
        ('2c48d7cd', 'admin', NOW(), 'admin', NOW(), 'MEDIUM', 'Video 1 medium thumbnail URL', 1024, 720),
@@ -24,6 +25,7 @@ VALUES ('319a7b41', 'admin', NOW(), 'admin', NOW(), 'ADMIN'),
 # admin(username: admin, password: 00000000)
 # user1(username: user1, password: 11111111)
 # user2(username: user2, password: 22222222)
+# user3(username: user3, password: 33333333)
 INSERT INTO `user`(id, created_by, created_date, modified_by, modified_date, country, date_of_birth, email, gender,
                    password, phone_number, username, bio, published_at)
 VALUES ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
@@ -31,28 +33,33 @@ VALUES ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
        ('a05990b1', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
         '$2a$10$Y4tJpNDAZbt5micTfwkx2uqU1f3EMy9/tbyz43GaNInzFXGQqDhle', null, 'user1', null, NOW()),
        ('9b79f4ba', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
-        '$2a$10$EfQYDzvm3xOpKXlKIyrE4uIY1NIevCE8Id5jro5K05quqeKaFhBpG', null, 'user2', null, NOW());
+        '$2a$10$EfQYDzvm3xOpKXlKIyrE4uIY1NIevCE8Id5jro5K05quqeKaFhBpG', null, 'user2', null, NOW()),
+       ('d540fce2', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
+        '$2a$10$T3nG/IZLGJUPpCf0nyrOcOivCggdil7XdTYnxzBykFt0QXJv39J2q', null, 'user3', null, NOW());
 
 # FcmMessageToken
-INSERT INTO `fcm_message_token`(id, timestamp, token, user_id)
-VALUES ('01a14281', NOW(), '838fdc717a5480e3', 'a05990b1');
+INSERT INTO `fcm_message_token`(id, timestamp, token, user_id, created_by, created_date, modified_by, modified_date)
+VALUES ('01a14281', NOW(), '838fdc717a5480e3', 'a05990b1', 'admin', NOW(), 'admin', NOW());
 
 # UserRole
 INSERT INTO `user_role`(user_id, role_id)
 VALUES ('3f06af63', '319a7b41'),
        ('a05990b1', '72ca9394'),
-       ('9b79f4ba', '72ca9394');
+       ('9b79f4ba', '72ca9394'),
+       ('d540fce2', '72ca9394');
 
 # UserThumbnail
 INSERT INTO `user_thumbnail`(user_id, thumbnail_id)
 VALUES ('3f06af63', '7e90877f'),
        ('a05990b1', 'f3e78681'),
        ('a05990b1', 'a8cfd1fb'),
-       ('9b79f4ba', 'a31aba86');
+       ('9b79f4ba', 'a31aba86'),
+       ('d540fce2', '15de2ef4');
 
 # Follow
 INSERT INTO `follow`(id, created_by, created_date, modified_by, modified_date, published_at, follower_id, user_id)
-VALUES ('f2cf8a48', 'admin', NOW(), 'admin', NOW(), NOW(), 'a05990b1', '9b79f4ba');
+VALUES ('f2cf8a48', 'admin', NOW(), 'admin', NOW(), NOW(), 'a05990b1', '9b79f4ba'),
+       ('52f031a8', 'admin', NOW(), 'admin', NOW(), NOW(), 'd540fce2', '9b79f4ba');
 
 # Hashtag
 INSERT INTO `hashtag`(id, created_by, created_date, modified_by, modified_date, tag)
@@ -149,11 +156,13 @@ VALUES ('admin', NOW(), 'admin', NOW(), 0, 'f7d9b74b', 'd8659362'),
        ('admin', NOW(), 'admin', NOW(), 0, '37b32dc2', '236e2aa6');
 
 # NotificationObject
-INSERT INTO `notification_object`(id, action_type, message, object_id, object_type, published_at)
-VALUES ('77a70703', 1, 'user2 uploaded: Video 3', 'e65707b4', 'VIDEO', NOW()),
-       ('c63edb2c', 2, 'user1 has followed you', 'f2cf8a48', 'FOLLOW', NOW());
+INSERT INTO `notification_object`(id, action_type, message, object_id, object_type, published_at, created_by,
+                                  created_date, modified_by, modified_date)
+VALUES ('77a70703', 1, 'user2 uploaded: Video 3', 'e65707b4', 'VIDEO', NOW(), 'admin', NOW(), 'admin', NOW()),
+       ('c63edb2c', 2, 'user1 has followed you', 'f2cf8a48', 'FOLLOW', NOW(), 'admin', NOW(), 'admin', NOW());
 
 # Notification
-INSERT INTO `notification`(id, is_read, is_seen, actor_id, notification_object_id, recipient_id)
-VALUES ('856c89bc', false, false, '9b79f4ba', '77a70703', 'a05990b1'),
-       ('652ef2c2', false, false, 'a05990b1', 'c63edb2c', '9b79f4ba');
+INSERT INTO `notification`(id, is_read, is_seen, actor_id, notification_object_id, recipient_id, created_by,
+                           created_date, modified_by, modified_date)
+VALUES ('856c89bc', false, false, '9b79f4ba', '77a70703', 'a05990b1', 'admin', NOW(), 'admin', NOW()),
+       ('652ef2c2', false, false, 'a05990b1', 'c63edb2c', '9b79f4ba', 'admin', NOW(), 'admin', NOW());

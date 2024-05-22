@@ -39,7 +39,7 @@ public class NotificationControllerTest {
                         .param("id", "856c89bc"))
                 .andExpect(status().isNoContent());
 
-        // Assert database is updated.
+        // Assert the database is updated.
         assertThat(notificationRepository.findByIdAndRecipientId("856c89bc", "a05990b1")
                 .getIsRead()).isEqualTo(true);
     }

@@ -13,7 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-public class NotificationObject {
+public class NotificationObject extends AuditableEntity {
 
     public enum ObjectType {
         VIDEO, FOLLOW, COMMENT;

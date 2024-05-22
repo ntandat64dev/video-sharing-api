@@ -4,9 +4,11 @@ import com.example.videosharingapi.validation.IdExists;
 import com.example.videosharingapi.entity.Comment;
 import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.entity.Video;
+import com.example.videosharingapi.validation.group.Create;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Null;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -58,6 +60,7 @@ public final class CommentDto {
     }
 
     @IdExists(entity = Comment.class)
+    @Null(groups = Create.class)
     private String id;
 
     @Valid

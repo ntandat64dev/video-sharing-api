@@ -2,12 +2,11 @@ package com.example.videosharingapi.service.impl;
 
 import com.example.videosharingapi.dto.NotificationDto;
 import com.example.videosharingapi.dto.response.PageResponse;
-import com.example.videosharingapi.entity.FcmMessageToken;
-import com.example.videosharingapi.entity.Notification;
-import com.example.videosharingapi.entity.NotificationObject;
+import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.NotificationMapper;
+import com.example.videosharingapi.mapper.NotificationObjectMapper;
 import com.example.videosharingapi.mapper.ThumbnailMapper;
 import com.example.videosharingapi.repository.*;
 import com.example.videosharingapi.service.NotificationService;
@@ -41,13 +40,16 @@ public class NotificationServiceImpl implements NotificationService {
     private final NotificationRepository notificationRepository;
     private final NotificationObjectRepository notificationObjectRepository;
     private final FcmMessageTokenRepository fcmMessageTokenRepository;
+    private final CommentRepository commentRepository;
 
     private final ThumbnailMapper thumbnailMapper;
+    private final NotificationObjectMapper notificationObjectMapper;
     private final NotificationMapper notificationMapper;
     private final FirebaseMessaging firebaseMessaging;
 
     @Override
     public void pushMessage(List<String> tokens, Map<String, String> data) {
+        if (tokens == null || tokens.isEmpty()) return;
         try {
             var message = MulticastMessage.builder()
                     .addAllTokens(tokens)
@@ -74,73 +76,122 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void createNotification(NotificationDto notificationDto) {
-        var objectType = notificationDto.getSnippet().getObjectType();
-        if (objectType.equals(NotificationObject.ObjectType.VIDEO)) {
-            createVideoNotification(notificationDto);
+        var snippet = notificationDto.getSnippet();
+        switch (snippet.getObjectType()) {
+            case VIDEO -> handleVideoNotificationCreation(snippet);
+            case COMMENT -> handleCommentNotificationCreation(snippet);
+            case FOLLOW -> handleFollowNotificationCreation(snippet);
         }
     }
 
-    private void createVideoNotification(NotificationDto notificationDto) {
-        var actionType = notificationDto.getSnippet().getActionType();
-        var objectType = notificationDto.getSnippet().getObjectType();
-        var actor = userRepository.findById(notificationDto.getSnippet().getActorId()).orElseThrow();
-        var video = videoRepository.findById(notificationDto.getSnippet().getObjectId()).orElseThrow();
+    private void handleVideoNotificationCreation(NotificationDto.Snippet snippet) {
+        var actor = userRepository.findById(snippet.getActorId()).orElseThrow();
+        var video = videoRepository.findById(snippet.getObjectId()).orElseThrow();
 
-        var follows = followRepository
-                .findAllByUserId(actor.getId(), Pageable.unpaged())
-                .getContent();
-        if (follows.isEmpty()) {
-            // If there are no followers then return.
-            return;
-        }
+        var follows = followRepository.findAllByUserId(actor.getId(), Pageable.unpaged()).getContent();
+        if (follows.isEmpty()) return; // If there are no followers, then return.
 
-        // Create and save NotificationObject.
-        var notificationObject = NotificationObject.builder()
-                .actionType(actionType)
-                .objectType(objectType)
-                .objectId(video.getId())
-                .publishedAt(LocalDateTime.now())
-                .message(buildNotificationMessage(actor.getUsername(), video.getTitle(), actionType))
-                .build();
+        var message = buildMessage(snippet.getActionType(), actor.getUsername(), video.getTitle());
+        var notificationObject = createNotificationObject(snippet, message);
         notificationObjectRepository.save(notificationObject);
 
-        // Create and save Notifications.
-        List<Notification> notifications = new ArrayList<>();
-        for (var follow : follows) {
-            var recipientId = follow.getFollower();
-            var notification = Notification.builder()
-                    .notificationObject(notificationObject)
-                    .recipient(recipientId)
-                    .actor(follow.getUser())
-                    .isRead(false)
-                    .isSeen(false)
-                    .build();
-            notifications.add(notification);
-        }
+        var followers = follows.stream().map(Follow::getFollower).toList();
+        var notifications = followers.stream()
+                .map(follower -> createNotification(notificationObject, actor, follower))
+                .toList();
         notificationRepository.saveAll(notifications);
 
-        // Push message.
-        var userIds = follows.stream()
-                .map(follow -> follow.getFollower().getId())
-                .toList();
+        pushMessageToFollowers(followers, actor, video);
+    }
+
+    private void handleFollowNotificationCreation(NotificationDto.Snippet snippet) {
+        var actor = userRepository.findById(snippet.getActorId()).orElseThrow();
+        var follow = followRepository.findById(snippet.getObjectId()).orElseThrow();
+
+        var message = buildMessage(snippet.getActionType(), actor.getUsername(), null);
+        var notificationObject = createNotificationObject(snippet, message);
+        notificationObjectRepository.save(notificationObject);
+
+        var notification = createNotification(notificationObject, follow.getFollower(), follow.getUser());
+        notificationRepository.save(notification);
+
+        pushMessageToRecipient(
+                List.of(notification.getRecipient().getId()), actor.getUsername(),
+                message, actor.getThumbnails(), null);
+    }
+
+    private void handleCommentNotificationCreation(NotificationDto.Snippet snippet) {
+        var actor = userRepository.findById(snippet.getActorId()).orElseThrow();
+        var comment = commentRepository.findById(snippet.getObjectId()).orElseThrow();
+
+        var message = buildMessage(snippet.getActionType(), actor.getUsername(), comment.getText());
+        var notificationObject = createNotificationObject(snippet, message);
+        notificationObjectRepository.save(notificationObject);
+
+        var recipient = switch (snippet.getActionType()) {
+            case 3 -> comment.getVideo().getUser();
+            case 4 -> comment.getParent().getUser();
+            default -> throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
+        };
+        var notification = createNotification(notificationObject, comment.getUser(), recipient);
+        notificationRepository.save(notification);
+
+        pushMessageToRecipient(
+                List.of(notification.getRecipient().getId()), actor.getUsername(), comment.getText(),
+                actor.getThumbnails(), comment.getVideo().getThumbnails());
+    }
+
+    private void pushMessageToFollowers(List<User> followers, User actor, Video video) {
+        var followerIds = followers.stream().map(User::getId).toList();
+        pushMessageToRecipient(
+                followerIds, actor.getUsername(), video.getTitle(),
+                actor.getThumbnails(), video.getThumbnails());
+    }
+
+    private void pushMessageToRecipient(List<String> userIds, String title, String body,
+                                        List<Thumbnail> largeIconThumbnails, List<Thumbnail> imageThumbnails) {
         var tokens = fcmMessageTokenRepository.findAllByUserIdIn(userIds).stream()
                 .map(FcmMessageToken::getToken)
                 .toList();
-        var data = new HashMap<String, String>();
-        data.put(TITLE, actor.getUsername());
-        data.put(BODY, video.getTitle());
-        data.put(IMAGE, thumbnailMapper.getDefaultThumbnailUrl(video.getThumbnails()));
-        data.put(LARGE_ICON, thumbnailMapper.getDefaultThumbnailUrl(actor.getThumbnails()));
+        var data = createMessageData(title, body, largeIconThumbnails, imageThumbnails);
         pushMessage(tokens, data);
     }
 
-    private String buildNotificationMessage(String actor, String content, int actionType) {
+    private NotificationObject createNotificationObject(NotificationDto.Snippet snippet, String message) {
+        var notificationObject = notificationObjectMapper.fromNotificationDtoSnippet(snippet);
+        notificationObject.setMessage(message);
+        return notificationObject;
+    }
+
+    private Notification createNotification(NotificationObject notificationObject, User actor, User recipient) {
+        return Notification.builder()
+                .notificationObject(notificationObject)
+                .actor(actor)
+                .recipient(recipient)
+                .isRead(false)
+                .isSeen(false)
+                .build();
+    }
+
+    private Map<String, String> createMessageData(String title, String body,
+                                                  List<Thumbnail> largeIconThumbnails,
+                                                  List<Thumbnail> imageThumbnails) {
+        var data = new HashMap<String, String>();
+        data.put(TITLE, title);
+        data.put(BODY, body);
+        if (largeIconThumbnails != null)
+            data.put(LARGE_ICON, thumbnailMapper.getDefaultThumbnailUrl(largeIconThumbnails));
+        if (imageThumbnails != null)
+            data.put(IMAGE, thumbnailMapper.getDefaultThumbnailUrl(imageThumbnails));
+        return data;
+    }
+
+    private String buildMessage(int actionType, String param1, String param2) {
         return switch (actionType) {
-            case 1 -> MessageUtil.decode("notification.message.type.1", actor, content);
-            case 2 -> MessageUtil.decode("notification.message.type.2", actor);
-            case 3 -> MessageUtil.decode("notification.message.type.3", actor);
-            case 4 -> MessageUtil.decode("notification.message.type.4", actor, content);
-            case 5 -> MessageUtil.decode("notification.message.type.5", actor, content);
+            case 1 -> MessageUtil.decode("notification.message.type.1", param1, param2);
+            case 2 -> MessageUtil.decode("notification.message.type.2", param1);
+            case 3 -> MessageUtil.decode("notification.message.type.3", param1, param2);
+            case 4 -> MessageUtil.decode("notification.message.type.4", param1, param2);
             default -> throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
         };
     }
@@ -181,7 +232,7 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public PageResponse<NotificationDto> getNotificationsByUserId(String userId, Pageable pageable) {
-        // Mark all notification as seen.
+        // Mark all notifications as seen.
         notificationRepository.markAllAsSeen(userId);
 
         var notificationDtoPage = notificationRepository

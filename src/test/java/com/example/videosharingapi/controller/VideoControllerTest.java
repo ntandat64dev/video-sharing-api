@@ -1,6 +1,7 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
+import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.CategoryDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
@@ -8,7 +9,6 @@ import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.jayway.jsonpath.JsonPath;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.junit.jupiter.api.Test;
@@ -52,9 +52,11 @@ public class VideoControllerTest {
     private @Autowired PlaylistItemRepository playlistItemRepository;
     private @Autowired NotificationRepository notificationRepository;
     private @Autowired NotificationObjectRepository notificationObjectRepository;
+    private @Autowired FcmMessageTokenRepository fcmMessageTokenRepository;
 
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
+    private @Autowired TestUtil testUtil;
 
     @PostConstruct
     public void afterPropertiesSet() {
@@ -186,7 +188,7 @@ public class VideoControllerTest {
         // Assert Video is created.
         assertThat(videoRepository.findAll()).hasSize(4);
         var video = videoRepository
-                .findById(JsonPath.read(result.getResponse().getContentAsString(), "$.id"));
+                .findById(testUtil.json(result, "$.id"));
         assertThat(video).isPresent();
 
         // Assert VideoStatistic is created.
@@ -227,10 +229,10 @@ public class VideoControllerTest {
                 .andReturn();
 
         assertThat(notificationObjectRepository.count()).isEqualTo(3);
-        assertThat(notificationRepository.count()).isEqualTo(3);
+        assertThat(notificationRepository.count()).isEqualTo(4);
 
         var notificationObject = notificationObjectRepository
-                .findByObjectId(JsonPath.read(result.getResponse().getContentAsString(), "$.id"))
+                .findByObjectId(testUtil.json(result, "$.id"))
                 .orElseThrow();
         assertThat(notificationObject.getActionType()).isEqualTo(1);
         assertThat(notificationObject.getObjectType()).isEqualTo(NotificationObject.ObjectType.VIDEO);
@@ -239,11 +241,16 @@ public class VideoControllerTest {
         var notifications = notificationRepository
                 .findByNotificationObjectId(notificationObject.getId(), Pageable.unpaged())
                 .getContent();
-        assertThat(notifications).hasSize(1);
-        assertThat(notifications.getFirst().getActor().getId()).isEqualTo("9b79f4ba");
-        assertThat(notifications.getFirst().getRecipient().getId()).isEqualTo("a05990b1");
-        assertThat(notifications.getFirst().getIsSeen()).isEqualTo(false);
-        assertThat(notifications.getFirst().getIsRead()).isEqualTo(false);
+        assertThat(notifications).hasSize(2);
+        assertThat(notifications).allMatch(notification -> !notification.getIsSeen());
+        assertThat(notifications).allMatch(notification -> !notification.getIsRead());
+        assertThat(notifications.stream().map(notification -> notification.getActor().getId()))
+                .allMatch(userId -> userId.equals("9b79f4ba"));
+        assertThat(notifications.stream().map(notification -> notification.getRecipient().getId()))
+                .containsExactlyInAnyOrder("a05990b1", "d540fce2");
+
+        // The follower user1's FCM token is invalid, so assert FCM token is deleted.
+        assertThat(fcmMessageTokenRepository.count()).isEqualTo(0);
     }
 
     @Test
@@ -253,6 +260,40 @@ public class VideoControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message")
                         .value("Required part 'videoFile' is not present."));
+
+        // Assert video is not saved.
+        assertThat(videoRepository.count()).isEqualTo(3);
+    }
+
+    @Test
+    public void givenInvalidVideoFile_whenPostVideo_thenError() throws Exception {
+        // Given empty file.
+        var invalidVideoFile = new MockMultipartFile(
+                "videoFile",
+                "test.mp4",
+                "video/mp4", new byte[] {});
+
+        mockMvc.perform(multipart("/api/v1/videos")
+                        .file(invalidVideoFile)
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadata()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("videoFile: The video file is invalid."));
+
+        // Given invalid content type.
+        invalidVideoFile = new MockMultipartFile(
+                "videoFile",
+                "test.mp4",
+                "text/plain", RandomStringUtils.random(10).getBytes());
+
+        mockMvc.perform(multipart("/api/v1/videos")
+                        .file(invalidVideoFile)
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadata()))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("videoFile: The video file is invalid."));
 
         // Assert video is not saved.
         assertThat(videoRepository.count()).isEqualTo(3);
@@ -384,19 +425,19 @@ public class VideoControllerTest {
         var video = videoRepository.findById("37b32dc2").orElseThrow();
         assertThat(video.getTitle()).isEqualTo("Video 1 updated");
         assertThat(video.getDescription()).isEqualTo("Video 1 description updated");
-        // publishedAt not updated as expect.
+        // publishedAt is not updated as expect.
         assertThat(video.getPublishedAt()).isEqualTo(LocalDateTime.parse("2024-04-01T09:00:00"));
-        // videoUrl not updated as expect.
+        // videoUrl is not updated as expect.
         assertThat(video.getVideoUrl()).isEqualTo("Video 1 URL");
         assertThat(video.getCategory().getId()).isEqualTo("f2fe0cb6");
         assertThat(video.getLocation()).isEqualTo("US");
-        // thumbnails not updated as expect.
+        // thumbnails are not updated as expect.
         assertThat(video.getThumbnails()).hasSize(2);
         assertThat(video.getThumbnails().stream().map(Thumbnail::getUrl)).containsExactlyInAnyOrder(
                 "Video 1 default thumbnail URL",
                 "Video 1 medium thumbnail URL");
         assertThat(video.getHashtags().stream().map(Hashtag::getTag)).containsExactlyInAnyOrder("art");
-        // duration not updated as expect.
+        // duration is not updated as expect.
         assertThat(video.getDurationSec()).isEqualTo(1000);
         assertThat(video.getPrivacy().getId()).isEqualTo("f01121d2");
         assertThat(video.getAgeRestricted()).isEqualTo(false);
@@ -417,7 +458,7 @@ public class VideoControllerTest {
         assertThat(videoStatistic.getCommentCount()).isEqualTo(1);
         assertThat(videoStatistic.getDownloadCount()).isEqualTo(0);
 
-        // Assert old hashtags is retained and new hashtags is added.
+        // Assert old hashtags are retained and new hashtags are added.
         assertThat(hashtagRepository.findAllTag()).containsExactlyInAnyOrder("music", "sport", "art");
     }
 
@@ -485,7 +526,7 @@ public class VideoControllerTest {
         assertThat(videoRepository.findById("37b32dc2")).isNotPresent();
 
         // Assert Thumbnails is deleted.
-        assertThat(thumbnailRepository.count()).isEqualTo(6);
+        assertThat(thumbnailRepository.count()).isEqualTo(7);
         assertThat(thumbnailRepository.findAllById(List.of("b2825704", "2c48d7cd"))).isEmpty();
 
         // Assert VideoStatistic is deleted.
@@ -527,9 +568,9 @@ public class VideoControllerTest {
                 .andExpect(status().isNoContent());
 
         assertThat(notificationObjectRepository.count()).isEqualTo(1);
-        assertThat(notificationObjectRepository.findById("77a70703")).isNotPresent();
+        assertThat(notificationObjectRepository.findAll().getFirst().getId()).isEqualTo("c63edb2c");
         assertThat(notificationRepository.count()).isEqualTo(1);
-        assertThat(notificationRepository.findById("856c89bc")).isNotPresent();
+        assertThat(notificationRepository.findAll().getFirst().getId()).isEqualTo("652ef2c2");
     }
 
     @Test
@@ -582,7 +623,7 @@ public class VideoControllerTest {
                 .andExpect(jsonPath("$.rating").value(VideoRatingDto.LIKE))
                 .andExpect(jsonPath("$.publishedAt").isNotEmpty());
 
-        // When there is VideoRating with DISLIKE type.
+        // When there is VideoRating with a DISLIKE type.
         mockMvc.perform(get("/api/v1/videos/rate/mine")
                         .param("videoId", "e65707b4"))
                 .andExpect(status().isOk())
@@ -622,7 +663,7 @@ public class VideoControllerTest {
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(1);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
 
-        // Rate DISLIKE then VideoRating is updated with DISLIKE type.
+        // Rate DISLIKE then VideoRating is updated with a DISLIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
                         .param("videoId", videoId)
                         .param("rating", "dislike"))

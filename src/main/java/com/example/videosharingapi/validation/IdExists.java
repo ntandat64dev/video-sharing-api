@@ -5,6 +5,11 @@ import jakarta.validation.Payload;
 
 import java.lang.annotation.*;
 
+/**
+ * The ID of {@code entity} must be existing in the database.
+ * <p>
+ * {@code null} value is considered valid.
+ */
 @Target({ ElementType.FIELD, ElementType.PARAMETER })
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
