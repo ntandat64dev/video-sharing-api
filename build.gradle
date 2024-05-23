@@ -57,6 +57,10 @@ dependencies {
 
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.17.0'
 
+    implementation ('com.google.firebase:firebase-admin:9.2.0') {
+        exclude group: 'commons-logging', module: 'commons-logging'
+    }
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     // Used to get rid of Gradle warning: https://docs.gradle.org/8.5/userguide/upgrading_version_8.html#test_framework_implementation_dependencies

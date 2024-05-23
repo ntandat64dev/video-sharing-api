@@ -1,9 +1,11 @@
 package com.example.videosharingapi.service.impl;
 
+import com.example.videosharingapi.dto.NotificationDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.dto.response.PageResponse;
 import com.example.videosharingapi.entity.Hashtag;
+import com.example.videosharingapi.entity.NotificationObject;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.entity.VideoRating;
 import com.example.videosharingapi.exception.AppException;
@@ -11,6 +13,7 @@ import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.VideoMapper;
 import com.example.videosharingapi.mapper.VideoRatingMapper;
 import com.example.videosharingapi.repository.*;
+import com.example.videosharingapi.service.NotificationService;
 import com.example.videosharingapi.service.StorageService;
 import com.example.videosharingapi.service.UserService;
 import com.example.videosharingapi.service.VideoService;
@@ -44,6 +47,7 @@ public class VideoServiceImpl implements VideoService {
 
     private final UserService userService;
     private final StorageService storageService;
+    private final NotificationService notificationService;
 
     private final VideoMapper videoMapper;
     private final VideoRatingMapper videoRatingMapper;
@@ -65,9 +69,17 @@ public class VideoServiceImpl implements VideoService {
         var video = videoRepository.save(videoMapper.toVideo(videoDto));
         saveHashtags(videoDto.getSnippet().getHashtags(), video);
 
-        return videoRepository.findById(video.getId())
-                .map(videoMapper::toVideoDto)
-                .orElseThrow();
+        // Create notification.
+        var notification = new NotificationDto();
+        notification.setSnippet(NotificationDto.Snippet.builder()
+                .actionType(1)
+                .actorId(video.getUser().getId())
+                .objectType(NotificationObject.ObjectType.VIDEO)
+                .objectId(video.getId())
+                .build());
+        notificationService.createNotification(notification);
+
+        return videoMapper.toVideoDto(video);
     }
 
     private void saveHashtags(List<String> tags, Video video) {
@@ -85,7 +97,7 @@ public class VideoServiceImpl implements VideoService {
         var videoOwner = userRepository.findByVideoId(videoDto.getId());
         var user = userService.getAuthenticatedUser();
 
-        // If the video owner is not the authorized user then throw forbidden error.
+        // If the video owner is not the authorized user, then throw forbidden error.
         if (!Objects.equals(videoOwner.getId(), user.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
 
         // Set null to values that user does not permission to update.
@@ -129,6 +141,9 @@ public class VideoServiceImpl implements VideoService {
 
         // Delete Video.
         videoRepository.deleteById(id);
+
+        // Delete related notifications.
+        notificationService.deleteRelatedNotifications(id);
     }
 
     @Override
@@ -200,27 +215,35 @@ public class VideoServiceImpl implements VideoService {
     @Override
     @Transactional
     public VideoRatingDto rateVideo(String videoId, String userId, String rating) {
-        var video = videoRepository.getReferenceById(videoId);
-        var user = userRepository.getReferenceById(userId);
+        var video = videoRepository.findById(videoId).orElseThrow();
+        var user = userRepository.findById(userId).orElseThrow();
 
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), video.getId());
+
         if (videoRating == null && Objects.equals(rating, VideoRatingDto.NONE)) {
-            return videoRatingMapper.fromNullVideoRating(videoId, userId);
+            // If the user rates NONE but there is no rating yet, return NONE rating.
+            return videoRatingMapper.createNoneVideoRating(videoId, userId);
         }
+
         if (videoRating != null && videoRating.getRating().name().equalsIgnoreCase(rating)) {
+            // If the user rates the same rating, do nothing and return.
             return videoRatingMapper.toVideoRatingDto(videoRating);
         }
 
         if (videoRating != null) {
             if (Objects.equals(rating, VideoRatingDto.NONE)) {
+                // If the user rates NONE, then delete the rating and return NONE.
                 videoRatingRepository.delete(videoRating);
-                return videoRatingMapper.fromNullVideoRating(videoId, userId);
+                return videoRatingMapper.createNoneVideoRating(videoId, userId);
             } else {
+                // else update the current rating.
                 videoRating.setRating(VideoRating.Rating.valueOf(rating.toUpperCase()));
                 videoRating.setPublishedAt(LocalDateTime.now());
                 videoRatingRepository.save(videoRating);
             }
         } else {
+            // If this is the first time the user has rated the video,
+            // then create a new rating and save.
             videoRating = new VideoRating();
             videoRating.setVideo(video);
             videoRating.setUser(user);
@@ -234,7 +257,7 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public VideoRatingDto getRating(String videoId, String userId) {
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
-        if (videoRating == null) return videoRatingMapper.fromNullVideoRating(videoId, userId);
+        if (videoRating == null) return videoRatingMapper.createNoneVideoRating(videoId, userId);
         return videoRatingMapper.toVideoRatingDto(videoRating);
     }
 

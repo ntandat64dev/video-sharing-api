@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,7 +16,7 @@ import java.util.*;
 import java.util.stream.Stream;
 
 /**
- * An {@link ApplicationRunner} used to initialize database for testing purpose.
+ * An {@link ApplicationRunner} used to initialize the database for testing purpose.
  */
 @Profile("init")
 @Component
@@ -35,6 +36,8 @@ public class InsertTestDataRunner implements ApplicationRunner {
     private final PrivacyRepository privacyRepository;
     private final CategoryRepository categoryRepository;
     private final RoleRepository roleRepository;
+    private final NotificationObjectRepository notificationObjectRepository;
+    private final NotificationRepository notificationRepository;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -83,11 +86,31 @@ public class InsertTestDataRunner implements ApplicationRunner {
             for (var follower : users) {
                 if (Objects.equals(user.getId(), follower.getId())) continue;
                 if (new Random().nextInt(10) < 3) {
-                    var subscription = new Follow();
-                    subscription.setUser(user);
-                    subscription.setFollower(follower);
-                    subscription.setPublishedAt(LocalDateTime.now());
-                    followRepository.saveAndFlush(subscription);
+                    var follow = new Follow();
+                    follow.setUser(user);
+                    follow.setFollower(follower);
+                    follow.setPublishedAt(LocalDateTime.now());
+                    followRepository.saveAndFlush(follow);
+
+                    var notificationObject = NotificationObject.builder()
+                            .objectId(follow.getId())
+                            .objectType(NotificationObject.ObjectType.FOLLOW)
+                            .actionType(2)
+                            .message(follower.getUsername() + " has followed you")
+                            .publishedAt(LocalDateTime.now())
+                            .build();
+                    notificationObjectRepository.save(notificationObject);
+
+                    var isSeen = new Random().nextBoolean();
+                    var isRead = isSeen && new Random().nextBoolean();
+                    var notification = Notification.builder()
+                            .notificationObject(notificationObject)
+                            .actor(follower)
+                            .recipient(user)
+                            .isSeen(isSeen)
+                            .isRead(isRead)
+                            .build();
+                    notificationRepository.save(notification);
                 }
             }
         }
@@ -160,6 +183,34 @@ public class InsertTestDataRunner implements ApplicationRunner {
             video.setHashtags(hashtags.subList(start, end));
             videoRepository.saveAndFlush(video);
             videos[i - 1] = video;
+
+            var notificationObject = NotificationObject.builder()
+                    .objectId(video.getId())
+                    .objectType(NotificationObject.ObjectType.VIDEO)
+                    .actionType(2)
+                    .message(video.getUser().getUsername() + " uploaded: " + video.getTitle())
+                    .publishedAt(LocalDateTime.now())
+                    .build();
+            notificationObjectRepository.save(notificationObject);
+
+            var recipients = followRepository
+                    .findAllByUserId(video.getUser().getId(), Pageable.unpaged())
+                    .map(Follow::getFollower);
+
+            var notifications = new ArrayList<Notification>();
+            for (var recipient : recipients) {
+                var isSeen = new Random().nextBoolean();
+                var isRead = isSeen && new Random().nextBoolean();
+                var notification = Notification.builder()
+                        .notificationObject(notificationObject)
+                        .actor(video.getUser())
+                        .recipient(recipient)
+                        .isSeen(isSeen)
+                        .isRead(isRead)
+                        .build();
+                notifications.add(notification);
+            }
+            notificationRepository.saveAll(notifications);
 
             for (int j = 0; j < new Random().nextInt(20); j++) {
                 var user = users[new Random().nextInt(users.length)];

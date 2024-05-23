@@ -9,11 +9,15 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface CommentRepository extends JpaRepository<Comment, String> {
 
+    Long deleteByParentId(String parentId);
+
     void deleteByVideoId(String videoId);
 
     Page<Comment> findAllByVideoId(String videoId, Pageable pageable);
 
-    Page<Comment> findByVideoIdAndParentIsNull(String videoId, Pageable pageable);
+    Page<Comment> findAllByVideoIdAndParentIsNull(String videoId, Pageable pageable);
+
+    Page<Comment> findAllByParentId(String parentId, Pageable pageable);
 
     Long countByParentId(String parentId);
 }

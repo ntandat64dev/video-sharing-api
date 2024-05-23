@@ -28,7 +28,7 @@ public class AuthServiceImpl implements AuthService {
             // Authenticate using AuthenticationManager.
             var authenticationRequest = UsernamePasswordAuthenticationToken.unauthenticated(username, password);
             var authenticationResponse = authenticationManager.authenticate(authenticationRequest);
-            // If no error, therefore authentication is successful then generate JWT token and return to client.
+            // If no error, therefore, authentication is successful then generate JWT token and return to the client.
             var token = jwtUtil.generateToken((AuthenticatedUser) authenticationResponse.getPrincipal());
             return new AuthResponse(token, jwtUtil.extractExpiration(token));
         } catch (AuthenticationException e) {

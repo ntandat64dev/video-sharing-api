@@ -6,12 +6,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
-
 @Repository
 public interface FollowRepository extends JpaRepository<Follow, String> {
 
     Page<Follow> findAllByFollowerId(String followerId, Pageable pageable);
+
+    Page<Follow> findAllByUserId(String userId, Pageable pageable);
 
     Follow findByUserIdAndFollowerId(String userId, String followerId);
 

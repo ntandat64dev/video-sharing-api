@@ -1,13 +1,18 @@
 package com.example.videosharingapi.controller;
 
 import com.example.videosharingapi.common.TestSql;
+import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.FollowDto;
+import com.example.videosharingapi.entity.NotificationObject;
 import com.example.videosharingapi.repository.FollowRepository;
+import com.example.videosharingapi.repository.NotificationObjectRepository;
+import com.example.videosharingapi.repository.NotificationRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.ActiveProfiles;
@@ -31,7 +36,10 @@ public class FollowControllerTest {
 
     private @Autowired ObjectMapper objectMapper;
     private @Autowired FollowRepository followRepository;
+    private @Autowired NotificationObjectRepository notificationObjectRepository;
+    private @Autowired NotificationRepository notificationRepository;
     private @Autowired MockMvc mockMvc;
+    private @Autowired TestUtil testUtil;
 
     // user2 follow user1
     private FollowDto obtainFollowDto() {
@@ -121,11 +129,56 @@ public class FollowControllerTest {
 
     @Test
     @Transactional
+    @WithUserDetails("user2")
+    public void whenFollow_thenNotificationIsCreated() throws Exception {
+        var followDto = obtainFollowDto();
+
+        var result = mockMvc.perform(post("/api/v1/follows")
+                        .content(objectMapper.writeValueAsBytes(followDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        assertThat(notificationObjectRepository.count()).isEqualTo(3);
+        assertThat(notificationRepository.count()).isEqualTo(3);
+
+        var notificationObject = notificationObjectRepository
+                .findAllByObjectId(testUtil.json(result, "$.id"))
+                .getFirst();
+        assertThat(notificationObject.getActionType()).isEqualTo(2);
+        assertThat(notificationObject.getObjectType()).isEqualTo(NotificationObject.ObjectType.FOLLOW);
+        assertThat(notificationObject.getMessage()).isEqualTo("user2 has followed you");
+
+        var notifications = notificationRepository
+                .findByNotificationObjectId(notificationObject.getId(), Pageable.unpaged())
+                .getContent();
+        assertThat(notifications).hasSize(1);
+        assertThat(notifications.getFirst().getActor().getId()).isEqualTo("9b79f4ba");
+        assertThat(notifications.getFirst().getRecipient().getId()).isEqualTo("a05990b1");
+        assertThat(notifications.getFirst().getIsSeen()).isEqualTo(false);
+        assertThat(notifications.getFirst().getIsRead()).isEqualTo(false);
+    }
+
+    @Test
+    @Transactional
     public void givenFollowId_whenDelete_thenSuccess() throws Exception {
         mockMvc.perform(delete("/api/v1/follows")
                         .param("id", "f2cf8a48"))
                 .andExpect(status().isNoContent());
         assertThat(followRepository.existsById("f2cf8a48")).isFalse();
+    }
+
+    @Test
+    @Transactional
+    public void givenFollowId_whenDelete_thenRelatedNotificationsAreDeleted() throws Exception {
+        mockMvc.perform(delete("/api/v1/follows")
+                        .param("id", "f2cf8a48"))
+                .andExpect(status().isNoContent());
+
+        assertThat(notificationObjectRepository.count()).isEqualTo(1);
+        assertThat(notificationObjectRepository.findById("c63edb2c")).isNotPresent();
+        assertThat(notificationRepository.count()).isEqualTo(1);
+        assertThat(notificationRepository.findById("652ef2c2")).isNotPresent();
     }
 
     @Test

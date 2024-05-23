@@ -44,7 +44,7 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.snippet.username").value("user2"))
                 .andExpect(jsonPath("$.snippet.roles").value(contains("USER")))
                 .andExpect(jsonPath("$.statistic.viewCount").value(2))
-                .andExpect(jsonPath("$.statistic.followerCount").value(1))
+                .andExpect(jsonPath("$.statistic.followerCount").value(2))
                 .andExpect(jsonPath("$.statistic.followingCount").value(0))
                 .andExpect(jsonPath("$.statistic.videoCount").value(1));
     }
