@@ -16,8 +16,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -82,26 +81,71 @@ public class NotificationControllerTest {
 
     @Test
     @Transactional
-    public void givenToken_whenPost_thenSuccess() throws Exception {
+    public void givenToken_whenRegister_thenSuccess() throws Exception {
         var token = "abc123";
         mockMvc.perform(post("/api/v1/notifications/message-token")
                         .content(token))
                 .andExpect(status().isCreated());
 
-        assertThat(fcmMessageTokenRepository.count()).isEqualTo(2);
+        // Assert the database is updated.
+        assertThat(fcmMessageTokenRepository.count()).isEqualTo(3);
         assertThat(fcmMessageTokenRepository.findAll().stream().map(FcmMessageToken::getToken))
-                .containsExactlyInAnyOrder("838fdc717a5480e3", "abc123");
+                .containsExactlyInAnyOrder("838fdc717a5480e3", "b369be84eae3622c", "abc123");
     }
 
     @Test
-    public void givenTokenThatAlreadyExists_whenPost_thenNothingHappen() throws Exception {
+    public void givenAnExistingToken_whenRegister_thenNothingHappen() throws Exception {
         var token = "838fdc717a5480e3";
         mockMvc.perform(post("/api/v1/notifications/message-token")
                         .content(token))
                 .andExpect(status().isCreated());
 
-        assertThat(fcmMessageTokenRepository.count()).isEqualTo(1);
+        // Assert the database is intact.
+        assertThat(fcmMessageTokenRepository.count()).isEqualTo(2);
         assertThat(fcmMessageTokenRepository.findAll().getFirst().getToken())
-                .isEqualTo("838fdc717a5480e3");
+                .isEqualTo("838fdc717a5480e3", "b369be84eae3622c");
+    }
+
+    @Test
+    @WithUserDetails("user2")
+    public void givenAnExistingTokenAndInvalidUserCredential_whenRegister_thenError() throws Exception {
+        var token = "838fdc717a5480e3";
+        mockMvc.perform(post("/api/v1/notifications/message-token")
+                        .content(token))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("The token is already registered."));
+
+        // Assert the database is intact.
+        assertThat(fcmMessageTokenRepository.count()).isEqualTo(2);
+        assertThat(fcmMessageTokenRepository.findAll().getFirst().getToken())
+                .isEqualTo("838fdc717a5480e3", "b369be84eae3622c");
+    }
+
+    @Test
+    @Transactional
+    public void givenToken_whenUnregister_thenSuccess() throws Exception {
+        var token = "838fdc717a5480e3";
+        mockMvc.perform(delete("/api/v1/notifications/message-token")
+                        .content(token))
+                .andExpect(status().isNoContent());
+
+        // Assert the database is updated.
+        assertThat(fcmMessageTokenRepository.count()).isEqualTo(1);
+        assertThat(fcmMessageTokenRepository.findAll().stream().map(FcmMessageToken::getId))
+                .containsExactly("783d890e");
+    }
+
+    @Test
+    @Transactional
+    public void givenTokenThatDoesNotExist_whenUnregister_thenNothingHappened() throws Exception {
+        var token = "12345678";
+        mockMvc.perform(delete("/api/v1/notifications/message-token")
+                        .content(token))
+                .andExpect(status().isNoContent());
+
+        // Assert the database is intact.
+        assertThat(fcmMessageTokenRepository.count()).isEqualTo(2);
+        assertThat(fcmMessageTokenRepository.findAll().stream().map(FcmMessageToken::getId))
+                .containsExactly("01a14281", "783d890e");
     }
 }

@@ -13,11 +13,11 @@ public interface VideoRatingMapper {
     @Mapping(target = "rating", expression = "java(videoRating.getRating().name().toLowerCase())")
     VideoRatingDto toVideoRatingDto(VideoRating videoRating);
 
-    default VideoRatingDto fromNullVideoRating(String videoId, String userId) {
-        var videoRatingDto = new VideoRatingDto();
-        videoRatingDto.setVideoId(videoId);
-        videoRatingDto.setUserId(userId);
-        videoRatingDto.setRating(VideoRatingDto.NONE);
-        return videoRatingDto;
+    default VideoRatingDto createNoneVideoRating(String videoId, String userId) {
+        var dto = new VideoRatingDto();
+        dto.setVideoId(videoId);
+        dto.setUserId(userId);
+        dto.setRating(VideoRatingDto.NONE);
+        return dto;
     }
 }

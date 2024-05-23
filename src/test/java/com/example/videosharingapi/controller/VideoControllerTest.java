@@ -232,8 +232,8 @@ public class VideoControllerTest {
         assertThat(notificationRepository.count()).isEqualTo(4);
 
         var notificationObject = notificationObjectRepository
-                .findByObjectId(testUtil.json(result, "$.id"))
-                .orElseThrow();
+                .findAllByObjectId(testUtil.json(result, "$.id"))
+                .getFirst();
         assertThat(notificationObject.getActionType()).isEqualTo(1);
         assertThat(notificationObject.getObjectType()).isEqualTo(NotificationObject.ObjectType.VIDEO);
         assertThat(notificationObject.getMessage()).isEqualTo("user2 uploaded: Video title");

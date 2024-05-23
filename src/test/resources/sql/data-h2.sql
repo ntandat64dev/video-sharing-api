@@ -39,7 +39,8 @@ VALUES ('3f06af63', 'admin', NOW(), 'admin', NOW(), null, null, null, null,
 
 # FcmMessageToken
 INSERT INTO `fcm_message_token`(id, timestamp, token, user_id, created_by, created_date, modified_by, modified_date)
-VALUES ('01a14281', NOW(), '838fdc717a5480e3', 'a05990b1', 'admin', NOW(), 'admin', NOW());
+VALUES ('01a14281', NOW(), '838fdc717a5480e3', 'a05990b1', 'admin', NOW(), 'admin', NOW()),
+       ('783d890e', NOW(), 'b369be84eae3622c', 'a05990b1', 'admin', NOW(), 'admin', NOW());
 
 # UserRole
 INSERT INTO `user_role`(user_id, role_id)
@@ -137,7 +138,7 @@ INSERT INTO `comment_rating`(id, created_by, created_date, modified_by, modified
                              user_id)
 VALUES ('85baf0bb', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '6b342e72', 'a05990b1'),
        ('def0075f', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '3a1e0539', '9b79f4ba'),
-       ('def0075f', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', '6c3239d6', '9b79f4ba');
+       ('def0075f', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', '6c3239d6', 'a05990b1');
 
 # Playlist
 INSERT INTO `playlist`(id, created_by, created_date, modified_by, modified_date, description, is_user_create,

@@ -143,8 +143,8 @@ public class FollowControllerTest {
         assertThat(notificationRepository.count()).isEqualTo(3);
 
         var notificationObject = notificationObjectRepository
-                .findByObjectId(testUtil.json(result, "$.id"))
-                .orElseThrow();
+                .findAllByObjectId(testUtil.json(result, "$.id"))
+                .getFirst();
         assertThat(notificationObject.getActionType()).isEqualTo(2);
         assertThat(notificationObject.getObjectType()).isEqualTo(NotificationObject.ObjectType.FOLLOW);
         assertThat(notificationObject.getMessage()).isEqualTo("user2 has followed you");

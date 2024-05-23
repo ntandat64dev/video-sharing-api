@@ -124,6 +124,16 @@ public class NotificationServiceImpl implements NotificationService {
         var actor = userRepository.findById(snippet.getActorId()).orElseThrow();
         var comment = commentRepository.findById(snippet.getObjectId()).orElseThrow();
 
+        if (comment.getParent() == null && actor.getId().equals(comment.getVideo().getUser().getId())) {
+            // If the actor is the one has commented on his/her own video, then return.
+            return;
+        }
+
+        if (comment.getParent() != null && actor.getId().equals(comment.getParent().getUser().getId())) {
+            // If the actor is the one has replied on his/her comment, then return.
+            return;
+        }
+
         var message = buildMessage(snippet.getActionType(), actor.getUsername(), comment.getText());
         var notificationObject = createNotificationObject(snippet, message);
         notificationObjectRepository.save(notificationObject);
@@ -199,7 +209,11 @@ public class NotificationServiceImpl implements NotificationService {
     @Override
     @Transactional
     public void registerMessageToken(String userId, String token) {
-        if (fcmMessageTokenRepository.existsByToken(token)) return;
+        if (fcmMessageTokenRepository.existsByUserIdAndToken(userId, token)) return;
+
+        if (fcmMessageTokenRepository.existsByToken(token)) {
+            throw new AppException(ErrorCode.TOKEN_ALREADY_REGISTERED);
+        }
 
         var user = userRepository.findById(userId).orElseThrow();
         var fcmMessageToken = FcmMessageToken.builder()
@@ -212,8 +226,14 @@ public class NotificationServiceImpl implements NotificationService {
 
     @Override
     @Transactional
+    public void unregisterMessageToken(String userId, String token) {
+        fcmMessageTokenRepository.deleteByUserIdAndToken(userId, token);
+    }
+
+    @Override
+    @Transactional
     public void deleteRelatedNotifications(String objectId) {
-        notificationObjectRepository.findByObjectId(objectId).ifPresent(notificationObjectRepository::delete);
+        notificationObjectRepository.deleteAll(notificationObjectRepository.findAllByObjectId(objectId));
     }
 
     @Override

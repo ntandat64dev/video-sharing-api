@@ -11,7 +11,11 @@ public interface FcmMessageTokenRepository extends JpaRepository<FcmMessageToken
 
     void deleteAllByTokenIn(List<String> tokens);
 
+    void deleteByUserIdAndToken(String userId, String token);
+
     Boolean existsByToken(String token);
+
+    Boolean existsByUserIdAndToken(String userId, String token);
 
     List<FcmMessageToken> findAllByUserIdIn(List<String> userIds);
 }

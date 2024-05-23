@@ -215,27 +215,35 @@ public class VideoServiceImpl implements VideoService {
     @Override
     @Transactional
     public VideoRatingDto rateVideo(String videoId, String userId, String rating) {
-        var video = videoRepository.getReferenceById(videoId);
-        var user = userRepository.getReferenceById(userId);
+        var video = videoRepository.findById(videoId).orElseThrow();
+        var user = userRepository.findById(userId).orElseThrow();
 
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(user.getId(), video.getId());
+
         if (videoRating == null && Objects.equals(rating, VideoRatingDto.NONE)) {
-            return videoRatingMapper.fromNullVideoRating(videoId, userId);
+            // If the user rates NONE but there is no rating yet, return NONE rating.
+            return videoRatingMapper.createNoneVideoRating(videoId, userId);
         }
+
         if (videoRating != null && videoRating.getRating().name().equalsIgnoreCase(rating)) {
+            // If the user rates the same rating, do nothing and return.
             return videoRatingMapper.toVideoRatingDto(videoRating);
         }
 
         if (videoRating != null) {
             if (Objects.equals(rating, VideoRatingDto.NONE)) {
+                // If the user rates NONE, then delete the rating and return NONE.
                 videoRatingRepository.delete(videoRating);
-                return videoRatingMapper.fromNullVideoRating(videoId, userId);
+                return videoRatingMapper.createNoneVideoRating(videoId, userId);
             } else {
+                // else update the current rating.
                 videoRating.setRating(VideoRating.Rating.valueOf(rating.toUpperCase()));
                 videoRating.setPublishedAt(LocalDateTime.now());
                 videoRatingRepository.save(videoRating);
             }
         } else {
+            // If this is the first time the user has rated the video,
+            // then create a new rating and save.
             videoRating = new VideoRating();
             videoRating.setVideo(video);
             videoRating.setUser(user);
@@ -249,7 +257,7 @@ public class VideoServiceImpl implements VideoService {
     @Override
     public VideoRatingDto getRating(String videoId, String userId) {
         var videoRating = videoRatingRepository.findByUserIdAndVideoId(userId, videoId);
-        if (videoRating == null) return videoRatingMapper.fromNullVideoRating(videoId, userId);
+        if (videoRating == null) return videoRatingMapper.createNoneVideoRating(videoId, userId);
         return videoRatingMapper.toVideoRatingDto(videoRating);
     }
 

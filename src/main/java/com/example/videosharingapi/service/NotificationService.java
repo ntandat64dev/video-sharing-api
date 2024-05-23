@@ -15,6 +15,8 @@ public interface NotificationService {
 
     void registerMessageToken(String userId, String token);
 
+    void unregisterMessageToken(String userId, String token);
+
     void deleteRelatedNotifications(String objectId);
 
     void readNotification(String userId, String notificationId);

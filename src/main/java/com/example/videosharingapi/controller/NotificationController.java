@@ -43,6 +43,15 @@ public class NotificationController {
         return new ResponseEntity<>(HttpStatus.CREATED);
     }
 
+    @DeleteMapping("/message-token")
+    public ResponseEntity<?> unregisterMessageToken(
+            @AuthenticationPrincipal AuthenticatedUser user,
+            @RequestBody @NotEmpty String token
+    ) {
+        notificationService.unregisterMessageToken(user.getUserId(), token);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @GetMapping("/count-unseen/mine")
     public ResponseEntity<Integer> countUnseenNotification(@AuthenticationPrincipal AuthenticatedUser user) {
         var response = notificationService.countUnseenNotifications(user.getUserId());
