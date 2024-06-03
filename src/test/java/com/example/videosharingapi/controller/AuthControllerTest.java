@@ -1,6 +1,8 @@
 package com.example.videosharingapi.controller;
 
+import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
+import com.example.videosharingapi.elasticsearchrepository.UserElasticsearchRepository;
 import com.example.videosharingapi.entity.Role;
 import com.example.videosharingapi.entity.Thumbnail;
 import com.example.videosharingapi.repository.ThumbnailRepository;
@@ -22,10 +24,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @TestSql
-public class AuthControllerTest {
+public class AuthControllerTest extends AbstractElasticsearchContainer {
 
     private @Autowired UserRepository userRepository;
     private @Autowired ThumbnailRepository thumbnailRepository;
+
+    private @Autowired UserElasticsearchRepository userElasticsearchRepository;
+
     private @Autowired MockMvc mockMvc;
 
     @Test
@@ -79,6 +84,7 @@ public class AuthControllerTest {
     @Test
     @Transactional
     public void givenUsernameAndPassword_whenSignup_thenDatabaseIsUpdated() throws Exception {
+        super.prepareData();
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("username", "user4")
                         .param("password", "44444444"))
@@ -102,6 +108,24 @@ public class AuthControllerTest {
         assertThat(thumbnailRepository.count()).isEqualTo(11);
         assertThat(thumbnailRepository.findAllByUserId(user.getId()).stream().map(Thumbnail::getType))
                 .containsExactlyInAnyOrder(Thumbnail.Type.DEFAULT, Thumbnail.Type.MEDIUM);
+    }
+
+    @Test
+    @Transactional
+    public void givenUsernameAndPassword_whenSignup_thenUserDocumentIsCreated() throws Exception {
+        super.prepareData();
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .param("username", "user4")
+                        .param("password", "44444444"))
+                .andExpect(status().isCreated());
+
+        var userId = userRepository.findByUsername("user4").getId();
+
+        assertThat(userElasticsearchRepository.count()).isEqualTo(5);
+        var userDoc = userElasticsearchRepository.findById(userId).orElseThrow();
+        assertThat(userDoc.getId()).isEqualTo(userId);
+        assertThat(userDoc.getUsername()).isEqualTo("user4");
+        assertThat(userDoc.getBio()).isEqualTo(null);
     }
 
     @Test

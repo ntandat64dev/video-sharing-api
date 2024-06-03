@@ -14,4 +14,7 @@ public interface VideoStatisticRepository extends JpaRepository<VideoStatistic, 
             WHERE u.id = :userId
             GROUP BY u.id""")
     Long sumViewCountByUserId(String userId);
+
+    @Query("SELECT vs FROM VideoStatistic vs JOIN Comment c ON c.video.id = vs.id WHERE c.id = :commentId")
+    VideoStatistic findByCommentId(String commentId);
 }

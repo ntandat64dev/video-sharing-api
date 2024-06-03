@@ -4,6 +4,7 @@ import com.example.videosharingapi.config.security.AuthenticatedUser;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Component;
@@ -30,7 +31,7 @@ public class JwtUtil {
         return Jwts.builder()
                 .subject(user.getUsername())
                 .issuedAt(new Date())
-                .expiration(new Date(System.currentTimeMillis() + jwtExpiration))
+                .expiration(DateUtils.addDays(new Date(), 100))
                 .claim(CLAIM_USER_ID, user.getUserId())
                 .claim(CLAIM_SCOPE, user.getAuthorities().stream()
                         .map(GrantedAuthority::getAuthority)

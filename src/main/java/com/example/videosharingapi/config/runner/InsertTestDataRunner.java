@@ -283,7 +283,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
             for (int i = 0; i < new Random().nextInt(4); i++) {
                 var playlist = new Playlist();
                 playlist.setUser(user);
-                playlist.setTitle("Playlist %s".formatted(i));
+                playlist.setTitle("Playlist %c".formatted((char) (new Random().nextInt(95) + 32)));
                 playlist.setPublishedAt(LocalDateTime.now());
                 playlist.setIsUserCreate(true);
                 playlist.setPrivacy(new Random().nextInt() % 3 == 0 ? privatePrivacy : publicPrivacy);

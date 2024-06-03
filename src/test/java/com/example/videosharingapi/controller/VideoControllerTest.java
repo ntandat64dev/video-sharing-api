@@ -1,16 +1,20 @@
 package com.example.videosharingapi.controller;
 
+import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.common.TestUtil;
+import com.example.videosharingapi.document.Video;
 import com.example.videosharingapi.dto.CategoryDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
+import com.example.videosharingapi.elasticsearchrepository.VideoElasticsearchRepository;
 import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.assertj.core.util.Streams;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -39,7 +43,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestSql
 @WithUserDetails("user1")
-public class VideoControllerTest {
+public class VideoControllerTest extends AbstractElasticsearchContainer {
 
     private @Autowired VideoRepository videoRepository;
     private @Autowired ThumbnailRepository thumbnailRepository;
@@ -53,6 +57,8 @@ public class VideoControllerTest {
     private @Autowired NotificationRepository notificationRepository;
     private @Autowired NotificationObjectRepository notificationObjectRepository;
     private @Autowired FcmMessageTokenRepository fcmMessageTokenRepository;
+
+    private @Autowired VideoElasticsearchRepository videoElasticsearchRepository;
 
     private @Autowired MockMvc mockMvc;
     private @Autowired ObjectMapper objectMapper;
@@ -93,6 +99,7 @@ public class VideoControllerTest {
                 .hashtags(List.of("music", "pop"))
                 .userId("a05990b1")
                 .category(new CategoryDto("c0f3f41e"))
+                .publishedAt(LocalDateTime.parse("2024-04-15T12:30:00"))
                 .build());
         videoDto.setStatus(VideoDto.Status.builder()
                 .privacy("private")
@@ -208,6 +215,27 @@ public class VideoControllerTest {
                 .map(Notification::getId)).containsExactlyInAnyOrder("856c89bc", "652ef2c2");
         assertThat(notificationObjectRepository.findAll().stream()
                 .map(NotificationObject::getId)).containsExactlyInAnyOrder("77a70703", "c63edb2c");
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoDtoAndMockVideoFile_whenPostVideo_thenVideoDocumentIsCreated() throws Exception {
+        super.prepareData();
+        var result = mockMvc.perform(multipart("/api/v1/videos")
+                        .file(createMockVideoFile)
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadata()))
+                .andExpect(status().isCreated())
+                .andReturn();
+
+        assertThat(videoElasticsearchRepository.count()).isEqualTo(4);
+        var videoDoc = videoElasticsearchRepository.findById(testUtil.json(result, "$.id")).orElseThrow();
+        assertThat(videoDoc.getId()).isEqualTo(testUtil.json(result, "$.id"));
+        assertThat(videoDoc.getTitle()).isEqualTo("Video title");
+        assertThat(videoDoc.getDescription()).isEqualTo("Video description");
+        // We only can estimate the time the video was created.
+        assertThat(videoDoc.getPublishedDate()).isBetween(LocalDateTime.now().minusMinutes(10), LocalDateTime.now());
+        assertThat(videoDoc.getViewCount()).isEqualTo(0);
     }
 
     @Test
@@ -464,6 +492,31 @@ public class VideoControllerTest {
 
     @Test
     @Transactional
+    public void givenVideoDto_whenUpdate_thenVideoDocumentIsUpdated() throws Exception {
+        super.prepareData();
+
+        var builder = multipart("/api/v1/videos");
+        builder.with(request -> {
+            request.setMethod("PUT");
+            return request;
+        });
+
+        mockMvc.perform(builder
+                        .file(createMockThumbnailFile)
+                        .file(createMockMetadataForUpdate()))
+                .andExpect(status().isOk());
+
+        assertThat(videoElasticsearchRepository.count()).isEqualTo(3);
+        var videoDoc = videoElasticsearchRepository.findById("37b32dc2").orElseThrow();
+        assertThat(videoDoc.getId()).isEqualTo("37b32dc2");
+        assertThat(videoDoc.getTitle()).isEqualTo("Video 1 updated");
+        assertThat(videoDoc.getDescription()).isEqualTo("Video 1 description updated");
+        assertThat(videoDoc.getPublishedDate()).isEqualTo(LocalDateTime.parse("2024-04-01T09:00:00"));
+        assertThat(videoDoc.getViewCount()).isEqualTo(4L);
+    }
+
+    @Test
+    @Transactional
     public void givenInvalidVideoDto_whenUpdate_thenError() throws Exception {
         var videoDto = obtainVideoDtoForUpdate();
         videoDto.getSnippet().setTitle("");
@@ -557,6 +610,19 @@ public class VideoControllerTest {
         // (because there are no notifications related to this video).
         assertThat(notificationObjectRepository.count()).isEqualTo(2);
         assertThat(notificationRepository.count()).isEqualTo(2);
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoId_whenDeleteVideo_thenVideoDocumentIsUpdated() throws Exception {
+        super.prepareData();
+        mockMvc.perform(delete("/api/v1/videos")
+                        .param("id", "37b32dc2"))
+                .andExpect(status().isNoContent());
+
+        assertThat(videoElasticsearchRepository.count()).isEqualTo(2);
+        assertThat(Streams.stream(videoElasticsearchRepository.findAll()).map(Video::getId).toList())
+                .containsExactlyInAnyOrder("f7d9b74b", "e65707b4");
     }
 
     @Test

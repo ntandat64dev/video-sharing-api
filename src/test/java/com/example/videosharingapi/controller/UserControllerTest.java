@@ -1,5 +1,6 @@
 package com.example.videosharingapi.controller;
 
+import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +20,7 @@ import static org.hamcrest.Matchers.contains;
 @AutoConfigureMockMvc
 @TestSql
 @WithUserDetails("user1")
-public class UserControllerTest {
+public class UserControllerTest extends AbstractElasticsearchContainer {
 
     private @Autowired MockMvc mockMvc;
 

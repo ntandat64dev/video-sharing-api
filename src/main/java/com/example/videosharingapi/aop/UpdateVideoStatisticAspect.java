@@ -1,4 +1,4 @@
-package com.example.videosharingapi.config.aop;
+package com.example.videosharingapi.aop;
 
 import com.example.videosharingapi.entity.Comment;
 import com.example.videosharingapi.entity.VideoRating;
@@ -8,6 +8,7 @@ import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.VideoRatingRepository;
 import com.example.videosharingapi.repository.VideoStatisticRepository;
 import com.example.videosharingapi.repository.ViewHistoryRepository;
+import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Around;
@@ -24,30 +25,28 @@ import org.springframework.transaction.annotation.Transactional;
 @Aspect
 @Component
 @Transactional
+@RequiredArgsConstructor
 public class UpdateVideoStatisticAspect {
     private final VideoStatisticRepository videoStatisticRepository;
     private final VideoRatingRepository videoRatingRepository;
-
-    public UpdateVideoStatisticAspect(VideoStatisticRepository videoStatisticRepository,
-                                      VideoRatingRepository videoRatingRepository) {
-        this.videoStatisticRepository = videoStatisticRepository;
-        this.videoRatingRepository = videoRatingRepository;
-    }
 
     /**
      * Increase {@code VideoStatistic.viewCount} by 1 if {@link ViewHistory} is not updating.
      */
     @Around("""
-            execution(* com.example.videosharingapi.repository.ViewHistoryRepository.save(*)) ||
-            execution(* com.example.videosharingapi.repository.ViewHistoryRepository.saveAndFlush(*))""")
-    public Object updateViewCount(ProceedingJoinPoint joinPoint) throws Throwable {
-        var viewHistory = (ViewHistory) joinPoint.getArgs()[0];
-        // If the saveVideo*() method is used for updating the ViewHistory.
+            (execution(* com.example.videosharingapi.repository.ViewHistoryRepository.save(*)) ||
+            execution(* com.example.videosharingapi.repository.ViewHistoryRepository.saveAndFlush(*))) &&
+            args(viewHistory)""")
+    public Object updateViewCount(ProceedingJoinPoint joinPoint, ViewHistory viewHistory) throws Throwable {
+        // If the saveVideo*() method is used for updating the ViewHistory, then do nothing and return.
         if (viewHistory.getId() != null) return joinPoint.proceed();
         var result = joinPoint.proceed();
+
+        // Else increase video statistic's viewCount by 1.
         videoStatisticRepository
                 .findById(viewHistory.getVideo().getId())
-                .ifPresent(stat -> stat.setViewCount(stat.getViewCount() + 1));
+                .ifPresent(videoStat -> videoStat.setViewCount(videoStat.getViewCount() + 1));
+
         return result;
     }
 
@@ -94,11 +93,27 @@ public class UpdateVideoStatisticAspect {
                 .ifPresent(stat -> stat.setCommentCount(stat.getCommentCount() + 1));
     }
 
-    @AfterReturning("""
-            execution(* com.example.videosharingapi.repository.CommentRepository.delete(*)) &&
-            args(comment)""")
-    public void updateCommentCountWhenDelete(Comment comment) {
-        videoStatisticRepository.findById(comment.getVideo().getId())
-                .ifPresent(stat -> stat.setCommentCount(stat.getCommentCount() - 1));
+    @Around("""
+            execution(* com.example.videosharingapi.repository.CommentRepository.deleteById(*)) &&
+            args(commentId)""")
+    public Object updateCommentCountWhenDeleteComment(
+            ProceedingJoinPoint joinPoint, String commentId
+    ) throws Throwable {
+        var videoStat = videoStatisticRepository.findByCommentId(commentId);
+        var result = joinPoint.proceed();
+        videoStat.setCommentCount(videoStat.getCommentCount() - 1);
+        return result;
+    }
+
+    @Around("""
+            execution(* com.example.videosharingapi.repository.CommentRepository.deleteByParentId(*)) &&
+            args(commentId)""")
+    public Object updateCommentCountWhenDeleteReply(
+            ProceedingJoinPoint joinPoint, String commentId
+    ) throws Throwable {
+        var videoStat = videoStatisticRepository.findByCommentId(commentId);
+        var rows = (long) joinPoint.proceed();
+        videoStat.setCommentCount(videoStat.getCommentCount() - rows);
+        return rows;
     }
 }
