@@ -15,7 +15,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 // TODO: Create Testcontainers for Firebase
-// TODO: Test documents CRUD
 
 @SpringBootTest
 @ActiveProfiles("test")

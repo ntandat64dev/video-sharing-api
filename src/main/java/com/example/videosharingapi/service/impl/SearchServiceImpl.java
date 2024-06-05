@@ -119,47 +119,17 @@ public class SearchServiceImpl implements SearchService {
                 {
                      "query": {
                          "bool": {
-                             "must": [
-                                 {
-                                     "query_string": {
-                                         "query": "%s"
-                                     }
-                                 }
-                             ],
+                             "must": {"query_string": {"query": "%s"}},
                              "filter": {
                                  "bool": {
                                      "should": [
-                                         {
-                                             "bool": {
-                                                 "filter": {
-                                                     "term": {
-                                                         "_index": "video"
-                                                     }
-                                                 }
-                                             }
-                                         },
-                                         {
-                                             "bool": {
-                                                 "filter": {
-                                                     "term": {
-                                                         "_index": "user"
-                                                     }
-                                                 }
-                                             }
-                                         },
+                                         {"term": {"_index": "video"}},
+                                         {"term": {"_index": "user"}},
                                          {
                                              "bool": {
                                                  "filter": [
-                                                     {
-                                                         "term": {
-                                                             "_index": "playlist"
-                                                         }
-                                                     },
-                                                     {
-                                                         "term": {
-                                                             "isVisible": true
-                                                         }
-                                                     }
+                                                     {"term": {"_index": "playlist"}},
+                                                     {"term": {"isVisible": true}}
                                                  ]
                                              }
                                          }
@@ -168,15 +138,13 @@ public class SearchServiceImpl implements SearchService {
                              }
                          }
                      },
-                     "sort": [
-                         {
-                             "%s": {
-                                 "order": "desc",
-                                 "missing": "_last",
-                                 "unmapped_type": "%s"
-                             }
+                     "sort": {
+                         "%s": {
+                             "order": "desc",
+                             "missing": "_last",
+                             "unmapped_type": "%s"
                          }
-                     ]
+                     }
                 }
                 """.formatted(keyword, property, unmappedType);
 

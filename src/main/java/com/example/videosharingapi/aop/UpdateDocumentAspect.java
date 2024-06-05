@@ -9,11 +9,15 @@ import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.annotation.AfterReturning;
 import org.aspectj.lang.annotation.Aspect;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+
+/**
+ * TODO: Provide transaction.
+ * Spring Data Elasticsearch does not provide transaction.
+ * Consider defining pointcut on service methods instead.
+ */
 
 @Aspect
 @Component
-@Transactional
 @RequiredArgsConstructor
 public class UpdateDocumentAspect {
     private final VideoStatisticRepository videoStatisticRepository;
@@ -52,7 +56,8 @@ public class UpdateDocumentAspect {
     }
 
     @AfterReturning("""
-            (execution(* com.example.videosharingapi.repository.VideoRepository.deleteById(*)) && args(videoId))
+            (execution(* com.example.videosharingapi.repository.VideoRepository.deleteById(*)) &&
+            args(videoId))
             """)
     public void deleteVideoDocument(String videoId) {
         videoElasticsearchRepository.deleteById(videoId);
@@ -71,7 +76,8 @@ public class UpdateDocumentAspect {
     }
 
     @AfterReturning("""
-            (execution(* com.example.videosharingapi.repository.UserRepository.deleteById(*)) && args(userId))
+            (execution(* com.example.videosharingapi.repository.UserRepository.deleteById(*)) &&
+            args(userId))
             """)
     public void deleteUserDocument(String userId) {
         userElasticsearchRepository.deleteById(userId);
@@ -91,7 +97,8 @@ public class UpdateDocumentAspect {
     }
 
     @AfterReturning("""
-            (execution(* com.example.videosharingapi.repository.PlaylistRepository.deleteById(*)) && args(playlistId))
+            (execution(* com.example.videosharingapi.repository.PlaylistRepository.deleteById(*)) &&
+            args(playlistId))
             """)
     public void deletePlaylistDocument(String playlistId) {
         playlistElasticsearchRepository.deleteById(playlistId);

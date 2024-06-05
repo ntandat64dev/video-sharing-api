@@ -53,6 +53,7 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
     private @Autowired ViewHistoryRepository viewHistoryRepository;
     private @Autowired CommentRepository commentRepository;
     private @Autowired CommentRatingRepository commentRatingRepository;
+    private @Autowired PlaylistRepository playlistRepository;
     private @Autowired PlaylistItemRepository playlistItemRepository;
     private @Autowired NotificationRepository notificationRepository;
     private @Autowired NotificationObjectRepository notificationObjectRepository;
@@ -614,7 +615,7 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
 
     @Test
     @Transactional
-    public void givenVideoId_whenDeleteVideo_thenVideoDocumentIsUpdated() throws Exception {
+    public void givenVideoId_whenDeleteVideo_thenVideoDocumentIsAlsoDeleted() throws Exception {
         super.prepareData();
         mockMvc.perform(delete("/api/v1/videos")
                         .param("id", "37b32dc2"))
@@ -715,6 +716,12 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
         var videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
+        // PlaylistItem wasn't created.
+        var playlist = playlistRepository.findLikedVideosPlaylistByUserId(userId);
+        assertThat(playlistItemRepository.findAllByPlaylistId(playlist.getId())).hasSize(0);
+        var playlistItem = playlistItemRepository
+                .findByPlaylistIdAndPlaylistUserIdAndVideoId(playlist.getId(), userId, videoId);
+        assertThat(playlistItem).isNull();
 
         // Rate LIKE then VideoRating is created with LIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
@@ -728,6 +735,11 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
         videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(1);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
+        // A new PlaylistItem was added.
+        assertThat(playlistItemRepository.findAllByPlaylistId(playlist.getId())).hasSize(1);
+        playlistItem = playlistItemRepository
+                .findByPlaylistIdAndPlaylistUserIdAndVideoId(playlist.getId(), userId, videoId);
+        assertThat(playlistItem.getVideo().getId()).isEqualTo(videoId);
 
         // Rate DISLIKE then VideoRating is updated with a DISLIKE type.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
@@ -741,6 +753,11 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
         videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(2);
+        // The PlaylistItem was removed.
+        assertThat(playlistItemRepository.findAllByPlaylistId(playlist.getId())).hasSize(0);
+        playlistItem = playlistItemRepository
+                .findByPlaylistIdAndPlaylistUserIdAndVideoId(playlist.getId(), userId, videoId);
+        assertThat(playlistItem).isNull();
 
         // Rate NONE while there is a VideoRating then delete it.
         mockMvc.perform(post("/api/v1/videos/rate/mine")
@@ -754,6 +771,11 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
         videoStat = videoStatisticRepository.findById(videoId);
         assertThat(videoStat.orElseThrow().getLikeCount()).isEqualTo(0);
         assertThat(videoStat.orElseThrow().getDislikeCount()).isEqualTo(1);
+        // PlaylistItem wasn't created.
+        assertThat(playlistItemRepository.findAllByPlaylistId(playlist.getId())).hasSize(0);
+        playlistItem = playlistItemRepository
+                .findByPlaylistIdAndPlaylistUserIdAndVideoId(playlist.getId(), userId, videoId);
+        assertThat(playlistItem).isNull();
     }
 
     @Test

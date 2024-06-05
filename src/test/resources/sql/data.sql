@@ -141,14 +141,14 @@ VALUES ('85baf0bb', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '6b342e72', '
        ('def0075f', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', '6c3239d6', 'a05990b1');
 
 # Playlist
-INSERT INTO `playlist`(id, created_by, created_date, modified_by, modified_date, description, is_user_create,
+INSERT INTO `playlist`(id, created_by, created_date, modified_by, modified_date, description, default_type,
                        published_at, title, privacy_id, user_id)
-VALUES ('bae06c8a', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Watch Later', 'ec386a4b', 'a05990b1'),
-       ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Liked Videos', 'ec386a4b', 'a05990b1'),
-       ('d8659362', 'admin', NOW(), 'admin', NOW(), null, true, NOW(), 'My Videos', 'f01121d2', 'a05990b1'),
+VALUES ('bae06c8a', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', 'a05990b1'),
+       ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4b', 'a05990b1'),
+       ('d8659362', 'admin', NOW(), 'admin', NOW(), null, null, NOW(), 'My Videos', 'f01121d2', 'a05990b1'),
 
-       ('236e2aa6', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Watch Later', 'ec386a4b', '9b79f4ba'),
-       ('d07f1bee', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Liked Videos', 'ec386a4b', '9b79f4ba');
+       ('236e2aa6', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', '9b79f4ba'),
+       ('d07f1bee', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4b', '9b79f4ba');
 
 # PlaylistItem
 INSERT INTO `playlist_item`(created_by, created_date, modified_by, modified_date, priority, video_id, playlist_id)

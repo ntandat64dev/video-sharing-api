@@ -1,4 +1,4 @@
-package com.example.videosharingapi.config.runner;
+package com.example.videosharingapi.runner;
 
 import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.repository.*;
@@ -80,6 +80,24 @@ public class InsertTestDataRunner implements ApplicationRunner {
 
             userRepository.saveAndFlush(user);
             users[i - 1] = user;
+
+            var watchLaterPlaylist = Playlist.builder()
+                    .user(user)
+                    .privacy(privatePrivacy)
+                    .title("")
+                    .defaultType((byte) 0)
+                    .publishedAt(LocalDateTime.now())
+                    .build();
+
+            var likeVideosPlaylist = Playlist.builder()
+                    .user(user)
+                    .privacy(privatePrivacy)
+                    .title("")
+                    .defaultType((byte) 1)
+                    .publishedAt(LocalDateTime.now())
+                    .build();
+
+            playlistRepository.saveAll(List.of(watchLaterPlaylist, likeVideosPlaylist));
         }
 
         for (var user : users) {
@@ -274,6 +292,13 @@ public class InsertTestDataRunner implements ApplicationRunner {
                             VideoRating.Rating.LIKE :
                             VideoRating.Rating.DISLIKE);
                     videoRatingRepository.saveAndFlush(videoRating);
+
+                    var playlist = playlistRepository.findLikedVideosPlaylistByUserId(user.getId());
+                    var playlistItem = new PlaylistItem();
+                    playlistItem.setPlaylist(playlist);
+                    playlistItem.setVideo(video);
+                    playlistItem.setPriority(playlistItemRepository.getMaxPriorityByPlaylistId(playlist.getId()) + 1);
+                    playlistItemRepository.saveAndFlush(playlistItem);
                 }
             }
         }
@@ -285,18 +310,17 @@ public class InsertTestDataRunner implements ApplicationRunner {
                 playlist.setUser(user);
                 playlist.setTitle("Playlist %c".formatted((char) (new Random().nextInt(95) + 32)));
                 playlist.setPublishedAt(LocalDateTime.now());
-                playlist.setIsUserCreate(true);
+                playlist.setDefaultType(null);
                 playlist.setPrivacy(new Random().nextInt() % 3 == 0 ? privatePrivacy : publicPrivacy);
                 playlistRepository.saveAndFlush(playlist);
 
                 Collections.shuffle(videoList);
                 var randomVideos = videoList.subList(0, new Random().nextInt(5));
-                byte index = 0;
                 for (var video : randomVideos) {
                     var playlistVideo = new PlaylistItem();
                     playlistVideo.setPlaylist(playlist);
                     playlistVideo.setVideo(video);
-                    playlistVideo.setPriority(index++);
+                    playlistVideo.setPriority(playlistItemRepository.getMaxPriorityByPlaylistId(playlist.getId()) + 1);
                     playlistItemRepository.saveAndFlush(playlistVideo);
                 }
             }

@@ -1,4 +1,4 @@
-package com.example.videosharingapi.config.runner;
+package com.example.videosharingapi.runner;
 
 import com.example.videosharingapi.entity.Privacy;
 import com.example.videosharingapi.repository.PrivacyRepository;

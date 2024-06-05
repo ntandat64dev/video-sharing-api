@@ -8,7 +8,6 @@ import lombok.Setter;
 import org.mapstruct.Builder;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.MappingTarget;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.i18n.LocaleContextHolder;
 
@@ -51,7 +50,7 @@ public abstract class VideoMapper {
     @Mapping(target = ".", source = "videoStatistic")
     protected abstract VideoDto.Statistic mapStatistic(Video video);
 
-    public void updateVideo(@MappingTarget Video video, VideoDto videoDto) {
+    public void updateVideo(Video video, VideoDto videoDto) {
         video.setTitle(videoDto.getSnippet().getTitle());
         video.setDescription(videoDto.getSnippet().getDescription());
         video.setCategory(categoryMapper.toCategory(videoDto.getSnippet().getCategory()));

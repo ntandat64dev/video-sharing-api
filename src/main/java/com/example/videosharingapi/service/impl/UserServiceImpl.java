@@ -9,8 +9,10 @@ import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.UserMapper;
 import com.example.videosharingapi.repository.RoleRepository;
 import com.example.videosharingapi.repository.UserRepository;
+import com.example.videosharingapi.service.PlaylistService;
 import com.example.videosharingapi.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -21,15 +23,19 @@ import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
-@RequiredArgsConstructor
+@RequiredArgsConstructor(onConstructor_ = @Lazy)
 public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+
+    @Lazy
+    private final PlaylistService playlistService;
 
     private final PasswordEncoder passwordEncoder;
     private final UserMapper userMapper;
 
     @Override
+    @Transactional
     public void createUser(String username, String password) {
         if (userRepository.existsByUsername(username)) throw new AppException(ErrorCode.USERNAME_EXISTS);
 
@@ -59,9 +65,9 @@ public class UserServiceImpl implements UserService {
 
         user.setThumbnails(List.of(defaultThumbnail, mediumThumbnail));
 
-        // TODO: Create default playlists
-
         userRepository.save(user);
+
+        playlistService.createDefaultPlaylistsForUser(user);
     }
 
     @Override

@@ -7,6 +7,7 @@ import org.mapstruct.Mapping;
 import org.mapstruct.Named;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,10 +31,13 @@ public interface ThumbnailMapper {
     }
 
     default Map<Thumbnail.Type, ThumbnailDto> toMap(List<Thumbnail> value) {
+        if (value == null) return Collections.emptyMap();
         return value.stream().collect(Collectors.toMap(Thumbnail::getType, this::toThumbnailDto));
     }
 
     default List<Thumbnail> fromMap(Map<Thumbnail.Type, ThumbnailDto> value) {
+        if (value == null) return Collections.emptyList();
+
         var result = new ArrayList<Thumbnail>();
         value.forEach((type, thumbnailDto) -> {
             var thumbnail = toThumbnail(thumbnailDto);

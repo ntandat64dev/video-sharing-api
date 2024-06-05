@@ -115,7 +115,9 @@ public class VideoServiceImpl implements VideoService {
         // Update hashtags.
         saveHashtags(videoDto.getSnippet().getHashtags(), video);
 
+        // Trigger Video document update
         videoRepository.save(video);
+
         return videoMapper.toVideoDto(video);
     }
 
@@ -134,7 +136,7 @@ public class VideoServiceImpl implements VideoService {
         commentRepository.deleteByVideoId(id);
 
         // Delete PlaylistItem.
-        playlistItemRepository.deleteByVideoId(id);
+        playlistItemRepository.deleteAllByVideoId(id);
 
         // Delete VideoRating.
         videoRatingRepository.deleteByVideoId(id);

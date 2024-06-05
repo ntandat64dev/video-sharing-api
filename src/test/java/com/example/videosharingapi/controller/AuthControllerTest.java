@@ -5,6 +5,7 @@ import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.elasticsearchrepository.UserElasticsearchRepository;
 import com.example.videosharingapi.entity.Role;
 import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.repository.PlaylistRepository;
 import com.example.videosharingapi.repository.ThumbnailRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -28,6 +29,7 @@ public class AuthControllerTest extends AbstractElasticsearchContainer {
 
     private @Autowired UserRepository userRepository;
     private @Autowired ThumbnailRepository thumbnailRepository;
+    private @Autowired PlaylistRepository playlistRepository;
 
     private @Autowired UserElasticsearchRepository userElasticsearchRepository;
 
@@ -84,7 +86,6 @@ public class AuthControllerTest extends AbstractElasticsearchContainer {
     @Test
     @Transactional
     public void givenUsernameAndPassword_whenSignup_thenDatabaseIsUpdated() throws Exception {
-        super.prepareData();
         mockMvc.perform(post("/api/v1/auth/signup")
                         .param("username", "user4")
                         .param("password", "44444444"))
@@ -126,6 +127,19 @@ public class AuthControllerTest extends AbstractElasticsearchContainer {
         assertThat(userDoc.getId()).isEqualTo(userId);
         assertThat(userDoc.getUsername()).isEqualTo("user4");
         assertThat(userDoc.getBio()).isEqualTo(null);
+    }
+
+    @Test
+    @Transactional
+    public void givenUsernameAndPassword_whenSignup_thenDefaultPlaylistsIsCreated() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .param("username", "user4")
+                        .param("password", "44444444"))
+                .andExpect(status().isCreated());
+
+        var userId = userRepository.findByUsername("user4").getId();
+        var defaultsPlaylist = playlistRepository.findAllByUserIdAndDefaultTypeIsNotNull(userId);
+        assertThat(defaultsPlaylist).hasSize(2);
     }
 
     @Test
