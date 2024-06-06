@@ -38,6 +38,7 @@ public abstract class PlaylistMapper {
     @Mapping(target = "username", source = "user.username")
     @Mapping(target = "thumbnails", expression = "java(findThumbnails(playlist))")
     @Mapping(target = "title", expression = "java(mapTitle(playlist))")
+    @Mapping(target = "userImageUrl", source = "playlist.user.thumbnails", qualifiedByName = "getDefaultUrl")
     protected abstract PlaylistDto.Snippet mapSnippet(Playlist playlist);
 
     @Mapping(target = "privacy", source = "privacy.status")

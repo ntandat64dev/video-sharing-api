@@ -103,7 +103,7 @@ public abstract class AbstractElasticsearchContainer {
         playlist1.setVisible(true);
 
         var playlist2 = new Playlist();
-        playlist2.setId("bae06c8a");
+        playlist2.setId("fae06c8a");
         playlist2.setTitle("Watch Later");
         playlist2.setDescription(null);
         playlist2.setVisible(false);

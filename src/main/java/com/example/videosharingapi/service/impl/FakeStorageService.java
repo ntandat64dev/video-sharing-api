@@ -29,7 +29,7 @@ public class FakeStorageService implements StorageService {
 
         var thumbnail = new Thumbnail();
         thumbnail.setType(Thumbnail.Type.DEFAULT);
-        thumbnail.setUrl("https://dummyimage.com/720x450/fff/aaa");
+        thumbnail.setUrl("https://dummyimage.com/720x450/ff6b81/fff");
         thumbnail.setWidth(720);
         thumbnail.setHeight(450);
         videoDto.getSnippet().setThumbnails(thumbnailMapper.toMap(List.of(thumbnail)));

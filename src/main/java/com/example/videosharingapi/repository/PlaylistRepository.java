@@ -12,6 +12,14 @@ import java.util.List;
 @Repository
 public interface PlaylistRepository extends JpaRepository<Playlist, String> {
 
+    @Query("""
+            SELECT p FROM Playlist p WHERE p.user.id = :userId ORDER BY
+                CASE
+                    WHEN p.defaultType = 0 THEN 0
+                    WHEN p.defaultType = 1 THEN 1
+                    ELSE 2
+                END
+            """)
     Page<Playlist> findAllByUserId(String userId, Pageable pageable);
 
     List<Playlist> findAllByUserIdAndDefaultTypeIsNotNull(String userId);

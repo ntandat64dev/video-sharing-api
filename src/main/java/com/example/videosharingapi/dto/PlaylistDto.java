@@ -32,10 +32,11 @@ public class PlaylistDto {
 
         private String username;
 
-        @NotNull
+        private String userImageUrl;
+
+        @NotBlank
         private String title;
 
-        @NotNull(groups = Update.class)
         private String description;
 
         private Map<Thumbnail.Type, ThumbnailDto> thumbnails;

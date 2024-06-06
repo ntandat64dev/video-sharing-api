@@ -78,7 +78,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
         mockMvc.perform(post("/api/v1/playlists")
                         .content(objectMapper.writeValueAsString(playlistDto))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk());
+                .andExpect(status().isCreated());
     }
 
     @Test
@@ -88,7 +88,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
         var result = mockMvc.perform(post("/api/v1/playlists")
                         .content(objectMapper.writeValueAsString(playlistDto))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         assertThat(playlistRepository.count()).isEqualTo(6);
@@ -109,7 +109,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
         var result = mockMvc.perform(post("/api/v1/playlists")
                         .content(objectMapper.writeValueAsString(playlistDto))
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
                 .andReturn();
 
         var playlistId = (String) testUtil.json(result, "$.id");
@@ -169,7 +169,17 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errors[0]")
-                        .value("snippet.title: must not be null"));
+                        .value("snippet.title: must not be blank"));
+
+        // Given blank title
+        playlistDto = obtainPlaylistDto();
+        playlistDto.getSnippet().setTitle("");
+        mockMvc.perform(post("/api/v1/playlists")
+                        .content(objectMapper.writeValueAsString(playlistDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.title: must not be blank"));
 
         // Given invalid privacy
         playlistDto = obtainPlaylistDto();
@@ -261,7 +271,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
 
         // Given default playlist's id
         playlistDto = obtainPlaylistDtoForUpdate();
-        playlistDto.setId("bae06c8a");
+        playlistDto.setId("fae06c8a");
         mockMvc.perform(put("/api/v1/playlists")
                         .content(objectMapper.writeValueAsString(playlistDto))
                         .contentType(MediaType.APPLICATION_JSON))
@@ -278,16 +288,6 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message")
                         .value("The request is not supported."));
-
-        // Given null description
-        playlistDto = obtainPlaylistDtoForUpdate();
-        playlistDto.getSnippet().setDescription(null);
-        mockMvc.perform(put("/api/v1/playlists")
-                        .content(objectMapper.writeValueAsString(playlistDto))
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errors[0]")
-                        .value("snippet.description: must not be null"));
     }
 
     @Test
@@ -310,7 +310,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
         assertThat(playlistRepository.count()).isEqualTo(4);
         assertThat(playlistRepository.findById("d8659362")).isNotPresent();
         assertThat(playlistRepository.findAll().stream().map(Playlist::getId))
-                .containsExactlyInAnyOrder("bae06c8a", "c31760ea", "236e2aa6", "d07f1bee");
+                .containsExactlyInAnyOrder("fae06c8a", "c31760ea", "236e2aa6", "d07f1bee");
 
         assertThat(playlistItemRepository.count()).isEqualTo(1);
         assertThat(playlistItemRepository.findAllByPlaylistId("d8659362")).isEmpty();
@@ -331,7 +331,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
         assertThat(playlistElasticsearchRepository.findById("d8659362")).isNotPresent();
         assertThat(Streams.of(playlistElasticsearchRepository.findAll())
                 .map(com.example.videosharingapi.document.Playlist::getId))
-                .containsExactlyInAnyOrder("bae06c8a", "c31760ea", "236e2aa6", "d07f1bee");
+                .containsExactlyInAnyOrder("fae06c8a", "c31760ea", "236e2aa6", "d07f1bee");
     }
 
     @Test
@@ -345,7 +345,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                         .value("id: ID does not exist."));
 
         // Given default playlist id
-        playlistId = "bae06c8a";
+        playlistId = "fae06c8a";
         mockMvc.perform(delete("/api/v1/playlists")
                         .param("id", playlistId))
                 .andExpect(status().isForbidden())
@@ -360,21 +360,23 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                 .andExpect(jsonPath("$.totalElements")
                         .value(3))
                 .andExpect(jsonPath("$.items[*].id")
-                        .value(containsInAnyOrder("bae06c8a", "c31760ea", "d8659362")))
+                        .value(containsInAnyOrder("fae06c8a", "c31760ea", "d8659362")))
 
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].snippet.title")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.title")
                         .value("Watch Later"))
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].snippet.description")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.description")
                         .value(contains(nullValue())))
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].snippet.userId")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.userId")
                         .value("a05990b1"))
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].snippet.thumbnails")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.userImageUrl")
+                        .value("User 1 default thumbnail URL"))
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.thumbnails")
                         .value(Collections.emptyMap()))
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].status.isDefaultPlaylist")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].status.isDefaultPlaylist")
                         .value(true))
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].status.privacy")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].status.privacy")
                         .value("PRIVATE"))
-                .andExpect(jsonPath("$.items[?(@.id == 'bae06c8a')].contentDetails.itemCount")
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].contentDetails.itemCount")
                         .value(0))
 
                 .andExpect(jsonPath("$.items[?(@.id == 'd8659362')].snippet.title")
@@ -383,6 +385,8 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                         .value(contains(nullValue())))
                 .andExpect(jsonPath("$.items[?(@.id == 'd8659362')].snippet.userId")
                         .value("a05990b1"))
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.userImageUrl")
+                        .value("User 1 default thumbnail URL"))
                 .andExpect(jsonPath("$.items[?(@.id == 'd8659362')].snippet.thumbnails.length()")
                         .value(1))
                 .andExpect(jsonPath("$.items[?(@.id == 'd8659362')].snippet.thumbnails['DEFAULT'].url")
@@ -393,5 +397,15 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                         .value("PUBLIC"))
                 .andExpect(jsonPath("$.items[?(@.id == 'd8659362')].contentDetails.itemCount")
                         .value(2));
+    }
+
+    @Test
+    public void whenGetMyPlaylists_thenReturnInExpectOrder() throws Exception {
+        mockMvc.perform(get("/api/v1/playlists/mine"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements")
+                        .value(3))
+                .andExpect(jsonPath("$.items[*].id")
+                        .value(contains("fae06c8a", "c31760ea", "d8659362")));
     }
 }

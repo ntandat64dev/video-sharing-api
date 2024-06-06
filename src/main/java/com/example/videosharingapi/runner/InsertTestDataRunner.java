@@ -165,13 +165,13 @@ public class InsertTestDataRunner implements ApplicationRunner {
 
             var defaultThumbnail = new Thumbnail();
             defaultThumbnail.setType(Thumbnail.Type.DEFAULT);
-            defaultThumbnail.setUrl("https://dummyimage.com/720x450/fff/aaa");
+            defaultThumbnail.setUrl("https://dummyimage.com/720x450/ff6b81/fff");
             defaultThumbnail.setWidth(720);
             defaultThumbnail.setHeight(450);
 
             var mediumThumbnail = new Thumbnail();
             mediumThumbnail.setType(Thumbnail.Type.MEDIUM);
-            mediumThumbnail.setUrl("https://dummyimage.com/1280x720/fff/aaa");
+            mediumThumbnail.setUrl("https://dummyimage.com/1280x720/ff6b81/fff");
             mediumThumbnail.setWidth(1280);
             mediumThumbnail.setHeight(720);
 

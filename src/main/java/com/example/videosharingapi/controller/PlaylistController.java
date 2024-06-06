@@ -32,7 +32,7 @@ public class PlaylistController {
             PlaylistDto playlistDto
     ) {
         var response = playlistService.createPlaylist(playlistDto);
-        return ResponseEntity.ok(response);
+        return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
 
     @PutMapping

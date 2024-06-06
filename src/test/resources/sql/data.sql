@@ -143,8 +143,8 @@ VALUES ('85baf0bb', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '6b342e72', '
 # Playlist
 INSERT INTO `playlist`(id, created_by, created_date, modified_by, modified_date, description, default_type,
                        published_at, title, privacy_id, user_id)
-VALUES ('bae06c8a', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', 'a05990b1'),
-       ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4b', 'a05990b1'),
+VALUES ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4b', 'a05990b1'),
+       ('fae06c8a', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', 'a05990b1'),
        ('d8659362', 'admin', NOW(), 'admin', NOW(), null, null, NOW(), 'My Videos', 'f01121d2', 'a05990b1'),
 
        ('236e2aa6', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', '9b79f4ba'),
