@@ -18,6 +18,10 @@ public enum ErrorCode {
     TOKEN_ALREADY_REGISTERED(HttpStatus.BAD_REQUEST, "error.token.already-registered"),
     UPDATE_DEFAULT_PLAYLISTS(HttpStatus.FORBIDDEN, "error.playlist.update-default-playlists"),
     DELETE_DEFAULT_PLAYLISTS(HttpStatus.FORBIDDEN, "error.playlist.delete-default-playlists"),
+    ACCESS_FORBIDDEN_PLAYLIST(HttpStatus.FORBIDDEN, "error.playlist.access-forbidden"),
+    PLAYLIST_ITEM_ALREADY_EXISTS(HttpStatus.BAD_REQUEST, "error.playlist.item.already-exists"),
+    PLAYLIST_ITEM_NOT_FOUNT(HttpStatus.BAD_REQUEST, "error.playlist.item.not-found"),
+    PLAYLIST_ITEM_ADD_TO_LIKED_VIDEOS(HttpStatus.BAD_REQUEST, "error.playlist.item.add-to-liked-videos"),
     ;
 
     ErrorCode(HttpStatusCode statusCode, String message) {

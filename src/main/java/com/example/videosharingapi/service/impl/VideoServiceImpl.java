@@ -170,7 +170,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public List<String> getCategoriesForUserId(String userId) {
-        // TODO: Apply AI, instead of just get hashtags of videos that user created.
+        // TODO: Implement
         return hashtagRepository.findAllByUserId(userId).stream()
                 .map(Hashtag::getTag)
                 .collect(Collectors.toList());
@@ -178,7 +178,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public PageResponse<VideoDto> getVideosByCategoryAll(String userId, Pageable pageable) {
-        // TODO: Apply AI, instead of just get videos that user did not create.
+        // TODO: Implement
         var videoDtoList = videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
@@ -197,7 +197,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public PageResponse<VideoDto> getRelatedVideos(String videoId, String userId, Pageable pageable) {
-        // TODO: Apply AI, instead of just get videos that user did not create.
+        // TODO: Implement
         var videoDtoList = videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)

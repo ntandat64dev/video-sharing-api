@@ -152,8 +152,8 @@ VALUES ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4
 
 # PlaylistItem
 INSERT INTO `playlist_item`(created_by, created_date, modified_by, modified_date, priority, video_id, playlist_id)
-VALUES ('admin', NOW(), 'admin', NOW(), 0, 'f7d9b74b', 'd8659362'),
-       ('admin', NOW(), 'admin', NOW(), 1, 'e65707b4', 'd8659362'),
+VALUES ('admin', NOW(), 'admin', NOW(), 1, 'e65707b4', 'd8659362'),
+       ('admin', NOW(), 'admin', NOW(), 0, 'f7d9b74b', 'd8659362'),
        ('admin', NOW(), 'admin', NOW(), 0, '37b32dc2', '236e2aa6');
 
 # NotificationObject

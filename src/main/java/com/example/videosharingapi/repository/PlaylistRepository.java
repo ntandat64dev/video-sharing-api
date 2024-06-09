@@ -29,4 +29,11 @@ public interface PlaylistRepository extends JpaRepository<Playlist, String> {
 
     @Query(value = "SELECT p FROM Playlist p WHERE p.id IN :ids ORDER BY FIND_IN_SET(p.id, :idsStr)")
     List<Playlist> findAllByIdsAndKeepOrder(List<String> ids, String idsStr);
+
+    @Query("""
+            SELECT DISTINCT p.id FROM Playlist p JOIN PlaylistItem pi ON p.id = pi.playlist.id
+                WHERE pi.video.id = :videoId AND p.user.id = :userId AND
+                    (p.defaultType IS NULL OR p.defaultType NOT IN :excludeDefaults)
+            """)
+    List<String> findPlaylistIdsContainingVideo(String videoId, String userId, List<Integer> excludeDefaults);
 }

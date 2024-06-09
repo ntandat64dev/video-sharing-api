@@ -293,12 +293,14 @@ public class InsertTestDataRunner implements ApplicationRunner {
                             VideoRating.Rating.DISLIKE);
                     videoRatingRepository.saveAndFlush(videoRating);
 
-                    var playlist = playlistRepository.findLikedVideosPlaylistByUserId(user.getId());
-                    var playlistItem = new PlaylistItem();
-                    playlistItem.setPlaylist(playlist);
-                    playlistItem.setVideo(video);
-                    playlistItem.setPriority(playlistItemRepository.getMaxPriorityByPlaylistId(playlist.getId()) + 1);
-                    playlistItemRepository.saveAndFlush(playlistItem);
+                    if (videoRating.getRating() == VideoRating.Rating.LIKE) {
+                        var playlist = playlistRepository.findLikedVideosPlaylistByUserId(user.getId());
+                        var playlistItem = new PlaylistItem();
+                        playlistItem.setPlaylist(playlist);
+                        playlistItem.setVideo(video);
+                        playlistItem.setPriority(playlistItemRepository.getMaxPriorityByPlaylistId(playlist.getId()));
+                        playlistItemRepository.saveAndFlush(playlistItem);
+                    }
                 }
             }
         }
@@ -320,7 +322,7 @@ public class InsertTestDataRunner implements ApplicationRunner {
                     var playlistVideo = new PlaylistItem();
                     playlistVideo.setPlaylist(playlist);
                     playlistVideo.setVideo(video);
-                    playlistVideo.setPriority(playlistItemRepository.getMaxPriorityByPlaylistId(playlist.getId()) + 1);
+                    playlistVideo.setPriority(playlistItemRepository.getMaxPriorityByPlaylistId(playlist.getId()));
                     playlistItemRepository.saveAndFlush(playlistVideo);
                 }
             }

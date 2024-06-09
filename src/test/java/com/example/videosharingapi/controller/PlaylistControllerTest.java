@@ -4,6 +4,8 @@ import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.PlaylistDto;
+import com.example.videosharingapi.dto.PlaylistItemDto;
+import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.elasticsearchrepository.PlaylistElasticsearchRepository;
 import com.example.videosharingapi.entity.Playlist;
 import com.example.videosharingapi.entity.Privacy;
@@ -22,7 +24,6 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.*;
@@ -69,6 +70,15 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                 .privacy("private")
                 .build());
         return playlistDto;
+    }
+
+    private PlaylistItemDto obtainPlaylistItemDto() {
+        var playlistItemDto = new PlaylistItemDto();
+        playlistItemDto.setSnippet(PlaylistItemDto.Snippet.builder()
+                .playlistId("fae06c8a")
+                .videoId("e65707b4")
+                .build());
+        return playlistItemDto;
     }
 
     @Test
@@ -314,8 +324,6 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
 
         assertThat(playlistItemRepository.count()).isEqualTo(1);
         assertThat(playlistItemRepository.findAllByPlaylistId("d8659362")).isEmpty();
-        assertThat(playlistItemRepository.findAll().getFirst().getId().getPlaylistId())
-                .isEqualTo("236e2aa6");
     }
 
     @Test
@@ -354,6 +362,64 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
     }
 
     @Test
+    public void givenPlaylistId_whenGetPlaylist_thenSuccess() throws Exception {
+        mockMvc.perform(get("/api/v1/playlists")
+                        .param("id", "c31760ea"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.snippet.title")
+                        .value("Liked Videos"))
+                .andExpect(jsonPath("$.snippet.description")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.userId")
+                        .value("a05990b1"))
+                .andExpect(jsonPath("$.snippet.userImageUrl")
+                        .value("User 1 default thumbnail URL"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()")
+                        .value(0))
+                .andExpect(jsonPath("$.status.isDefaultPlaylist")
+                        .value(true))
+                .andExpect(jsonPath("$.status.privacy")
+                        .value("PRIVATE"))
+                .andExpect(jsonPath("$.contentDetails.itemCount")
+                        .value(0));
+    }
+
+    @Test
+    public void whenGetDefaultPlaylistOfOtherUser_thenForbidden() throws Exception {
+        mockMvc.perform(get("/api/v1/playlists")
+                        .param("id", "236e2aa6"))
+                .andExpect(status().isForbidden())
+                .andExpect(jsonPath("$.message")
+                        .value("You cannot access this playlist."));
+    }
+
+    @Test
+    public void givenVideoId_whenGetPlaylistIdsContainingThatVideo_thenSuccess() throws Exception {
+        var videoId = "e65707b4";
+        mockMvc.perform(get("/api/v1/playlists/containing")
+                        .param("videoId", videoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[*]")
+                        .value(containsInAnyOrder("d8659362")));
+
+        videoId = "37b32dc2";
+        mockMvc.perform(get("/api/v1/playlists/containing")
+                        .param("videoId", videoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(0));
+
+        videoId = "e65707b4";
+        mockMvc.perform(get("/api/v1/playlists/containing")
+                        .param("videoId", videoId)
+                        .param("excludes", "0"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[*]")
+                        .value(containsInAnyOrder("d8659362")));
+    }
+
+    @Test
     public void whenGetMyPlaylists_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/playlists/mine"))
                 .andExpect(status().isOk())
@@ -370,8 +436,8 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                         .value("a05990b1"))
                 .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.userImageUrl")
                         .value("User 1 default thumbnail URL"))
-                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.thumbnails")
-                        .value(Collections.emptyMap()))
+                .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].snippet.thumbnails.length()")
+                        .value(0))
                 .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].status.isDefaultPlaylist")
                         .value(true))
                 .andExpect(jsonPath("$.items[?(@.id == 'fae06c8a')].status.privacy")
@@ -407,5 +473,309 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
                         .value(3))
                 .andExpect(jsonPath("$.items[*].id")
                         .value(contains("fae06c8a", "c31760ea", "d8659362")));
+    }
+
+    @Test
+    @Transactional
+    public void givenPlaylistItemDto_whenCreatePlaylistItem_thenSuccess() throws Exception {
+        var playlistItemDto = obtainPlaylistItemDto();
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.snippet.playlistId").value("fae06c8a"))
+                .andExpect(jsonPath("$.snippet.videoId").value("e65707b4"))
+                .andExpect(jsonPath("$.snippet.title").value("Video 3"))
+                .andExpect(jsonPath("$.snippet.description").value("Video 3 description"))
+                .andExpect(jsonPath("$.snippet.videoUrl").value("Video 3 URL"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()").value(1))
+                .andExpect(jsonPath("$.snippet.thumbnails['DEFAULT'].url")
+                        .value("Video 3 default thumbnail URL"))
+                .andExpect(jsonPath("$.snippet.priority").value(0))
+                .andExpect(jsonPath("$.snippet.videoOwnerUserId").value("9b79f4ba"))
+                .andExpect(jsonPath("$.snippet.videoOwnerUsername").value("user2"))
+                .andExpect(jsonPath("$.contentDetails.duration").value("PT50M"));
+    }
+
+    @Test
+    @Transactional
+    public void givenPlaylistItemDto_whenCreatePlaylistItem_thenDatabaseIsUpdated() throws Exception {
+        var playlistItemDto = obtainPlaylistItemDto();
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        assertThat(playlistItemRepository.count()).isEqualTo(4);
+        var playlistItem = playlistItemRepository.findByPlaylistIdAndVideoId("fae06c8a", "e65707b4");
+        assertThat(playlistItem.getPriority()).isEqualTo(0);
+
+        // Create another item
+        playlistItemDto.getSnippet().setVideoId("f7d9b74b");
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        assertThat(playlistItemRepository.count()).isEqualTo(5);
+        playlistItem = playlistItemRepository.findByPlaylistIdAndVideoId("fae06c8a", "f7d9b74b");
+        assertThat(playlistItem.getPriority()).isEqualTo(1);
+    }
+
+    @Test
+    @Transactional
+    public void whenCreatePlaylistItem_thenGetPlaylist_thenItemCountAndThumbnailsReturnAsExpect() throws Exception {
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(obtainPlaylistItemDto()))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/playlists")
+                        .param("id", "fae06c8a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.snippet.title")
+                        .value("Watch Later"))
+                .andExpect(jsonPath("$.snippet.description")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.userId")
+                        .value("a05990b1"))
+                .andExpect(jsonPath("$.snippet.userImageUrl")
+                        .value("User 1 default thumbnail URL"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()")
+                        .value(1))
+                .andExpect(jsonPath("$.snippet.thumbnails['DEFAULT'].url")
+                        .value("Video 3 default thumbnail URL"))
+                .andExpect(jsonPath("$.status.isDefaultPlaylist")
+                        .value(true))
+                .andExpect(jsonPath("$.status.privacy")
+                        .value("PRIVATE"))
+                .andExpect(jsonPath("$.contentDetails.itemCount")
+                        .value(1));
+
+        // Add another item
+        var playlistItemDto = obtainPlaylistItemDto();
+        playlistItemDto.getSnippet().setVideoId("f7d9b74b");
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated());
+
+        mockMvc.perform(get("/api/v1/playlists")
+                        .param("id", "fae06c8a"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.snippet.title")
+                        .value("Watch Later"))
+                .andExpect(jsonPath("$.snippet.description")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.userId")
+                        .value("a05990b1"))
+                .andExpect(jsonPath("$.snippet.userImageUrl")
+                        .value("User 1 default thumbnail URL"))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()")
+                        .value(1))
+                .andExpect(jsonPath("$.snippet.thumbnails['DEFAULT'].url")
+                        .value("Video 3 default thumbnail URL"))
+                .andExpect(jsonPath("$.status.isDefaultPlaylist")
+                        .value(true))
+                .andExpect(jsonPath("$.status.privacy")
+                        .value("PRIVATE"))
+                .andExpect(jsonPath("$.contentDetails.itemCount")
+                        .value(2));
+    }
+
+    @Test
+    public void givenInvalidPlaylistItemDto_whenCreatePlaylistItem_thenError() throws Exception {
+        // Given null playlistId
+        var playlistItemDto = obtainPlaylistItemDto();
+        playlistItemDto.getSnippet().setPlaylistId(null);
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.playlistId: must not be null"));
+
+        // Given null videoId
+        playlistItemDto = obtainPlaylistItemDto();
+        playlistItemDto.getSnippet().setVideoId(null);
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errors[0]")
+                        .value("snippet.videoId: must not be null"));
+    }
+
+    @Test
+    @WithUserDetails("user2")
+    public void whenAddVideoToAnotherUserPlaylist_thenForbidden() throws Exception {
+        var playlistItemDto = obtainPlaylistItemDto();
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void givenLikedVideosPlaylistItemDto_whenCreatePlaylistItem_thenError() throws Exception {
+        var playlistItemDto = obtainPlaylistItemDto();
+        playlistItemDto.getSnippet().setPlaylistId("c31760ea");
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("You cannot add items to " +
+                        "Liked Videos playlist. Liked Videos playlist can only be updated when a user likes video."));
+    }
+
+    @Test
+    public void givenDuplicatedPlaylistItemDto_whenCreatePlaylistItem_thenError() throws Exception {
+        var playlistItemDto = obtainPlaylistItemDto();
+        playlistItemDto.getSnippet().setPlaylistId("d8659362");
+        playlistItemDto.getSnippet().setVideoId("f7d9b74b");
+
+        mockMvc.perform(post("/api/v1/playlists/items")
+                        .content(objectMapper.writeValueAsString(playlistItemDto))
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("The video already exists in this playlist."));
+    }
+
+    @Test
+    @Transactional
+    public void givenPlaylistIdAndVideoId_whenDeletePlaylistItem_thenSuccess() throws Exception {
+        var playlistId = "d8659362";
+        var videoId = "f7d9b74b";
+
+        mockMvc.perform(delete("/api/v1/playlists/items")
+                        .param("playlistId", playlistId)
+                        .param("videoId", videoId))
+                .andExpect(status().isNoContent());
+
+        // Assert the database is updated.
+        assertThat(playlistItemRepository.count()).isEqualTo(2);
+        assertThat(playlistItemRepository.findAll().stream()
+                .map(playlistItem -> playlistItem.getId().getPlaylistId() + ":" + playlistItem.getId().getVideoId()))
+                .containsExactlyInAnyOrder("d8659362:e65707b4", "236e2aa6:37b32dc2");
+    }
+
+    @Test
+    public void givenInvalidPlaylistIdAndVideoId_whenRemoveFromPlaylist_thenError() throws Exception {
+        var playlistId = "d8659362";
+        var videoId = "37b32dc2";
+
+        mockMvc.perform(delete("/api/v1/playlists/items")
+                        .param("playlistId", playlistId)
+                        .param("videoId", videoId))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message")
+                        .value("Playlist item not found."));
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoIdFromLikedVideosPlaylist_whenRemoveFromPlaylist_thenSuccess() throws Exception {
+        // First like a video
+        var videoId = "f7d9b74b";
+        mockMvc.perform(post("/api/v1/videos/rate/mine")
+                        .param("videoId", videoId)
+                        .param("rating", "like"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.LIKE));
+
+        // Remove video from Liked Videos playlist
+        var playlistId = "c31760ea";
+        mockMvc.perform(delete("/api/v1/playlists/items")
+                        .param("playlistId", playlistId)
+                        .param("videoId", videoId))
+                .andExpect(status().isNoContent());
+
+        // Get video rating
+        mockMvc.perform(get("/api/v1/videos/rate/mine")
+                        .param("videoId", videoId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.rating").value(VideoRatingDto.NONE))
+                .andExpect(jsonPath("$.publishedAt").doesNotExist());
+    }
+
+    @Test
+    @WithUserDetails("user2")
+    public void givenPlaylistIdVideoIdAndInvalidUserCredential_whenRemoveFromPlaylist_thenForbidden() throws Exception {
+        var playlistId = "d8659362";
+        var videoId = "f7d9b74b";
+
+        mockMvc.perform(delete("/api/v1/playlists/items")
+                        .param("playlistId", playlistId)
+                        .param("videoId", videoId))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    public void whenPlaylistId_whenGetItems_thenSuccess() throws Exception {
+        var playlistId = "d8659362";
+
+        mockMvc.perform(get("/api/v1/playlists/items")
+                        .param("playlistId", playlistId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+
+                .andExpect(jsonPath("$.items[0].snippet.playlistId")
+                        .value("d8659362"))
+                .andExpect(jsonPath("$.items[0].snippet.videoId")
+                        .value("f7d9b74b"))
+                .andExpect(jsonPath("$.items[0].snippet.title")
+                        .value("Video 2"))
+                .andExpect(jsonPath("$.items[0].snippet.description")
+                        .value("Video 2 description"))
+                .andExpect(jsonPath("$.items[0].snippet.videoUrl")
+                        .value("Video 2 URL"))
+                .andExpect(jsonPath("$.items[0].snippet.thumbnails.length()")
+                        .value(1))
+                .andExpect(jsonPath("$.items[0].snippet.thumbnails['DEFAULT'].url")
+                        .value("Video 2 default thumbnail URL"))
+                .andExpect(jsonPath("$.items[0].snippet.priority")
+                        .value(0))
+                .andExpect(jsonPath("$.items[0].snippet.videoOwnerUsername")
+                        .value("user1"))
+                .andExpect(jsonPath("$.items[0].snippet.videoOwnerUserId")
+                        .value("a05990b1"))
+                .andExpect(jsonPath("$.items[0].contentDetails.duration")
+                        .value("PT33M20S"))
+
+                .andExpect(jsonPath("$.items[1].snippet.playlistId")
+                        .value("d8659362"))
+                .andExpect(jsonPath("$.items[1].snippet.videoId")
+                        .value("e65707b4"))
+                .andExpect(jsonPath("$.items[1].snippet.title")
+                        .value("Video 3"))
+                .andExpect(jsonPath("$.items[1].snippet.description")
+                        .value("Video 3 description"))
+                .andExpect(jsonPath("$.items[1].snippet.videoUrl")
+                        .value("Video 3 URL"))
+                .andExpect(jsonPath("$.items[1].snippet.thumbnails.length()")
+                        .value(1))
+                .andExpect(jsonPath("$.items[1].snippet.thumbnails['DEFAULT'].url")
+                        .value("Video 3 default thumbnail URL"))
+                .andExpect(jsonPath("$.items[1].snippet.priority")
+                        .value(1))
+                .andExpect(jsonPath("$.items[1].snippet.videoOwnerUsername")
+                        .value("user2"))
+                .andExpect(jsonPath("$.items[1].snippet.videoOwnerUserId")
+                        .value("9b79f4ba"))
+                .andExpect(jsonPath("$.items[1].contentDetails.duration")
+                        .value("PT50M"));
+    }
+
+    @Test
+    public void givenPlaylistId_whenGetPlaylistItemVideos_thenSuccess() throws Exception {
+        var playlistId = "d8659362";
+        mockMvc.perform(get("/api/v1/playlists/items/videos")
+                        .param("playlistId", playlistId))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.totalElements").value(2))
+
+                .andExpect(jsonPath("$.items[0].id").value("f7d9b74b"))
+                .andExpect(jsonPath("$.items[1].id").value("e65707b4"));
     }
 }
