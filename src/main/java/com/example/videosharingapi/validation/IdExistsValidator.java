@@ -16,6 +16,7 @@ public class IdExistsValidator implements ConstraintValidator<IdExists, String> 
     private final FollowRepository followRepository;
     private final CategoryRepository categoryRepository;
     private final NotificationRepository notificationRepository;
+    private final PlaylistRepository playlistRepository;
 
     private JpaRepository<?, String> repository;
 
@@ -33,6 +34,8 @@ public class IdExistsValidator implements ConstraintValidator<IdExists, String> 
             repository = categoryRepository;
         } else if (constraintAnnotation.entity() == Notification.class) {
             repository = notificationRepository;
+        } else if (constraintAnnotation.entity() == Playlist.class) {
+            repository = playlistRepository;
         }
     }
 

@@ -1,8 +1,12 @@
 package com.example.videosharingapi.controller;
 
+import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
+import com.example.videosharingapi.common.TestUtil;
+import com.example.videosharingapi.elasticsearchrepository.UserElasticsearchRepository;
 import com.example.videosharingapi.entity.Role;
 import com.example.videosharingapi.entity.Thumbnail;
+import com.example.videosharingapi.repository.PlaylistRepository;
 import com.example.videosharingapi.repository.ThumbnailRepository;
 import com.example.videosharingapi.repository.UserRepository;
 import jakarta.transaction.Transactional;
@@ -10,10 +14,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.http.HttpHeaders;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.nullValue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -22,11 +30,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ActiveProfiles("test")
 @AutoConfigureMockMvc
 @TestSql
-public class AuthControllerTest {
+public class AuthControllerTest extends AbstractElasticsearchContainer {
 
     private @Autowired UserRepository userRepository;
     private @Autowired ThumbnailRepository thumbnailRepository;
+    private @Autowired PlaylistRepository playlistRepository;
+
+    private @Autowired UserElasticsearchRepository userElasticsearchRepository;
+
     private @Autowired MockMvc mockMvc;
+    private @Autowired TestUtil testUtil;
 
     @Test
     public void givenUsernameAndPassword_whenLogin_thenSuccess() throws Exception {
@@ -102,6 +115,86 @@ public class AuthControllerTest {
         assertThat(thumbnailRepository.count()).isEqualTo(11);
         assertThat(thumbnailRepository.findAllByUserId(user.getId()).stream().map(Thumbnail::getType))
                 .containsExactlyInAnyOrder(Thumbnail.Type.DEFAULT, Thumbnail.Type.MEDIUM);
+    }
+
+    @Test
+    @Transactional
+    public void whenSignup_thenGetUserInfo_thenSuccess() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .param("username", "user4")
+                        .param("password", "44444444"))
+                .andExpect(status().isCreated());
+
+        var result = mockMvc.perform(post("/api/v1/auth/login")
+                        .param("username", "user2")
+                        .param("password", "22222222"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        var token = (String) testUtil.json(result, "$.token");
+        var user = userRepository.findByUsername("user4");
+
+        mockMvc.perform(get("/api/v1/users/{userId}", user.getId())
+                        .header(HttpHeaders.AUTHORIZATION, "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(user.getId()))
+                .andExpect(jsonPath("$.snippet.username")
+                        .value("user4"))
+                .andExpect(jsonPath("$.snippet.email")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.dateOfBirth")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.phoneNumber")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.gender")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.country")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.bio")
+                        .value(nullValue()))
+                .andExpect(jsonPath("$.snippet.thumbnails.length()")
+                        .value(2))
+                .andExpect(jsonPath("$.snippet.roles")
+                        .value(contains("USER")))
+                .andExpect(jsonPath("$.statistic.viewCount")
+                        .value(0))
+                .andExpect(jsonPath("$.statistic.followerCount")
+                        .value(0))
+                .andExpect(jsonPath("$.statistic.followingCount")
+                        .value(0))
+                .andExpect(jsonPath("$.statistic.videoCount")
+                        .value(0));
+    }
+
+    @Test
+    @Transactional
+    public void givenUsernameAndPassword_whenSignup_thenUserDocumentIsCreated() throws Exception {
+        super.prepareData();
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .param("username", "user4")
+                        .param("password", "44444444"))
+                .andExpect(status().isCreated());
+
+        var userId = userRepository.findByUsername("user4").getId();
+
+        assertThat(userElasticsearchRepository.count()).isEqualTo(5);
+        var userDoc = userElasticsearchRepository.findById(userId).orElseThrow();
+        assertThat(userDoc.getId()).isEqualTo(userId);
+        assertThat(userDoc.getUsername()).isEqualTo("user4");
+        assertThat(userDoc.getBio()).isEqualTo(null);
+    }
+
+    @Test
+    @Transactional
+    public void givenUsernameAndPassword_whenSignup_thenDefaultPlaylistsIsCreated() throws Exception {
+        mockMvc.perform(post("/api/v1/auth/signup")
+                        .param("username", "user4")
+                        .param("password", "44444444"))
+                .andExpect(status().isCreated());
+
+        var userId = userRepository.findByUsername("user4").getId();
+        var defaultsPlaylist = playlistRepository.findAllByUserIdAndDefaultTypeIsNotNull(userId);
+        assertThat(defaultsPlaylist).hasSize(2);
     }
 
     @Test

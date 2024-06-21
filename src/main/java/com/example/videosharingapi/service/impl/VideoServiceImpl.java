@@ -4,10 +4,7 @@ import com.example.videosharingapi.dto.NotificationDto;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.dto.response.PageResponse;
-import com.example.videosharingapi.entity.Hashtag;
-import com.example.videosharingapi.entity.NotificationObject;
-import com.example.videosharingapi.entity.Video;
-import com.example.videosharingapi.entity.VideoRating;
+import com.example.videosharingapi.entity.*;
 import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.mapper.VideoMapper;
@@ -21,7 +18,9 @@ import com.example.videosharingapi.validation.group.Save;
 import jakarta.validation.Validator;
 import jakarta.validation.groups.Default;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +31,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
@@ -61,7 +61,7 @@ public class VideoServiceImpl implements VideoService {
             throw new AppException(ErrorCode.FORBIDDEN);
         }
 
-        storageService.store(videoFile, thumbnailFile, videoDto);
+        storageService.storeVideo(videoFile, thumbnailFile, videoDto);
 
         var constraintViolations = validator.validate(videoDto, Default.class, Save.class);
         if (!constraintViolations.isEmpty()) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
@@ -78,6 +78,8 @@ public class VideoServiceImpl implements VideoService {
                 .objectId(video.getId())
                 .build());
         notificationService.createNotification(notification);
+
+        log.info("Uploaded video: videoId={}", video.getId());
 
         return videoMapper.toVideoDto(video);
     }
@@ -115,7 +117,11 @@ public class VideoServiceImpl implements VideoService {
         // Update hashtags.
         saveHashtags(videoDto.getSnippet().getHashtags(), video);
 
+        // Trigger Video document update
         videoRepository.save(video);
+
+        log.info("Updated video: videoId={}", video.getId());
+
         return videoMapper.toVideoDto(video);
     }
 
@@ -126,24 +132,53 @@ public class VideoServiceImpl implements VideoService {
         var video = videoRepository.findById(id).orElseThrow();
         if (!video.getUser().getId().equals(user.getUserId())) throw new AppException(ErrorCode.FORBIDDEN);
 
+        deleteMetadata(id);
+    }
+
+    private void deleteMetadata(String videoId) {
         // Delete ViewHistory.
-        viewHistoryRepository.deleteByVideoId(id);
+        viewHistoryRepository.deleteByVideoId(videoId);
 
         // Delete Comment.
-        commentRatingRepository.deleteByCommentVideoId(id);
-        commentRepository.deleteByVideoId(id);
+        commentRatingRepository.deleteByCommentVideoId(videoId);
+        commentRepository.deleteByVideoId(videoId);
 
         // Delete PlaylistItem.
-        playlistItemRepository.deleteByVideoId(id);
+        playlistItemRepository.deleteAllByVideoId(videoId);
 
         // Delete VideoRating.
-        videoRatingRepository.deleteByVideoId(id);
+        videoRatingRepository.deleteByVideoId(videoId);
 
         // Delete Video.
-        videoRepository.deleteById(id);
+        videoRepository.deleteById(videoId);
 
         // Delete related notifications.
-        notificationService.deleteRelatedNotifications(id);
+        notificationService.deleteRelatedNotifications(videoId);
+    }
+
+    @Override
+    @Transactional
+    public VideoDto changeThumbnail(MultipartFile imageFile, String videoId, String userId) {
+        var video = videoRepository.findById(videoId).orElseThrow();
+
+        // If the userId is not the one who created the video, then throw forbidden error.
+        if (!Objects.equals(userId, video.getUser().getId())) throw new AppException(ErrorCode.FORBIDDEN);
+
+        var thumbnailUrl = storageService.storeThumbnailImage(imageFile);
+        if (thumbnailUrl == null) throw new AppException(ErrorCode.SOMETHING_WENT_WRONG);
+
+        var thumbnail = new Thumbnail();
+        thumbnail.setType(Thumbnail.Type.DEFAULT);
+        thumbnail.setUrl(thumbnailUrl);
+        thumbnail.setWidth(100);
+        thumbnail.setHeight(100);
+
+        video.getThumbnails().clear();
+        video.getThumbnails().add(thumbnail);
+
+        log.info("Profile image changed: videoId={}", videoId);
+
+        return videoMapper.toVideoDto(video);
     }
 
     @Override
@@ -168,15 +203,15 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public List<String> getCategoriesForUserId(String userId) {
-        // TODO: Apply AI, instead of just get hashtags of videos that user created.
-        return hashtagRepository.findAllByUserId(userId).stream()
+        // TODO: Implement and test
+        return hashtagRepository.findAll(PageRequest.of(0, 10)).stream()
                 .map(Hashtag::getTag)
                 .collect(Collectors.toList());
     }
 
     @Override
     public PageResponse<VideoDto> getVideosByCategoryAll(String userId, Pageable pageable) {
-        // TODO: Apply AI, instead of just get videos that user did not create.
+        // TODO: Implement
         var videoDtoList = videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
@@ -195,7 +230,7 @@ public class VideoServiceImpl implements VideoService {
 
     @Override
     public PageResponse<VideoDto> getRelatedVideos(String videoId, String userId, Pageable pageable) {
-        // TODO: Apply AI, instead of just get videos that user did not create.
+        // TODO: Implement
         var videoDtoList = videoRepository.findAll().stream()
                 .filter(video -> !video.getUser().getId().equals(userId))
                 .map(videoMapper::toVideoDto)
@@ -210,6 +245,19 @@ public class VideoServiceImpl implements VideoService {
         final var page = new PageImpl<>(videoDtoList.subList(start, end), pageable, videoDtoList.size());
 
         return new PageResponse<>(page);
+    }
+
+    @Override
+    @Transactional
+    public void viewVideo(String videoId, String userId) {
+        var video = videoRepository.findById(videoId).orElseThrow();
+        var user = userRepository.findById(userId).orElseThrow();
+        ViewHistory viewHistory = new ViewHistory();
+        viewHistory.setVideo(video);
+        viewHistory.setUser(user);
+        viewHistory.setPublishedAt(LocalDateTime.now());
+        viewHistory.setViewedDurationSec(0);
+        viewHistoryRepository.save(viewHistory);
     }
 
     @Override

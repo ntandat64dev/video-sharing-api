@@ -15,6 +15,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.MulticastMessage;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -28,6 +29,7 @@ import java.util.Map;
 @Service
 @Transactional(readOnly = true)
 @RequiredArgsConstructor
+@Slf4j
 public class NotificationServiceImpl implements NotificationService {
     private static final String TITLE = "title";
     private static final String BODY = "body";
@@ -56,6 +58,7 @@ public class NotificationServiceImpl implements NotificationService {
                     .putAllData(data)
                     .build();
             var batchResponse = firebaseMessaging.sendEachForMulticast(message);
+            log.info("Notification pushed: {}", tokens);
             if (batchResponse.getFailureCount() > 0) {
                 var responses = batchResponse.getResponses();
                 var failedTokens = new ArrayList<String>();
@@ -67,8 +70,13 @@ public class NotificationServiceImpl implements NotificationService {
                 }
                 // Delete all invalid tokens.
                 fcmMessageTokenRepository.deleteAllByTokenIn(failedTokens);
+
+                if (!failedTokens.isEmpty()) {
+                    log.info("Deleted failed tokens: {}", tokens);
+                }
             }
         } catch (FirebaseMessagingException e) {
+            log.error("Push notification failed: {}", e.getMessage());
             throw new RuntimeException(e);
         }
     }

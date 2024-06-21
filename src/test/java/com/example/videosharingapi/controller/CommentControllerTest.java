@@ -1,5 +1,6 @@
 package com.example.videosharingapi.controller;
 
+import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.common.TestUtil;
 import com.example.videosharingapi.dto.CommentDto;
@@ -31,7 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestSql
 @WithUserDetails("user1")
-public class CommentControllerTest {
+public class CommentControllerTest extends AbstractElasticsearchContainer {
     private @Autowired VideoStatisticRepository videoStatisticRepository;
     private @Autowired CommentRepository commentRepository;
     private @Autowired CommentRatingRepository commentRatingRepository;

@@ -79,11 +79,11 @@ INSERT INTO `video`(id, created_by, created_date, modified_by, modified_date, de
                     comment_allowed, made_for_kids, category_id, location, title, published_at, video_url, user_id,
                     privacy_id)
 VALUES ('37b32dc2', 'admin', NOW(), 'admin', NOW(), 'Video 1 description', 1000, false, true, false, 'a82f3e3d',
-        'New York, US', 'Video 1', '20240401T09:00', 'Video 1 URL', 'a05990b1', 'ec386a4b'),
+        'New York, US', 'Video 1', '2024-04-01T09:00:00', 'Video 1 URL', 'a05990b1', 'ec386a4b'),
        ('f7d9b74b', 'admin', NOW(), 'admin', NOW(), 'Video 2 description', 2000, false, true, false, 'f2fe0cb6',
-        'Ha Noi, Vietnam', 'Video 2', '20240402T09:00', 'Video 2 URL', 'a05990b1', 'f01121d2'),
+        'Ha Noi, Vietnam', 'Video 2', '2024-04-02T09:00:00', 'Video 2 URL', 'a05990b1', 'f01121d2'),
        ('e65707b4', 'admin', NOW(), 'admin', NOW(), 'Video 3 description', 3000, false, false, true, 'c0f3f41e',
-        'Tokyo, Japan', 'Video 3', '20240403T09:00', 'Video 3 URL', '9b79f4ba', 'f01121d2');
+        'Tokyo, Japan', 'Video 3', '2024-04-03T09:00:00', 'Video 3 URL', '9b79f4ba', 'f01121d2');
 
 # VideoStatistic
 INSERT INTO `video_statistic`(created_by, created_date, modified_by, modified_date, view_count, like_count,
@@ -141,19 +141,19 @@ VALUES ('85baf0bb', 'admin', NOW(), 'admin', NOW(), NOW(), 'LIKE', '6b342e72', '
        ('def0075f', 'admin', NOW(), 'admin', NOW(), NOW(), 'DISLIKE', '6c3239d6', 'a05990b1');
 
 # Playlist
-INSERT INTO `playlist`(id, created_by, created_date, modified_by, modified_date, description, is_user_create,
+INSERT INTO `playlist`(id, created_by, created_date, modified_by, modified_date, description, default_type,
                        published_at, title, privacy_id, user_id)
-VALUES ('bae06c8a', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Watch Later', 'ec386a4b', 'a05990b1'),
-       ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Liked Videos', 'ec386a4b', 'a05990b1'),
-       ('d8659362', 'admin', NOW(), 'admin', NOW(), null, true, NOW(), 'My Videos', 'ec386a4b', 'a05990b1'),
+VALUES ('c31760ea', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4b', 'a05990b1'),
+       ('fae06c8a', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', 'a05990b1'),
+       ('d8659362', 'admin', NOW(), 'admin', NOW(), null, null, NOW(), 'My Videos', 'f01121d2', 'a05990b1'),
 
-       ('236e2aa6', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Watch Later', 'ec386a4b', '9b79f4ba'),
-       ('d07f1bee', 'admin', NOW(), 'admin', NOW(), null, false, NOW(), 'Liked Videos', 'ec386a4b', '9b79f4ba');
+       ('236e2aa6', 'admin', NOW(), 'admin', NOW(), null, 0, NOW(), '', 'ec386a4b', '9b79f4ba'),
+       ('d07f1bee', 'admin', NOW(), 'admin', NOW(), null, 1, NOW(), '', 'ec386a4b', '9b79f4ba');
 
 # PlaylistItem
 INSERT INTO `playlist_item`(created_by, created_date, modified_by, modified_date, priority, video_id, playlist_id)
-VALUES ('admin', NOW(), 'admin', NOW(), 0, 'f7d9b74b', 'd8659362'),
-       ('admin', NOW(), 'admin', NOW(), 1, 'e65707b4', 'd8659362'),
+VALUES ('admin', NOW(), 'admin', NOW(), 1, 'e65707b4', 'd8659362'),
+       ('admin', NOW(), 'admin', NOW(), 0, 'f7d9b74b', 'd8659362'),
        ('admin', NOW(), 'admin', NOW(), 0, '37b32dc2', '236e2aa6');
 
 # NotificationObject

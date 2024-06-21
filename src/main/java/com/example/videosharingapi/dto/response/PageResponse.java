@@ -1,13 +1,15 @@
 package com.example.videosharingapi.dto.response;
 
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
 
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class PageResponse<T> {
 
     private int pageNumber;

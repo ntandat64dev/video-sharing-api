@@ -25,7 +25,7 @@ public class PlaylistItem extends AuditableEntity {
     private PlaylistItemId id = new PlaylistItemId();
 
     @Column(nullable = false)
-    private Byte priority;
+    private Long priority;
 
     @ManyToOne
     @MapsId("playlistId")

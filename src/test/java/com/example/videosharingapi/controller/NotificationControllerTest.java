@@ -1,5 +1,6 @@
 package com.example.videosharingapi.controller;
 
+import com.example.videosharingapi.common.AbstractElasticsearchContainer;
 import com.example.videosharingapi.common.TestSql;
 import com.example.videosharingapi.entity.FcmMessageToken;
 import com.example.videosharingapi.entity.Notification;
@@ -25,7 +26,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @TestSql
 @WithUserDetails("user1")
-public class NotificationControllerTest {
+public class NotificationControllerTest extends AbstractElasticsearchContainer {
 
     private @Autowired NotificationRepository notificationRepository;
     private @Autowired FcmMessageTokenRepository fcmMessageTokenRepository;

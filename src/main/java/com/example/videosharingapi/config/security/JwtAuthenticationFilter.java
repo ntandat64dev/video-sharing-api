@@ -3,11 +3,11 @@ package com.example.videosharingapi.config.security;
 import com.example.videosharingapi.exception.AppException;
 import com.example.videosharingapi.exception.ErrorCode;
 import com.example.videosharingapi.util.JwtUtil;
+import jakarta.annotation.Nonnull;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -35,9 +35,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(
-            @NotNull HttpServletRequest request,
-            @NotNull HttpServletResponse response,
-            @NotNull FilterChain filterChain
+            @Nonnull HttpServletRequest request,
+            @Nonnull HttpServletResponse response,
+            @Nonnull FilterChain filterChain
     ) throws ServletException, IOException {
         try {
             final var authHeader = request.getHeader("Authorization");

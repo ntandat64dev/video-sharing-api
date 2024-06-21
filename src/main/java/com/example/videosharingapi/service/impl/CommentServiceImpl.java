@@ -14,7 +14,6 @@ import com.example.videosharingapi.mapper.CommentRatingMapper;
 import com.example.videosharingapi.repository.CommentRatingRepository;
 import com.example.videosharingapi.repository.CommentRepository;
 import com.example.videosharingapi.repository.UserRepository;
-import com.example.videosharingapi.repository.VideoStatisticRepository;
 import com.example.videosharingapi.service.CommentService;
 import com.example.videosharingapi.service.NotificationService;
 import com.example.videosharingapi.service.UserService;
@@ -33,7 +32,6 @@ public class CommentServiceImpl implements CommentService {
 
     private final CommentRepository commentRepository;
     private final CommentRatingRepository commentRatingRepository;
-    private final VideoStatisticRepository videoStatisticRepository;
 
     private final NotificationService notificationService;
     private final UserService userService;
@@ -89,15 +87,10 @@ public class CommentServiceImpl implements CommentService {
         commentRatingRepository.deleteByCommentParentId(id);
 
         // Delete reply comments.
-        var rows = commentRepository.deleteByParentId(id);
+        commentRepository.deleteByParentId(id);
 
         // Delete Comment.
         commentRepository.deleteById(id);
-
-        // Update VideoStatistic.
-        var videoStat = videoStatisticRepository.findById(comment.getVideo().getId()).orElseThrow();
-        videoStat.setCommentCount(videoStat.getCommentCount() - (1 + rows));
-        videoStatisticRepository.save(videoStat);
 
         // Delete related notifications.
         notificationService.deleteRelatedNotifications(id);

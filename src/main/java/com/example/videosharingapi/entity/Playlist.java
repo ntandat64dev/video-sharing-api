@@ -1,13 +1,15 @@
 package com.example.videosharingapi.entity;
 
 import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 
-@Getter
-@Setter
+@Data
+@EqualsAndHashCode(callSuper = true)
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Entity
 @Table(uniqueConstraints = @UniqueConstraint(columnNames = { "id", "title" }))
 public class Playlist extends AuditableEntity {
@@ -23,7 +25,7 @@ public class Playlist extends AuditableEntity {
     @Column(length = 10000)
     private String description;
 
-    private Boolean isUserCreate;
+    private Byte defaultType;
 
     @Column(nullable = false)
     private LocalDateTime publishedAt;

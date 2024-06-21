@@ -8,11 +8,11 @@ import java.lang.annotation.*;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Sql(
-        scripts = "/sql/data-h2.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS,
+        scripts = "/sql/data.sql", executionPhase = Sql.ExecutionPhase.BEFORE_TEST_CLASS,
         config = @org.springframework.test.context.jdbc.SqlConfig(commentPrefix = "#")
 )
 @Sql(
-        scripts = "/sql/clean-h2.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS,
+        scripts = "/sql/cleanup.sql", executionPhase = Sql.ExecutionPhase.AFTER_TEST_CLASS,
         config = @org.springframework.test.context.jdbc.SqlConfig(commentPrefix = "#")
 )
 public @interface TestSql {
