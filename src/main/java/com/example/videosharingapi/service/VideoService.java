@@ -16,6 +16,8 @@ public interface VideoService {
 
     void deleteVideoById(String id);
 
+    VideoDto changeThumbnail(MultipartFile imageFile, String videoId, String userId);
+
     PageResponse<VideoDto> getAllVideos(Pageable pageable);
 
     PageResponse<VideoDto> getVideosByUserId(String userId, Pageable pageable);
@@ -27,6 +29,8 @@ public interface VideoService {
     PageResponse<VideoDto> getVideosByCategoryAll(String userId, Pageable pageable);
 
     PageResponse<VideoDto> getRelatedVideos(String videoId, String userId, Pageable pageable);
+
+    void viewVideo(String videoId, String userId);
 
     VideoRatingDto rateVideo(String videoId, String userId, String rating);
 

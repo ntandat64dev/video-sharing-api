@@ -4,6 +4,7 @@ import com.example.videosharingapi.config.security.AuthenticatedUser;
 import com.example.videosharingapi.dto.VideoDto;
 import com.example.videosharingapi.dto.VideoRatingDto;
 import com.example.videosharingapi.dto.response.PageResponse;
+import com.example.videosharingapi.entity.User;
 import com.example.videosharingapi.entity.Video;
 import com.example.videosharingapi.service.VideoService;
 import com.example.videosharingapi.validation.IdExists;
@@ -34,6 +35,15 @@ public class VideoController {
     @PreAuthorize("hasAuthority('ROLE_ADMIN')")
     public ResponseEntity<PageResponse<VideoDto>> getAllVideos(Pageable pageable) {
         var response = videoService.getAllVideos(pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/for-user")
+    public ResponseEntity<PageResponse<VideoDto>> getVideosByUserId(
+            @IdExists(entity = User.class) String userId,
+            Pageable pageable
+    ) {
+        var response = videoService.getVideosByUserId(userId, pageable);
         return ResponseEntity.ok(response);
     }
 
@@ -108,6 +118,25 @@ public class VideoController {
     public ResponseEntity<?> deleteVideo(@IdExists(entity = Video.class) String id) {
         videoService.deleteVideoById(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/thumbnails")
+    public ResponseEntity<VideoDto> changeThumbnail(
+            @RequestParam @ValidFile(type = "image") MultipartFile imageFile,
+            @IdExists(entity = Video.class) String videoId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        var response = videoService.changeThumbnail(imageFile, videoId, user.getUserId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/view")
+    public ResponseEntity<?> viewVideo(
+            @IdExists(entity = Video.class) String videoId,
+            @AuthenticationPrincipal AuthenticatedUser user
+    ) {
+        videoService.viewVideo(videoId, user.getUserId());
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/rate/mine")

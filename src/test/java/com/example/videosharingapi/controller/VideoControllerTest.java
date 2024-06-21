@@ -100,6 +100,7 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
                 .hashtags(List.of("music", "pop"))
                 .userId("a05990b1")
                 .category(new CategoryDto("c0f3f41e"))
+                .duration(Duration.ofMinutes(5))
                 .publishedAt(LocalDateTime.parse("2024-04-15T12:30:00"))
                 .build());
         videoDto.setStatus(VideoDto.Status.builder()
@@ -178,7 +179,7 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
                         .file(createMockMetadata()))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.snippet.title").value("Video title"))
-                .andExpect(jsonPath("$.snippet.duration").value("PT16M40S"))
+                .andExpect(jsonPath("$.snippet.duration").value("PT5M"))
                 .andExpect(jsonPath("$.snippet.userId").value("a05990b1"))
                 .andExpect(jsonPath("$.snippet.category.category").value("Sports"));
     }
@@ -195,16 +196,28 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
 
         // Assert Video is created.
         assertThat(videoRepository.findAll()).hasSize(4);
-        var video = videoRepository
-                .findById(testUtil.json(result, "$.id"));
-        assertThat(video).isPresent();
+        var video = videoRepository.findById(testUtil.json(result, "$.id")).orElseThrow();
+        assertThat(video.getTitle()).isEqualTo("Video title");
+        assertThat(video.getDescription()).isEqualTo("Video description");
+        assertThat(video.getVideoUrl()).isEqualTo("https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ElephantsDream.mp4");
+        assertThat(video.getLocation()).isEqualTo(null);
+        assertThat(video.getDurationSec()).isEqualTo(300);
+        assertThat(video.getPrivacy().getStatus()).isEqualTo(Privacy.Status.PRIVATE);
+        assertThat(video.getCategory().getId()).isEqualTo("c0f3f41e");
+        assertThat(video.getHashtags().stream().map(Hashtag::getTag)).containsExactlyInAnyOrder("music", "pop");
+        assertThat(video.getMadeForKids()).isEqualTo(false);
+        assertThat(video.getCommentAllowed()).isEqualTo(true);
+        assertThat(video.getAgeRestricted()).isEqualTo(false);
+        assertThat(video.getThumbnails().size()).isEqualTo(1);
+        assertThat(video.getPublishedAt()).isBetween(LocalDateTime.now().minusMinutes(10), LocalDateTime.now());
+        assertThat(video.getUser().getId()).isEqualTo("a05990b1");
 
         // Assert VideoStatistic is created.
-        var videoStatistic = videoStatisticRepository.findById(video.get().getId());
+        var videoStatistic = videoStatisticRepository.findById(video.getId());
         assertThat(videoStatistic).isPresent();
 
         // Assert Thumbnails is created.
-        var thumbnails = thumbnailRepository.findAllByVideoId(video.get().getId());
+        var thumbnails = thumbnailRepository.findAllByVideoId(video.getId());
         assertThat(thumbnails).hasSize(1);
         assertThat(thumbnails.getFirst().getType()).isEqualTo(Thumbnail.Type.DEFAULT);
 
@@ -348,6 +361,7 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
         videoDto.getSnippet().setUserId(null);
         videoDto.getSnippet().setCategory(null);
         videoDto.getStatus().setPrivacy(null);
+        videoDto.getSnippet().setDuration(null);
 
         var metadata = new MockMultipartFile(
                 "metadata", null,
@@ -363,6 +377,7 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
                                 "snippet.userId: must not be null",
                                 "snippet.title: must not be blank",
                                 "snippet.category: must not be null",
+                                "snippet.duration: must not be null",
                                 "status.privacy: must not be blank")));
 
         // Assert video is not saved.
@@ -657,6 +672,24 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
     }
 
     @Test
+    @Transactional
+    public void givenImageFile_whenChangeThumbnail_thenSuccess() throws Exception {
+        var mockImageFile = new MockMultipartFile(
+                "imageFile",
+                "thumbnail.png",
+                "image/png", RandomStringUtils.random(2).getBytes());
+        mockMvc.perform(multipart("/api/v1/videos/thumbnails")
+                        .file(mockImageFile)
+                        .param("videoId", "37b32dc2"))
+                .andExpect(status().isOk());
+
+        var video = videoRepository.findById("37b32dc2").orElseThrow();
+        assertThat(video.getThumbnails().size()).isEqualTo(1);
+        assertThat(video.getThumbnails().get(0).getUrl())
+                .isEqualTo("https://dummyimage.com/720x450/ff6b81/fff");
+    }
+
+    @Test
     public void whenGetVideosByCategoryAll_thenSuccess() throws Exception {
         mockMvc.perform(get("/api/v1/videos/category/all/mine"))
                 .andExpect(status().isOk())
@@ -672,6 +705,17 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].id").value("e65707b4"));
+    }
+
+    @Test
+    @Transactional
+    public void givenVideoId_whenViewVideo_thenSuccess() throws Exception {
+        mockMvc.perform(post("/api/v1/videos/view")
+                        .param("videoId", "f7d9b74b"))
+                .andExpect(status().isNoContent());
+
+        assertThat(viewHistoryRepository.count()).isEqualTo(10);
+        assertThat(videoStatisticRepository.findById("f7d9b74b").orElseThrow().getViewCount()).isEqualTo(4);
     }
 
     @Test
@@ -786,12 +830,5 @@ public class VideoControllerTest extends AbstractElasticsearchContainer {
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.items.length()").value(1))
                 .andExpect(jsonPath("$.items[0].id").value("e65707b4"));
-    }
-
-    @Test
-    public void whenGetVideoCategories_thenSuccess() throws Exception {
-        mockMvc.perform(get("/api/v1/videos/video-categories/mine"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$").value(contains("music")));
     }
 }

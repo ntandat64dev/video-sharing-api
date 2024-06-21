@@ -12,7 +12,7 @@ import com.example.videosharingapi.entity.Privacy;
 import com.example.videosharingapi.repository.PlaylistItemRepository;
 import com.example.videosharingapi.repository.PlaylistRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.commons.lang3.stream.Streams;
+import org.assertj.core.util.Streams;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -337,7 +337,7 @@ public class PlaylistControllerTest extends AbstractElasticsearchContainer {
 
         assertThat(playlistElasticsearchRepository.count()).isEqualTo(4);
         assertThat(playlistElasticsearchRepository.findById("d8659362")).isNotPresent();
-        assertThat(Streams.of(playlistElasticsearchRepository.findAll())
+        assertThat(Streams.stream(playlistElasticsearchRepository.findAll())
                 .map(com.example.videosharingapi.document.Playlist::getId))
                 .containsExactlyInAnyOrder("fae06c8a", "c31760ea", "236e2aa6", "d07f1bee");
     }

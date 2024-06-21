@@ -69,7 +69,9 @@ public class PlaylistServiceImpl implements PlaylistService {
                 .publishedAt(LocalDateTime.now())
                 .build();
 
-        playlistRepository.saveAll(List.of(watchLaterPlaylist, likeVideosPlaylist));
+        // We used save() instead of saveAll() for triggering advice to add to Elasticsearch index.
+        playlistRepository.save(watchLaterPlaylist);
+        playlistRepository.save(likeVideosPlaylist);
     }
 
     @Override

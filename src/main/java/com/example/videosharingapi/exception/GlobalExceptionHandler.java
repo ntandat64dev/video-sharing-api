@@ -2,10 +2,10 @@ package com.example.videosharingapi.exception;
 
 import com.example.videosharingapi.dto.response.ErrorResponse;
 import io.jsonwebtoken.JwtException;
+import jakarta.annotation.Nonnull;
 import jakarta.annotation.Nullable;
 import jakarta.validation.ConstraintViolationException;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -32,9 +32,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     protected ResponseEntity<Object> handleExceptionInternal(
             Exception ex,
             Object body,
-            @NotNull HttpHeaders headers,
-            @NotNull HttpStatusCode statusCode,
-            @NotNull WebRequest request
+            @Nonnull HttpHeaders headers,
+            @Nonnull HttpStatusCode statusCode,
+            @Nonnull WebRequest request
     ) {
         var errorResponse = ErrorResponse.builder()
                 .httpStatus(statusCode)
@@ -46,9 +46,9 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
     @Override
     protected ResponseEntity<Object> handleMethodArgumentNotValid(
             MethodArgumentNotValidException ex,
-            @NotNull HttpHeaders headers,
-            @NotNull HttpStatusCode status,
-            @NotNull WebRequest request
+            @Nonnull HttpHeaders headers,
+            @Nonnull HttpStatusCode status,
+            @Nonnull WebRequest request
     ) {
         var errors = new ArrayList<String>();
         for (FieldError error : ex.getBindingResult().getFieldErrors()) {

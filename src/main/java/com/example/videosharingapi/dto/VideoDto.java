@@ -55,7 +55,7 @@ public final class VideoDto {
 
         private List<String> hashtags;
 
-        @NotNull(groups = Save.class)
+        @NotNull(groups = Create.class)
         private Duration duration;
 
         private String location;
