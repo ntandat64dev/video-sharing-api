@@ -92,6 +92,13 @@ public class AuthenticatedUser implements UserDetails {
             return this;
         }
 
+        public AuthenticatedUserBuilder scopes(List<String> scopes) {
+            this.authorities = new ArrayList<>(scopes.stream()
+                    .map(SimpleGrantedAuthority::new)
+                    .toList());
+            return this;
+        }
+
         public AuthenticatedUser build() {
             return new AuthenticatedUser(this.userId, this.username, this.password, this.authorities);
         }

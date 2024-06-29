@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -22,13 +21,11 @@ import java.io.IOException;
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
-    private final UserDetailsService userDetailsService;
     private final JwtUtil jwtUtil;
     private final HandlerExceptionResolver resolver;
 
-    public JwtAuthenticationFilter(UserDetailsService userDetailsService, JwtUtil jwtUtil,
+    public JwtAuthenticationFilter(JwtUtil jwtUtil,
                                    @Qualifier("handlerExceptionResolver") HandlerExceptionResolver resolver) {
-        this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.resolver = resolver;
     }
@@ -51,20 +48,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // Extract token from Authentication header.
             final String token = authHeader.substring(7);
 
-            // Get username from token.
-            var username = jwtUtil.extractUsername(token);
-
-            if (username == null && SecurityContextHolder.getContext().getAuthentication() != null) {
-                // If there is no username in token or user is authenticated (by previous filters).
+            if (SecurityContextHolder.getContext().getAuthentication() != null) {
+                // If the user is authenticated (by previous filters).
                 filterChain.doFilter(request, response);
                 return;
             }
 
-            // Authenticate token (we can also use a custom AuthenticationProvider for this).
-            jwtUtil.verifyToken(token);
-            // If there is no exception then token is valid.
-            // Load UserDetails and set to SecurityContext.
-            var userDetails = userDetailsService.loadUserByUsername(username);
+            // Authenticate the token and set the SecurityContextHolder directly.
+            // (we can use AuthenticationManager instead)
+            var userDetails = jwtUtil.verifyToken(token);
             var authToken = new UsernamePasswordAuthenticationToken(
                     userDetails, null, userDetails.getAuthorities());
             authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
