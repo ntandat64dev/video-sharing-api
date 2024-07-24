@@ -2,16 +2,19 @@ package com.example.videosharingapi.util;
 
 import com.example.videosharingapi.config.security.AuthenticatedUser;
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
 import org.apache.commons.lang3.time.DateUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.stream.Collectors;
 
@@ -40,15 +43,21 @@ public class JwtUtil {
                 .compact();
     }
 
-    public void verifyToken(String token) {
-        Jwts.parser()
-                .verifyWith(getJwtSecretKey())
-                .build()
-                .parseSignedClaims(token);
-    }
+    public UserDetails verifyToken(String token) {
+        var claims = extractClaims(token);
 
-    public String extractUsername(String token) {
-        return extractClaims(token).getSubject();
+        if (claims.getExpiration().before(new Date())) {
+            throw new JwtException("Expired JWT token");
+        }
+
+        var scopesString = claims.get(CLAIM_SCOPE, String.class);
+        var scopes = Arrays.stream(scopesString.split(SCOPE_SEPARATOR)).toList();
+
+        return AuthenticatedUser.builder()
+                .userId(claims.get(CLAIM_USER_ID, String.class))
+                .username(claims.getSubject())
+                .scopes(scopes)
+                .build();
     }
 
     public LocalDateTime extractExpiration(String token) {
